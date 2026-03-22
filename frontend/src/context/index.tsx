@@ -17,8 +17,8 @@ const _modal = createAppKit({
   metadata,
   allowUnsupportedChain: true,
   chainImages: {
-    84532: "https://avatars.githubusercontent.com/u/108554348?s=200&v=4",     // Base logo
-    11142220: "https://avatars.githubusercontent.com/u/37552875?s=200&v=4",   // Celo logo
+    84532: "https://avatars.githubusercontent.com/u/108554348?s=200&v=4",
+    11142220: "https://avatars.githubusercontent.com/u/37552875?s=200&v=4",
   },
   features: {
     analytics: true,
