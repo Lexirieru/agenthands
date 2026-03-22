@@ -101,6 +101,30 @@ const x402Routes = {
   },
 };
 
+// ─── Webhook Store (in-memory) ───────────────────────────
+const webhooks = new Map<string, string>(); // taskId → webhookUrl
+
+async function notifyAgent(taskId: string, status: string, proofCID?: string) {
+  const url = webhooks.get(taskId);
+  if (!url) return;
+  try {
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event: "task_status_changed",
+        taskId,
+        status,
+        proofCID,
+        timestamp: new Date().toISOString(),
+      }),
+    });
+    console.log(`📡 Webhook sent for task #${taskId} → ${url}`);
+  } catch (err) {
+    console.error(`❌ Webhook failed for task #${taskId}:`, err);
+  }
+}
+
 // ─── App ─────────────────────────────────────────────────
 const app = new Hono();
 app.use("/*", cors());
@@ -125,7 +149,7 @@ app.use("/api/ipfs/*", paymentMiddlewareFromConfig(x402Routes, [facilitator], sc
 // ─── Agent: Create Task ──────────────────────────────────
 app.post("/api/agent/tasks", async (c) => {
   const body = await c.req.json();
-  const { title, description, location, reward, deadlineHours = 24, completionHours = 72, chain = "base-sepolia" } = body;
+  const { title, description, location, reward, deadlineHours = 24, completionHours = 72, chain = "base-sepolia", webhookUrl } = body;
 
   if (!title || !description || !location || !reward) {
     return c.json({ error: "Missing required fields: title, description, location, reward" }, 400);
@@ -148,7 +172,17 @@ app.post("/api/agent/tasks", async (c) => {
   });
   const receipt = await publicClient.waitForTransactionReceipt({ hash: createTx });
 
-  return c.json({ success: true, txHash: createTx, blockNumber: Number(receipt.blockNumber), task: { title, description, location, reward, chain } });
+  // Extract taskId from logs
+  const taskCount = await publicClient.readContract({ address: AGENTHANDS_ADDRESS, abi: AGENTHANDS_ABI, functionName: "taskCount" });
+  const taskId = taskCount.toString();
+
+  // Register webhook if provided
+  if (webhookUrl) {
+    webhooks.set(taskId, webhookUrl);
+    console.log(`🔔 Webhook registered for task #${taskId} → ${webhookUrl}`);
+  }
+
+  return c.json({ success: true, txHash: createTx, blockNumber: Number(receipt.blockNumber), taskId, webhookRegistered: !!webhookUrl, task: { title, description, location, reward, chain } });
 });
 
 // ─── Agent: Approve ──────────────────────────────────────
@@ -191,6 +225,36 @@ app.get("/api/agent/tasks/:id", async (c) => {
   // Serialize BigInt values to strings
   const serialized = JSON.parse(JSON.stringify(task, (_key, value) => typeof value === "bigint" ? value.toString() : value));
   return c.json({ task: serialized });
+});
+
+// ─── Notify: Worker submitted proof ──────────────────────
+app.post("/api/notify/:id", async (c) => {
+  const taskId = c.req.param("id");
+  const { status, proofCID } = await c.req.json().catch(() => ({ status: "submitted", proofCID: "" }));
+  await notifyAgent(taskId, status || "submitted", proofCID);
+  return c.json({ success: true, notified: webhooks.has(taskId) });
+});
+
+// ─── Agent: Register/Update Webhook ──────────────────────
+app.post("/api/agent/tasks/:id/webhook", async (c) => {
+  const taskId = c.req.param("id");
+  const { webhookUrl } = await c.req.json();
+  if (!webhookUrl) return c.json({ error: "Missing webhookUrl" }, 400);
+  webhooks.set(taskId, webhookUrl);
+  return c.json({ success: true, taskId, webhookUrl });
+});
+
+// ─── Agent: List All Tasks (FREE) ────────────────────────
+app.get("/api/agent/tasks", async (c) => {
+  const chain = c.req.query("chain") || "base-sepolia";
+  const { publicClient } = getClients(chain);
+  const count = await publicClient.readContract({ address: AGENTHANDS_ADDRESS, abi: AGENTHANDS_ABI, functionName: "taskCount" });
+  const tasks = [];
+  for (let i = 1n; i <= count; i++) {
+    const task = await publicClient.readContract({ address: AGENTHANDS_ADDRESS, abi: AGENTHANDS_ABI, functionName: "getTask", args: [i] });
+    tasks.push(JSON.parse(JSON.stringify(task, (_key, value) => typeof value === "bigint" ? value.toString() : value)));
+  }
+  return c.json({ tasks, total: Number(count) });
 });
 
 // ─── ERC-8004: Status ────────────────────────────────────
