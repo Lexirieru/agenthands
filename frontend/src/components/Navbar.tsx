@@ -5,6 +5,7 @@ import { useAppKitAccount, useAppKitNetwork } from "@reown/appkit/react";
 import { useReadContract } from "wagmi";
 import { USDC_ADDRESSES } from "@/config";
 import { formatUnits } from "viem";
+import NetworkSwitch from "./NetworkSwitch";
 
 const ERC20_ABI = [
   {
@@ -62,7 +63,7 @@ export default function Navbar() {
             )}
           </>
         )}
-        <appkit-network-button />
+        <NetworkSwitch />
         <appkit-button />
       </div>
     </nav>
