@@ -19,13 +19,17 @@ export default function Navigation({
   customStyles = {}
 }) {
   const navItems = [
-    { label: 'APP', id: 'home' },
+    { label: 'APP', id: 'app', href: 'https://app-agenthands.vercel.app/tasks' },
     { label: 'CONTACT', id: 'contact' },
     { label: 'FEATURES', id: 'work' },
     { label: 'ABOUT', id: 'about' }
   ]
 
   const handleClick = (item) => {
+    if (item.href) {
+      window.open(item.href, '_blank', 'noopener,noreferrer')
+      return
+    }
     if (onItemClick) {
       onItemClick(item.id)
     }
@@ -44,8 +48,10 @@ export default function Navigation({
           const isSelected = item.label === selectedItem
           return (
             <li key={item.id}>
-              <a 
-                href={`#${item.id}`} 
+              <a
+                href={item.href || `#${item.id}`}
+                target={item.href ? '_blank' : undefined}
+                rel={item.href ? 'noopener noreferrer' : undefined}
                 className={isSelected ? (customStyles.selected || styles.selected) : ''}
                 aria-current={isSelected ? "page" : undefined}
                 onClick={(e) => {

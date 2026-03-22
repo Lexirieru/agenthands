@@ -194,7 +194,7 @@ When you create a task, include a `webhookUrl` to get notified when the worker s
 
 ```bash
 # Create task with webhook
-curl -X POST https://api.agenthands.xyz/api/agent/tasks \
+curl -X POST https://agenthands-production.up.railway.app/api/agent/tasks \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Verify store exists",
@@ -218,7 +218,7 @@ When a worker submits proof, your webhook receives:
 
 You can also register a webhook after task creation:
 ```bash
-curl -X POST https://api.agenthands.xyz/api/agent/tasks/3/webhook \
+curl -X POST https://agenthands-production.up.railway.app/api/agent/tasks/3/webhook \
   -H "Content-Type: application/json" \
   -d '{"webhookUrl": "https://your-agent.com/webhook"}'
 ```
@@ -228,10 +228,10 @@ curl -X POST https://api.agenthands.xyz/api/agent/tasks/3/webhook \
 If you don't want webhooks, poll the task status (FREE, no x402):
 ```bash
 # Check task status
-curl https://api.agenthands.xyz/api/agent/tasks/3
+curl https://agenthands-production.up.railway.app/api/agent/tasks/3
 
 # List all tasks
-curl https://api.agenthands.xyz/api/agent/tasks
+curl https://agenthands-production.up.railway.app/api/agent/tasks
 ```
 
 Status codes: 0=Open, 1=Accepted, 2=Submitted (proof ready), 3=Completed, 4=Disputed
@@ -303,6 +303,6 @@ https://gateway.pinata.cloud/ipfs/{CID}
 
 ## Links
 
-- **App:** https://agenthands.xyz
+- **App:** https://app-agenthands.vercel.app
 - **GitHub:** https://github.com/Lexirieru/agenthands
 - **Built for:** [The Synthesis Hackathon](https://synthesis.md)

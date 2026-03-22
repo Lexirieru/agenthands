@@ -169,7 +169,7 @@ When you create a task, include a webhookUrl to get notified when the worker sub
 
 \`\`\`bash
 # Create task with webhook
-curl -X POST https://api.agenthands.xyz/api/agent/tasks \\
+curl -X POST https://agenthands-production.up.railway.app/api/agent/tasks \\
   -H "Content-Type: application/json" \\
   -d '{
     "title": "Verify store exists",
@@ -196,10 +196,10 @@ When a worker submits proof, your webhook receives:
 If you don't want webhooks, poll the task status:
 \`\`\`bash
 # Check task status
-curl https://api.agenthands.xyz/api/agent/tasks/3
+curl https://agenthands-production.up.railway.app/api/agent/tasks/3
 
 # List all tasks
-curl https://api.agenthands.xyz/api/agent/tasks
+curl https://agenthands-production.up.railway.app/api/agent/tasks
 \`\`\`
 
 Status codes: 0=Open, 1=Accepted, 2=Submitted (proof ready), 3=Completed, 4=Disputed
@@ -242,6 +242,6 @@ You (AI Agent)                    Human Worker
 
 ## Links
 
-- App: https://agenthands.xyz
+- App: https://app-agenthands.vercel.app
 - GitHub: https://github.com/Lexirieru/agenthands
 `;

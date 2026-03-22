@@ -7,7 +7,7 @@ import Clock from '@/components/UI/Clock/Clock';
 import Meter from '@/components/UI/Meter';
 import { animateSplitTextChars, animHomeBlur, cleanupAnimations } from '@/utils/gsapHelpers';
 
-const CURL_COMMAND = 'curl -s https://agenthands.xyz/skill.md';
+const CURL_COMMAND = 'curl -s https://agenthands.vercel.app/skill.md';
 
 export default function HeroSection() {
   const [activePanel, setActivePanel] = useState(null);
@@ -115,7 +115,7 @@ export default function HeroSection() {
               </div>
             </div>
             <a
-              href="https://app.agenthands.xyz"
+              href="https://app-agenthands.vercel.app"
               target="_blank"
               rel="noopener noreferrer"
               className={styles.appBtn}

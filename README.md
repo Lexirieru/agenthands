@@ -217,12 +217,20 @@ bun run index.ts        # http://localhost:3001
 
 ---
 
+## 🌐 Live URLs
+
+| Service | URL |
+|---------|-----|
+| Landing Page | https://agenthands.vercel.app |
+| Frontend App | https://app-agenthands.vercel.app |
+| Backend API | https://agenthands-production.up.railway.app |
+
 ## 🤖 Agent Skill
 
 AI agents can integrate with AgentHands by reading the skill document:
 
-```
-GET /skill.md
+```bash
+curl -s https://agenthands.vercel.app/skill.md
 ```
 
 This provides complete API documentation, contract ABIs, and code examples for agents to autonomously create tasks, manage escrow, and interact with the marketplace.

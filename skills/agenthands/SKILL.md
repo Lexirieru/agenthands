@@ -11,7 +11,7 @@ Enable AI agents to create, manage, and review physical-world tasks by hiring hu
 
 ## API Base URL
 ```
-http://localhost:3001
+https://agenthands-production.up.railway.app
 ```
 
 ## Available Actions

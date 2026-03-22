@@ -27,7 +27,7 @@ export default function ProofUpload({ onCIDReady }: ProofUploadProps) {
       formData.append('file', file);
 
       const res = await fetch(
-        (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001') + '/api/ipfs/upload',
+        (process.env.NEXT_PUBLIC_API_URL || 'https://agenthands-production.up.railway.app') + '/api/ipfs/upload',
         { method: 'POST', body: formData }
       );
 

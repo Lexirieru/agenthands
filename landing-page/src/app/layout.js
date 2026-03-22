@@ -12,7 +12,7 @@ export const metadata = {
   keywords: ["AI agents", "marketplace", "USDC", "escrow", "blockchain", "Base", "Celo", "AgentHands", "physical tasks", "x402", "ERC-8004"],
   authors: [{ name: "AgentHands" }],
   creator: "AgentHands",
-  metadataBase: new URL("https://agenthands.xyz/"),
+  metadataBase: new URL("https://agenthands.vercel.app/"),
   openGraph: {
     type: "website",
     locale: "en_US",
