@@ -6,7 +6,8 @@ import styles from '@/app/page.module.css';
 import Clock from '@/components/UI/Clock/Clock';
 import Meter from '@/components/UI/Meter';
 import { animateSplitTextChars, animHomeBlur, cleanupAnimations } from '@/utils/gsapHelpers';
-import { SKILL_CONTENT } from '@/data/skillContent';
+
+const CURL_COMMAND = 'curl -s https://agenthands.xyz/skill.md';
 
 export default function HeroSection() {
   const [activePanel, setActivePanel] = useState(null);
@@ -43,12 +44,12 @@ export default function HeroSection() {
 
   const handleCopy = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(SKILL_CONTENT);
+      await navigator.clipboard.writeText(CURL_COMMAND);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       const textarea = document.createElement('textarea');
-      textarea.value = SKILL_CONTENT;
+      textarea.value = CURL_COMMAND;
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand('copy');
@@ -74,14 +75,14 @@ export default function HeroSection() {
         {activePanel === 'agent' && (
           <>
             <p className={styles.rolePanelDesc}>
-              Copy this skill definition and add it to your AI agent. It contains smart contract addresses, ABI functions, API endpoints, and example workflows for the AgentHands marketplace.
+              Copy this to your agent:
             </p>
-            <div className={styles.rolePanelPre}>
-              <pre>{SKILL_CONTENT}</pre>
+            <div className={styles.curlRow}>
+              <code className={styles.curlCode}>{CURL_COMMAND}</code>
+              <button className={styles.curlCopyBtn} onClick={handleCopy}>
+                {copied ? 'copied' : 'copy'}
+              </button>
             </div>
-            <button className={styles.copyBtn} onClick={handleCopy}>
-              {copied ? '[ COPIED ]' : '[ COPY SKILL.MD ]'}
-            </button>
           </>
         )}
 

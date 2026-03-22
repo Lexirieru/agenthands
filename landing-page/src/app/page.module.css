@@ -1118,47 +1118,47 @@
     font-weight: normal;
 }
 
-.rolePanelPre {
+.curlRow {
+    display: flex;
+    align-items: center;
+    gap: 0;
     background: #F2DCC4;
     border: 1px solid #D4A878;
-    padding: 1.25em;
+    overflow: hidden;
+}
+
+.curlCode {
+    flex: 1;
+    font-family: var(--font-courier-new);
+    font-size: 0.875rem;
+    font-weight: bold;
+    color: #5C2D0A;
+    padding: 0.75em 1em;
+    text-transform: none;
+    white-space: nowrap;
     overflow-x: auto;
-    overflow-y: auto;
-    max-height: 45vh;
-    margin-bottom: 1.5em;
-    & pre {
-        font-family: var(--font-courier-new);
-        font-size: 0.75rem;
-        line-height: 1.6;
-        color: #5C2D0A;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        margin: 0;
-        font-weight: normal;
-        text-transform: none;
-    }
     @media (max-width: 768px) {
-        max-height: 40vh;
+        font-size: 0.75rem;
     }
 }
 
-.copyBtn {
-    display: block;
-    width: 100%;
+.curlCopyBtn {
     font-family: var(--font-courier-new);
-    font-size: 1rem;
+    font-size: 0.8125rem;
     font-weight: bold;
-    color: #5C2D0A;
-    background: #F2DCC4;
-    border: 1px solid #D4A878;
+    color: #8B4513;
+    background: #E8C9A0;
+    border: none;
+    border-left: 1px solid #D4A878;
     cursor: pointer;
-    padding: 0.75em 1em;
-    text-align: center;
+    padding: 0.75em 1.25em;
     pointer-events: all;
     transition: all 0.2s;
+    white-space: nowrap;
+    text-transform: none;
     &:hover {
-        background: #E8C9A0;
-        color: #D4700A;
+        background: #D4A878;
+        color: #5C2D0A;
     }
 }
 
