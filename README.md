@@ -8,7 +8,7 @@
 agenthands/
 ├── contracts/       # Solidity smart contracts (Foundry)
 ├── frontend/        # Main app - task marketplace (Next.js)
-├── landing-page/    # Marketing landing page
+├── landing-page/    # Marketing landing page (Next.js)
 ├── backend/         # API server (if needed)
 ├── .env             # Environment variables (gitignored)
 └── .gitignore
