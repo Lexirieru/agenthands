@@ -50,12 +50,6 @@ export default function Navbar() {
         {isConnected && (
           <>
             <Link
-              href="/tasks/new"
-              className="text-gray-400 hover:text-white transition text-sm"
-            >
-              Post Task
-            </Link>
-            <Link
               href="/dashboard"
               className="text-gray-400 hover:text-white transition text-sm"
             >
