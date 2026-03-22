@@ -6,6 +6,7 @@ import { useAppKitAccount } from "@reown/appkit/react";
 import { AGENTHANDS_ADDRESS } from "@/config";
 import AgentHandsABI from "@/abi/AgentHands.json";
 import Navbar from "@/components/Navbar";
+import ProofUpload from "@/components/ProofUpload";
 import type { TaskData } from "@/types/task";
 
 const STATUS_LABELS: Record<number, { label: string; color: string; emoji: string }> = {
@@ -167,6 +168,10 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
             {status === 1 && isWorker && (
               <div className="space-y-3">
+                <ProofUpload onCIDReady={(cid) => setProofCID(cid)} />
+                <div className="text-xs text-gray-500">
+                  Or paste CID manually:
+                </div>
                 <input
                   type="text"
                   value={proofCID}
@@ -179,7 +184,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                   disabled={submitting || !proofCID}
                   className="w-full py-3 bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-700 text-white font-semibold rounded-lg transition"
                 >
-                  {submitting ? "Submitting..." : "📸 Submit Proof"}
+                  {submitting ? "Submitting..." : "📸 Submit Proof On-Chain"}
                 </button>
               </div>
             )}
