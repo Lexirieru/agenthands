@@ -1,7 +1,10 @@
 'use client';
 
 import { use, useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { createPublicClient, http } from 'viem';
+import { baseSepolia, celoAlfajores } from 'viem/chains';
 import { useAppKitAccount } from '@reown/appkit/react';
 import { ArrowLeft, Clock, DollarSign, MapPin, User } from 'lucide-react';
 import Link from 'next/link';
@@ -16,6 +19,12 @@ import { getStatusDisplay, truncateAddress } from '@/lib/utils/format';
 import { toast } from '@/components/Toast';
 import type { TaskData } from '@/types/task';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CHAIN_CLIENTS: Record<number, any> = {
+  84532: createPublicClient({ chain: baseSepolia, transport: http('https://sepolia.base.org') }),
+  11142220: createPublicClient({ chain: { ...celoAlfajores, id: 11142220 as number, name: 'Celo Sepolia' }, transport: http('https://forno.celo-sepolia.celo-testnet.org') }),
+};
+
 const STATUS_COLORS: Record<number, string> = {
   0: 'bg-green-100 text-green-700',
   1: 'bg-blue-100 text-blue-700',
@@ -29,6 +38,9 @@ const STATUS_COLORS: Record<number, string> = {
 export default function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const taskId = BigInt(id);
+  const searchParams = useSearchParams();
+  const chainParam = searchParams.get('chain');
+  const chainId = chainParam ? Number(chainParam) : 84532;
   const { address } = useAppKitAccount();
   const [proofCID, setProofCID] = useState('');
   const [rating, setRating] = useState(5);
@@ -39,12 +51,40 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   );
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { data: task, isLoading, refetch } = useReadContract({
+  // Direct viem fetch for the correct chain
+  const [directTask, setDirectTask] = useState<TaskData | null>(null);
+  const [directLoading, setDirectLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTask() {
+      setDirectLoading(true);
+      try {
+        const client = CHAIN_CLIENTS[chainId] || CHAIN_CLIENTS[84532];
+        const result = await client.readContract({
+          address: AGENTHANDS_ADDRESS,
+          abi: AgentHandsABI,
+          functionName: 'getTask',
+          args: [taskId],
+        });
+        setDirectTask(result as unknown as TaskData);
+      } catch {
+        setDirectTask(null);
+      }
+      setDirectLoading(false);
+    }
+    fetchTask();
+  }, [chainId, taskId]);
+
+  // Also keep wagmi hook for write operations (uses connected chain)
+  const { data: task, refetch } = useReadContract({
     address: AGENTHANDS_ADDRESS,
     abi: AgentHandsABI as typeof AgentHandsABI,
     functionName: 'getTask',
     args: [taskId],
   });
+
+  const isLoading = directLoading;
+  const displayTask = directTask || (task as unknown as TaskData);
 
   const { writeContract: acceptWrite, data: acceptTx, isPending: accepting } = useWriteContract();
   const { writeContract: submitWrite, data: submitTx, isPending: submitting } = useWriteContract();
@@ -65,7 +105,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
   // GSAP entrance animation
   useEffect(() => {
-    if (!isLoading && task && containerRef.current) {
+    if (!isLoading && displayTask && containerRef.current) {
       const ctx = gsap.context(() => {
         gsap.from('.detail-section', {
           opacity: 0,
@@ -77,7 +117,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
       }, containerRef);
       return () => ctx.revert();
     }
-  }, [isLoading, task]);
+  }, [isLoading, displayTask]);
 
   if (isLoading) {
     return (
@@ -91,7 +131,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
     );
   }
 
-  if (!task) {
+  if (!displayTask) {
     return (
       <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12 text-center text-[#A07858]">
         <p className="text-lg">Task not found</p>
@@ -100,7 +140,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
     );
   }
 
-  const t = task as unknown as TaskData;
+  const t = displayTask;
   const status = Number(t.status);
   const statusInfo = getStatusDisplay(status);
   const statusColor = STATUS_COLORS[status] || STATUS_COLORS[0];
@@ -202,7 +242,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* Chain badge */}
         <div className="flex items-center gap-2">
-          <ChainBadge chainId={84532} size="md" />
+          <ChainBadge chainId={chainId} size="md" />
         </div>
       </div>
 
