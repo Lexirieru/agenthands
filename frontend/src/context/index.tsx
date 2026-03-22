@@ -22,8 +22,8 @@ const _modal = createAppKit({
   },
   themeMode: "light" as const,
   themeVariables: {
-    "--w3m-accent": "#FF8C42",
-    "--w3m-color-mix": "#FFFAF5",
+    "--w3m-accent": "#D4700A",
+    "--w3m-color-mix": "#ffffff",
     "--w3m-color-mix-strength": 20,
     "--w3m-border-radius-master": "2px",
   },

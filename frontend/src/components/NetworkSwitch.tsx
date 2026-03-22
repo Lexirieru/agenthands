@@ -29,18 +29,18 @@ export default function NetworkSwitch() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#FFFAF5] border border-[#F5DEC8] hover:border-[#FF8C42] rounded-full transition text-sm"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--card-solid)] hover:bg-[var(--card)] border border-[var(--border)] hover:border-[#D4700A] rounded-full transition text-sm"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={currentChain.logo} alt="" className="h-4 w-4 rounded-full" />
-        <span className="text-[#1A0F08] text-xs font-label">{currentChain.name}</span>
-        <svg className={`w-3 h-3 text-[#A07858] transition ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <span className="text-[#5C2D0A] text-xs font-label">{currentChain.name}</span>
+        <svg className={`w-3 h-3 text-[#8B4513] transition ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-48 bg-white border border-[#F5DEC8] rounded-xl shadow-lg z-50 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-48 bg-[var(--card-solid)] border border-[var(--border)] rounded-xl shadow-lg z-50 overflow-hidden">
           {NETWORKS.map(({ chain, id }) => {
             const info = getChainInfo(id);
             const isActive = chainId === id;
@@ -53,14 +53,14 @@ export default function NetworkSwitch() {
                 }}
                 className={`w-full flex items-center gap-2 px-4 py-3 text-sm transition ${
                   isActive
-                    ? "bg-[#FFF2E8] text-[#D4700A]"
-                    : "text-[#6B5040] hover:bg-[#FFFAF5] hover:text-[#1A0F08]"
+                    ? "bg-[var(--card)] text-[#D4700A]"
+                    : "text-[#5C2D0A] hover:bg-[var(--card)] hover:text-[#5C2D0A]"
                 }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={info.logo} alt="" className="h-5 w-5 rounded-full" />
                 <span>{info.name}</span>
-                {isActive && <span className="ml-auto text-[#D4700A]">✓</span>}
+                {isActive && <svg className="ml-auto w-4 h-4 text-[#D4700A]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}
               </button>
             );
           })}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useReadContract } from 'wagmi';
+import { HelpCircle, ShieldCheck, Star } from 'lucide-react';
 import { IDENTITY_REGISTRY, REPUTATION_REGISTRY, ERC8004_CHAIN_ID } from '@/config/erc8004';
 import IdentityRegistryABI from '@/abi/IdentityRegistry.json';
 import ReputationRegistryABI from '@/abi/ReputationRegistry.json';
@@ -50,20 +51,20 @@ export default function AgentBadge({ agentAddress }: AgentBadgeProps) {
 
   if (!isVerified) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[#FFF2E8] text-[#A07858] text-xs border border-[#F5DEC8]">
-        ❓ Unverified Agent
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--card)] text-[#8B4513] text-xs border border-[var(--border)]">
+        <HelpCircle size={12} /> Unverified Agent
       </span>
     );
   }
 
   return (
     <div className="inline-flex items-center gap-2">
-      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs font-medium border border-green-200">
-        🆔 ERC-8004 Verified
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-900/10 text-green-800 text-xs font-medium border border-green-400/30">
+        <ShieldCheck size={12} /> ERC-8004 Verified
       </span>
       {reviewCount > 0 && (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[#FFF2E8] text-[#D4700A] text-xs border border-[#F5DEC8]">
-          ⭐ {reviewCount} review{reviewCount > 1 ? 's' : ''}
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--card)] text-[#D4700A] text-xs border border-[var(--border)]">
+          <Star size={12} /> {reviewCount} review{reviewCount > 1 ? 's' : ''}
         </span>
       )}
       {agentURI ? (
@@ -71,7 +72,7 @@ export default function AgentBadge({ agentAddress }: AgentBadgeProps) {
           href={String(agentURI)}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-[#A07858] hover:text-[#D4700A]"
+          className="text-xs text-[#8B4513] hover:text-[#D4700A]"
         >
           [metadata]
         </a>

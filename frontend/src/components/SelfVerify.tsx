@@ -20,11 +20,11 @@ export default function SelfVerify({ onVerified }: SelfVerifyProps) {
 
   if (verified) {
     return (
-      <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
+      <div className="flex items-center gap-2 p-3 bg-green-900/10 rounded-lg border border-green-400/30">
         <CheckCircle size={18} className="text-green-600" />
         <div>
           <div className="text-sm font-medium text-green-700">Self Verified Human</div>
-          <div className="text-xs text-[#A07858]">Identity confirmed via Self Protocol</div>
+          <div className="text-xs text-[#8B4513]">Identity confirmed via Self Protocol</div>
         </div>
       </div>
     );
@@ -56,19 +56,19 @@ export default function SelfVerify({ onVerified }: SelfVerifyProps) {
   };
 
   return (
-    <div className="p-4 bg-white rounded-xl border border-[#F5DEC8]">
-      <h3 className="text-[#1A0F08] font-semibold mb-2 flex items-center gap-2">
+    <div className="p-4 bg-[var(--card-solid)] rounded-xl border border-[var(--border)]">
+      <h3 className="text-[#5C2D0A] font-semibold mb-2 flex items-center gap-2">
         <Shield size={18} className="text-[#D4700A]" />
         Verify Your Identity
       </h3>
-      <p className="text-[#6B5040] text-sm mb-4">
+      <p className="text-[#5C2D0A] text-sm mb-4">
         Verify you&apos;re a real human via Self Protocol. Your personal data stays private — only a zero-knowledge proof is shared.
       </p>
 
       <button
         onClick={handleVerify}
         disabled={verifying}
-        className="w-full py-3 bg-[#1A0F08] hover:bg-[#2a1a0c] disabled:bg-[#A07858] text-white font-semibold rounded-lg transition flex items-center justify-center gap-2 text-sm"
+        className="w-full py-3 bg-[#5C2D0A] hover:bg-[#6B3A1F] disabled:bg-[#8B4513] text-white font-semibold rounded-lg transition flex items-center justify-center gap-2 text-sm"
       >
         {verifying ? (
           <>
@@ -83,7 +83,7 @@ export default function SelfVerify({ onVerified }: SelfVerifyProps) {
         )}
       </button>
 
-      <p className="text-xs text-[#A07858] mt-3 text-center">
+      <p className="text-xs text-[#8B4513] mt-3 text-center">
         Powered by{' '}
         <a
           href="https://self.xyz"

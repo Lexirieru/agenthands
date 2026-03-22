@@ -4,17 +4,17 @@ const CHAIN_INFO: Record<number, { name: string; logo: string; color: string }> 
   84532: {
     name: "Base",
     logo: "https://avatars.githubusercontent.com/u/108554348?s=200&v=4",
-    color: "border-blue-300 bg-blue-50 text-blue-700",
+    color: "border-blue-400/40 bg-blue-900/10 text-blue-900",
   },
   11142220: {
     name: "Celo",
     logo: "https://avatars.githubusercontent.com/u/37552875?s=200&v=4",
-    color: "border-yellow-300 bg-yellow-50 text-yellow-700",
+    color: "border-yellow-500/40 bg-yellow-900/10 text-yellow-900",
   },
 };
 
 export function getChainInfo(chainId: number) {
-  return CHAIN_INFO[chainId] || { name: `Chain ${chainId}`, logo: "", color: "border-[#F5DEC8] bg-[#FFF2E8] text-[#A07858]" };
+  return CHAIN_INFO[chainId] || { name: `Chain ${chainId}`, logo: "", color: "border-[var(--border)] bg-[var(--card)] text-[#8B4513]" };
 }
 
 export default function ChainBadge({ chainId, size = "sm" }: { chainId: number; size?: "sm" | "md" }) {

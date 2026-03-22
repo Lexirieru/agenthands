@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useReadContracts } from 'wagmi';
 import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
-import { Briefcase, CheckCircle, Clock, Zap } from 'lucide-react';
+import { Briefcase, CheckCircle, Clock, Zap, Bot, HardHat } from 'lucide-react';
 import gsap from 'gsap';
 import { useTaskCount, useUSDCBalance } from '@/hooks/useAgentHands';
 import { AGENTHANDS_ADDRESS } from '@/config';
@@ -101,8 +101,8 @@ export default function DashboardPage() {
   if (!isConnected) {
     return (
       <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-16 text-center">
-        <h1 className="text-2xl sm:text-3xl tracking-tight text-[#1A0F08] mb-4 font-bold">Dashboard</h1>
-        <p className="text-[#6B5040] mb-6">Connect your wallet to view your dashboard.</p>
+        <h1 className="text-2xl sm:text-3xl tracking-tight text-[#5C2D0A] mb-4 font-bold">Dashboard</h1>
+        <p className="text-[#5C2D0A] mb-6">Connect your wallet to view your dashboard.</p>
         <appkit-button />
       </div>
     );
@@ -112,77 +112,77 @@ export default function DashboardPage() {
     <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl sm:text-4xl tracking-tight text-[#1A0F08] font-bold">Dashboard</h1>
-          <p className="text-[#A07858] mt-1 font-mono text-sm">
+          <h1 className="text-3xl sm:text-4xl tracking-tight text-[#5C2D0A] font-bold">Dashboard</h1>
+          <p className="text-[#8B4513] mt-1 font-mono text-sm">
             {address?.slice(0, 8)}...{address?.slice(-6)}
           </p>
         </div>
         <div className="text-right">
-          <div className="text-sm text-[#A07858] font-label">USDC Balance</div>
+          <div className="text-sm text-[#8B4513] font-label">USDC Balance</div>
           <div className="text-2xl font-bold text-[#D4700A]">${balanceFormatted}</div>
-          <div className="text-xs text-[#A07858]">{caipNetwork?.name}</div>
+          <div className="text-xs text-[#8B4513]">{caipNetwork?.name}</div>
         </div>
       </div>
 
       {/* Stats */}
       <div ref={statsRef} className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        <div className="stat-card bg-white border border-[#F5DEC8] rounded-xl p-5">
+        <div className="stat-card bg-[var(--card-solid)] border border-[var(--border)] rounded-xl p-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#FF8C42]/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-[#D4700A]/20 flex items-center justify-center">
               <Briefcase size={20} className="text-[#D4700A]" />
             </div>
             <div>
-              <p className="text-xs text-[#A07858] font-label">Tasks Posted</p>
-              <p className="text-lg font-bold text-[#1A0F08]">{myAgentTasks.length}</p>
+              <p className="text-xs text-[#8B4513] font-label">Tasks Posted</p>
+              <p className="text-lg font-bold text-[#5C2D0A]">{myAgentTasks.length}</p>
             </div>
           </div>
         </div>
-        <div className="stat-card bg-white border border-[#F5DEC8] rounded-xl p-5">
+        <div className="stat-card bg-[var(--card-solid)] border border-[var(--border)] rounded-xl p-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-blue-900/15 flex items-center justify-center">
               <Clock size={20} className="text-blue-600" />
             </div>
             <div>
-              <p className="text-xs text-[#A07858] font-label">Tasks Accepted</p>
-              <p className="text-lg font-bold text-[#1A0F08]">{myWorkerTasks.length}</p>
+              <p className="text-xs text-[#8B4513] font-label">Tasks Accepted</p>
+              <p className="text-lg font-bold text-[#5C2D0A]">{myWorkerTasks.length}</p>
             </div>
           </div>
         </div>
-        <div className="stat-card bg-white border border-[#F5DEC8] rounded-xl p-5">
+        <div className="stat-card bg-[var(--card-solid)] border border-[var(--border)] rounded-xl p-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-green-900/15 flex items-center justify-center">
               <CheckCircle size={20} className="text-green-600" />
             </div>
             <div>
-              <p className="text-xs text-[#A07858] font-label">Completed</p>
-              <p className="text-lg font-bold text-[#1A0F08]">{completedCount}</p>
+              <p className="text-xs text-[#8B4513] font-label">Completed</p>
+              <p className="text-lg font-bold text-[#5C2D0A]">{completedCount}</p>
             </div>
           </div>
         </div>
-        <div className="stat-card bg-white border border-[#F5DEC8] rounded-xl p-5">
+        <div className="stat-card bg-[var(--card-solid)] border border-[var(--border)] rounded-xl p-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#FFF2E8] flex items-center justify-center">
-              <Zap size={20} className="text-[#FF8C42]" />
+            <div className="w-10 h-10 rounded-lg bg-[var(--card)] flex items-center justify-center">
+              <Zap size={20} className="text-[#D4700A]" />
             </div>
             <div>
-              <p className="text-xs text-[#A07858] font-label">Active</p>
-              <p className="text-lg font-bold text-[#1A0F08]">{activeCount}</p>
+              <p className="text-xs text-[#8B4513] font-label">Active</p>
+              <p className="text-lg font-bold text-[#5C2D0A]">{activeCount}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-[#FFF2E8] p-1 rounded-lg w-full sm:w-auto sm:inline-flex">
+      <div className="flex gap-1 mb-6 bg-[var(--card)] p-1 rounded-lg w-full sm:w-auto sm:inline-flex">
         {(['agent', 'worker'] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={`px-4 py-2 rounded-md text-sm font-medium font-label transition-colors ${
-              tab === t ? 'bg-[#1A0F08] text-white' : 'text-[#A07858] hover:text-[#1A0F08]'
+              tab === t ? 'bg-[#5C2D0A] text-white' : 'text-[#8B4513] hover:text-[#5C2D0A]'
             }`}
           >
-            {t === 'agent' ? `🤖 As Agent (${myAgentTasks.length})` : `👷 As Worker (${myWorkerTasks.length})`}
+            {t === 'agent' ? <><Bot size={14} className="inline mr-1" />As Agent ({myAgentTasks.length})</> : <><HardHat size={14} className="inline mr-1" />As Worker ({myWorkerTasks.length})</>}
           </button>
         ))}
       </div>
@@ -191,13 +191,13 @@ export default function DashboardPage() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-[#FFF2E8] border border-[#F5DEC8] rounded-xl p-5 animate-pulse h-40" />
+            <div key={i} className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 animate-pulse h-40" />
           ))}
         </div>
       ) : activeTasks.length === 0 ? (
-        <div className="text-center py-16 text-[#A07858]">
-          <div className="text-4xl mb-3">{tab === 'agent' ? '🤖' : '👷'}</div>
-          <p className="text-[#6B5040]">
+        <div className="text-center py-16 text-[#8B4513]">
+          <div className="mb-3 flex justify-center">{tab === 'agent' ? <Bot size={40} className="text-[#D4700A]" /> : <HardHat size={40} className="text-[#D4700A]" />}</div>
+          <p className="text-[#5C2D0A]">
             {tab === 'agent'
               ? "You haven't posted any tasks yet"
               : "You haven't accepted any tasks yet"}
@@ -205,7 +205,7 @@ export default function DashboardPage() {
           {tab === 'agent' && (
             <Link
               href="/tasks/new"
-              className="inline-block mt-4 px-6 py-2.5 bg-[#1A0F08] hover:bg-[#2a1a0c] text-white font-semibold rounded-lg transition text-sm"
+              className="inline-block mt-4 px-6 py-2.5 bg-[#5C2D0A] hover:bg-[#6B3A1F] text-white font-semibold rounded-lg transition text-sm"
             >
               Post Your First Task
             </Link>
@@ -213,7 +213,7 @@ export default function DashboardPage() {
           {tab === 'worker' && (
             <Link
               href="/tasks"
-              className="inline-block mt-4 px-6 py-2.5 bg-[#1A0F08] hover:bg-[#2a1a0c] text-white font-semibold rounded-lg transition text-sm"
+              className="inline-block mt-4 px-6 py-2.5 bg-[#5C2D0A] hover:bg-[#6B3A1F] text-white font-semibold rounded-lg transition text-sm"
             >
               Browse Available Tasks
             </Link>

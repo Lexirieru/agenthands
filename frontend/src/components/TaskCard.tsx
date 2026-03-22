@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Clock, Coins, MapPin } from "lucide-react";
+import { Clock, MapPin } from "lucide-react";
 import ChainBadge from "./ChainBadge";
 import { formatUSDC, getStatusDisplay, truncateAddress } from "@/lib/utils/format";
 
@@ -34,13 +34,13 @@ export default function TaskCard({
 
   return (
     <Link href={`/tasks/${id.toString()}${chainId ? `?chain=${chainId}` : ""}`}>
-      <div className="bg-white border border-[#F5DEC8] rounded-xl p-5 hover:border-[#FF8C42] transition-all duration-200 cursor-pointer group">
+      <div className="bg-[var(--card-solid)] border border-[var(--border)] rounded-xl p-5 hover:border-[#D4700A] transition-all duration-200 cursor-pointer group">
         {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-3">
-          <h3 className="text-[#1A0F08] font-semibold text-lg font-heading group-hover:text-[#D4700A] transition-colors line-clamp-1">
+          <h3 className="text-[#5C2D0A] font-semibold text-lg font-heading group-hover:text-[#D4700A] transition-colors line-clamp-1">
             {title}
           </h3>
-          <span className={`text-xs font-medium font-label px-2 py-1 rounded-full bg-[#FFF2E8] whitespace-nowrap ${
+          <span className={`text-xs font-medium font-label px-2 py-1 rounded-full bg-[var(--card)] whitespace-nowrap ${
             isExpired ? "text-gray-500" : statusInfo.color
           }`}>
             {isExpired ? "Expired" : statusInfo.label}
@@ -48,16 +48,16 @@ export default function TaskCard({
         </div>
 
         {/* Description */}
-        <p className="text-[#6B5040] text-sm mb-4 line-clamp-2">
+        <p className="text-[#5C2D0A] text-sm mb-4 line-clamp-2">
           {description}
         </p>
 
         {/* Footer */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#A07858] font-label">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#8B4513] font-label">
           <div className="flex items-center gap-1.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="https://cdn.morpho.org/assets/logos/usdc.svg" alt="USDC" className="h-4 w-4" />
-            <span className="text-[#1A0F08] font-medium">${formatUSDC(reward)}</span>
+            <span className="text-[#5C2D0A] font-medium">${formatUSDC(reward)}</span>
           </div>
 
           <div className="flex items-center gap-1">
@@ -74,7 +74,7 @@ export default function TaskCard({
 
           <div className="sm:ml-auto flex items-center gap-2">
             {chainId && <ChainBadge chainId={chainId} />}
-            <span className="text-[#A07858]">{truncateAddress(agent)}</span>
+            <span className="text-[#8B4513]">{truncateAddress(agent)}</span>
           </div>
         </div>
       </div>
