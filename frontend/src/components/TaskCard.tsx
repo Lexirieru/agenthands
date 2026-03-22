@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import ChainBadge from "./ChainBadge";
 
 const STATUS_LABELS: Record<number, { label: string; color: string }> = {
   0: { label: "Open", color: "bg-emerald-500/20 text-emerald-400" },
@@ -21,6 +22,7 @@ interface TaskCardProps {
   deadline: bigint;
   status: number;
   agent: string;
+  chainId?: number;
 }
 
 export default function TaskCard({
@@ -32,6 +34,7 @@ export default function TaskCard({
   deadline,
   status,
   agent,
+  chainId,
 }: TaskCardProps) {
   const statusInfo = STATUS_LABELS[status] || STATUS_LABELS[0];
   const rewardFormatted = (Number(reward) / 1e6).toFixed(2);
@@ -39,7 +42,7 @@ export default function TaskCard({
   const isExpired = deadlineDate < new Date() && status === 0;
 
   return (
-    <Link href={`/tasks/${id.toString()}`}>
+    <Link href={`/tasks/${id.toString()}${chainId ? `?chain=${chainId}` : ""}`}>
       <div className="p-6 bg-gray-800/50 rounded-xl border border-gray-700/50 hover:border-gray-600 transition cursor-pointer group">
         <div className="flex items-start justify-between mb-3">
           <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition line-clamp-1">
@@ -70,9 +73,12 @@ export default function TaskCard({
         </div>
 
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700/50">
-          <span className="text-xs text-gray-500">
-            by {agent.slice(0, 6)}...{agent.slice(-4)}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">
+              by {agent.slice(0, 6)}...{agent.slice(-4)}
+            </span>
+            {chainId && <ChainBadge chainId={chainId} />}
+          </div>
           <span className="text-lg font-bold text-emerald-400">
             ${rewardFormatted} <span className="text-xs text-gray-500">USDC</span>
           </span>

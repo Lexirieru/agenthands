@@ -62,6 +62,7 @@ export default function Navbar() {
             )}
           </>
         )}
+        <appkit-network-button />
         <appkit-button />
       </div>
     </nav>
