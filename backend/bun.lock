@@ -5,6 +5,7 @@
     "": {
       "name": "backend",
       "dependencies": {
+        "@selfxyz/agent-sdk": "^0.2.1",
         "@selfxyz/core": "^1.2.0-beta.1",
         "@x402/core": "^2.7.0",
         "@x402/evm": "^2.7.0",
@@ -102,6 +103,8 @@
 
     "@noble/curves": ["@noble/curves@1.9.1", "", { "dependencies": { "@noble/hashes": "1.8.0" } }, "sha512-k11yZxZg+t+gWvBbIswW0yoJlu8cHOC7dhunwOzoWH/mXGBiYyR4YY6hAEK/3EUs4UpB8la1RfdRpeGsFHkWsA=="],
 
+    "@noble/ed25519": ["@noble/ed25519@3.0.1", "", {}, "sha512-t/T8LuK0ym8ALQudCCQCtrRdMSxBnRgHXw+wg+YsSlE6d+on7sX3flqlSJ2mOs9xEuchM36kj9SuX5MG7pXQMA=="],
+
     "@noble/hashes": ["@noble/hashes@1.8.0", "", {}, "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A=="],
 
     "@openpassport/zk-kit-imt": ["@openpassport/zk-kit-imt@0.0.5", "", { "dependencies": { "@openpassport/zk-kit-utils": "0.0.1" } }, "sha512-edri5tUh7SFSOxZCzNGz+2ZqAG6mqOT4EMOw4gh66sBiWU6E6twKrOztx7h2J4HmZjz3hA/LDyL/F4QTUAB2Qg=="],
@@ -143,6 +146,8 @@
     "@scure/bip32": ["@scure/bip32@1.7.0", "", { "dependencies": { "@noble/curves": "~1.9.0", "@noble/hashes": "~1.8.0", "@scure/base": "~1.2.5" } }, "sha512-E4FFX/N3f4B80AKWp5dP6ow+flD1LQZo/w8UnLGYZO674jS6YnYeepycOOksv+vLPSpgN35wgKgy+ybfTb2SMw=="],
 
     "@scure/bip39": ["@scure/bip39@1.6.0", "", { "dependencies": { "@noble/hashes": "~1.8.0", "@scure/base": "~1.2.5" } }, "sha512-+lF0BbLiJNwVlev4eKelw1WWLaiKXw7sSl8T6FvBlWkdX+94aGJ4o8XjUdlyhTCjd8c+B3KT3JfS8P0bLRNU6A=="],
+
+    "@selfxyz/agent-sdk": ["@selfxyz/agent-sdk@0.2.1", "", { "dependencies": { "@noble/ed25519": "^3.0.0", "ethers": "^6.16.0" }, "bin": { "self-agent": "dist/cli.js", "self-agent-cli": "dist/cli.js" } }, "sha512-ymH1IQPrStzGas5qt2pxILpaPHhcLL6FqT+tHA4Hlq7W88+cTpLTueErZGPfEJwLWbE2LkBkdKnqu7BTmlu7pQ=="],
 
     "@selfxyz/common": ["@selfxyz/common@0.0.9", "", { "dependencies": { "@anon-aadhaar/core": "npm:@selfxyz/anon-aadhaar-core@^0.0.1", "@openpassport/zk-kit-imt": "^0.0.5", "@openpassport/zk-kit-lean-imt": "^0.0.6", "@openpassport/zk-kit-smt": "^0.0.1", "@peculiar/x509": "^1.12.3", "@stablelib/cbor": "^2.0.1", "asn1.js": "^5.4.1", "asn1js": "^3.0.5", "axios": "^1.7.2", "buffer": "^6.0.3", "country-emoji": "^1.5.6", "country-iso-3-to-2": "^1.1.1", "elliptic": "^6.5.5", "ethers": "^6.14.4", "fs": "^0.0.1-security", "hash.js": "^1.1.7", "i18n-iso-countries": "^7.13.0", "js-sha1": "^0.7.0", "js-sha256": "^0.11.0", "js-sha512": "^0.9.0", "json-to-ts": "^2.1.0", "jsrsasign": "^11.1.0", "node-forge": "github:remicolin/forge#17a11a632dd0e50343b3b8393245a2696f78afbb", "path": "^0.12.7", "pkijs": "^3.2.4", "poseidon-lite": "^0.2.0", "snarkjs": "^0.7.5", "typescript-parser": "^2.6.1", "uuid": "^11.1.0" } }, "sha512-DXoDvRSyK3/MdghR2mietlGZXzdpSLU9tg0NUOauO2Ha3J08fXekGBk/zbmlfgSMJ7rxs+yAt7UFJJ84tLrZwA=="],
 

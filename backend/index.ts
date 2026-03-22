@@ -222,25 +222,93 @@ app.post("/api/erc8004/register", async (c) => {
   return c.json({ success: true, txHash: tx, blockNumber: Number(receipt.blockNumber) });
 });
 
-// ─── Self Protocol: Verify Human ─────────────────────────
-const verifiedUsers = new Map<string, { verified: boolean; timestamp: number }>();
+// ─── Self Protocol: Agent Identity + Verification ────────
+import { SelfAgent, SelfAgentVerifier } from "@selfxyz/agent-sdk";
 
+// Initialize Self Agent (our agent's identity)
+const selfAgent = new SelfAgent({ privateKey: PRIVATE_KEY });
+
+// Verifier for incoming agent requests (require 18+, OFAC check)
+const selfVerifier = SelfAgentVerifier.fromConfig({
+  network: "testnet",
+  requireAge: 18,
+  requireOFAC: true,
+});
+
+// Agent registration status
+app.get("/api/self/agent/status", async (c) => {
+  try {
+    const isRegistered = await selfAgent.isRegistered();
+    const info = isRegistered ? await selfAgent.getInfo() : null;
+    return c.json({
+      address: selfAgent.address,
+      registered: isRegistered,
+      info,
+    });
+  } catch (error) {
+    return c.json({ address: selfAgent.address, registered: false, error: String(error) });
+  }
+});
+
+// Start agent registration (returns QR for human to scan)
+app.post("/api/self/agent/register", async (c) => {
+  try {
+    const res = await fetch("https://app.ai.self.xyz/api/agent/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: "linked",
+        network: "testnet",
+        humanAddress: account.address,
+        disclosures: { minimumAge: 18, ofac: true },
+      }),
+    });
+    const data = await res.json();
+    return c.json(data);
+  } catch (error) {
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Poll registration status
+app.get("/api/self/agent/register/status", async (c) => {
+  const token = c.req.query("token");
+  if (!token) return c.json({ error: "Missing token" }, 400);
+  try {
+    const res = await fetch(`https://app.ai.self.xyz/api/agent/register/status?token=${token}`);
+    const data = await res.json();
+    return c.json(data);
+  } catch (error) {
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Verify incoming agent request (middleware-style endpoint)
 app.post("/api/self/verify", async (c) => {
   try {
     const body = await c.req.json();
-    const { proof, publicSignals, userId } = body;
-    if (!proof || !publicSignals) return c.json({ error: "Missing proof or publicSignals" }, 400);
-    verifiedUsers.set(userId, { verified: true, timestamp: Date.now() });
-    return c.json({ success: true, userId, verified: true, message: "Identity verified via Self Protocol" });
+    const { signature, timestamp, method, url, requestBody } = body;
+
+    const result = await selfVerifier.verify({ signature, timestamp, method, url, body: requestBody });
+    return c.json({
+      valid: result.valid,
+      agentAddress: result.agentAddress,
+      agentId: result.agentId?.toString(),
+    });
   } catch (error) {
     return c.json({ error: "Verification failed", details: String(error) }, 500);
   }
 });
 
-app.get("/api/self/status/:userId", async (c) => {
-  const userId = c.req.param("userId");
-  const status = verifiedUsers.get(userId);
-  return c.json({ userId, verified: status?.verified || false, timestamp: status?.timestamp || null });
+// Agent credentials
+app.get("/api/self/agent/credentials", async (c) => {
+  try {
+    const creds = await selfAgent.getCredentials();
+    const strength = await selfAgent.getVerificationStrength();
+    return c.json({ credentials: creds, verificationStrength: strength });
+  } catch (error) {
+    return c.json({ error: String(error) }, 500);
+  }
 });
 
 // ─── IPFS: Upload ────────────────────────────────────────

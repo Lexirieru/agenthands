@@ -10,6 +10,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@selfxyz/agent-sdk": "^0.2.1",
     "@selfxyz/core": "^1.2.0-beta.1",
     "@x402/core": "^2.7.0",
     "@x402/evm": "^2.7.0",
