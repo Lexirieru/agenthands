@@ -66,10 +66,12 @@ export default function SelfVerify({ onVerified }: SelfVerifyProps) {
                 appName: 'AgentHands',
                 scope: 'agenthands-worker-verify',
                 endpoint: `${process.env.NEXT_PUBLIC_API_URL || 'https://agenthands-production.up.railway.app'}/api/self/verify`,
+                endpointType: 'staging_https',
+                version: 2,
                 logoBase64: '',
                 userId: address || '0x0000000000000000000000000000000000000000',
                 userIdType: 'hex',
-                devMode: true,
+                devMode: false,
                 disclosures: {
                   name: true,
                   nationality: true,

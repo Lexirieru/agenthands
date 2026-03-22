@@ -300,8 +300,8 @@ const selfConfigStore = new DefaultConfigStore({
 
 const selfBackendVerifier = new SelfBackendVerifier(
   "agenthands-worker-verify",   // scope — must match frontend
-  "https://forno.celo.org",     // Celo RPC (Self contracts live on Celo)
-  true,                          // mockPassport — true for testnet
+  "https://agenthands-production.up.railway.app/api/self/verify", // endpoint — must match frontend (used for scope hash)
+  true,                          // mockPassport — true for testnet (auto-selects Celo Sepolia RPC)
   AllIds,                        // allow all attestation types
   selfConfigStore,               // verification config
   "hex",                         // userIdType — wallet addresses
