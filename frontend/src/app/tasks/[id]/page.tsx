@@ -328,14 +328,18 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             <div className="bg-white border border-[#F5DEC8] rounded-xl p-6 space-y-4">
               <h2 className="text-lg font-semibold text-[#1A0F08]">Submit Proof</h2>
               <ProofUpload onCIDReady={(cid) => setProofCID(cid)} />
-              <div className="text-xs text-[#A07858] font-label">Or paste CID manually:</div>
-              <input
-                type="text"
-                value={proofCID}
-                onChange={(e) => setProofCID(e.target.value)}
-                placeholder="IPFS CID (e.g. QmXyz...)"
-                className="w-full px-4 py-3 bg-[#FFFAF5] border border-[#F5DEC8] rounded-lg text-[#1A0F08] placeholder-[#A07858] focus:outline-none focus:border-[#FF8C42] text-sm"
-              />
+              {!proofCID && (
+                <>
+                  <div className="text-xs text-[#A07858] font-label">Or paste CID manually:</div>
+                  <input
+                    type="text"
+                    value={proofCID}
+                    onChange={(e) => setProofCID(e.target.value)}
+                    placeholder="IPFS CID (e.g. QmXyz...)"
+                    className="w-full px-4 py-3 bg-[#FFFAF5] border border-[#F5DEC8] rounded-lg text-[#1A0F08] placeholder-[#A07858] focus:outline-none focus:border-[#FF8C42] text-sm"
+                  />
+                </>
+              )}
               <button
                 onClick={() => {
                   submitWrite({ ...contractCall, functionName: 'submitProof', args: [taskId, proofCID] });
