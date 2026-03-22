@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Test, console} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {AgentHands} from "../src/AgentHands.sol";
 import {MockERC20} from "../src/mocks/MockERC20.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract AgentHandsTest is Test {
     AgentHands public hands;
@@ -20,7 +21,16 @@ contract AgentHandsTest is Test {
 
     function setUp() public {
         usdc = new MockERC20("USD Coin", "USDC", 6);
-        hands = new AgentHands(feeRecipient, 250); // 2.5% fee
+
+        // Deploy implementation + proxy (UUPS)
+        AgentHands impl = new AgentHands();
+        bytes memory initData = abi.encodeWithSelector(
+            AgentHands.initialize.selector,
+            feeRecipient,
+            250 // 2.5% fee
+        );
+        ERC1967Proxy proxy = new ERC1967Proxy(address(impl), initData);
+        hands = AgentHands(address(proxy));
 
         hands.setAllowedToken(address(usdc), true);
 
@@ -56,6 +66,18 @@ contract AgentHandsTest is Test {
     function _submitProof(uint256 taskId) internal {
         vm.prank(worker);
         hands.submitProof(taskId, "QmProofCID123abc");
+    }
+
+    // ─── Tests: Proxy ────────────────────────────────────────
+    function test_InitializedCorrectly() public view {
+        assertEq(hands.owner(), owner);
+        assertEq(hands.feeRecipient(), feeRecipient);
+        assertEq(hands.platformFeeBps(), 250);
+    }
+
+    function test_CannotInitializeTwice() public {
+        vm.expectRevert();
+        hands.initialize(feeRecipient, 250);
     }
 
     // ─── Tests: Create ───────────────────────────────────────
@@ -126,7 +148,6 @@ contract AgentHandsTest is Test {
         vm.prank(agent);
         hands.approveTask(taskId);
 
-        // 2.5% fee = 2.5 USDC, worker gets 97.5 USDC
         uint256 expectedFee = (reward * 250) / 10000;
         uint256 expectedPayout = reward - expectedFee;
 
@@ -161,7 +182,7 @@ contract AgentHandsTest is Test {
         hands.disputeTask(taskId);
 
         uint256 workerBefore = usdc.balanceOf(worker);
-        hands.resolveDispute(taskId, true); // owner resolves, worker wins
+        hands.resolveDispute(taskId, true);
 
         uint256 expectedFee = (reward * 250) / 10000;
         uint256 expectedPayout = reward - expectedFee;
@@ -177,7 +198,7 @@ contract AgentHandsTest is Test {
         hands.disputeTask(taskId);
 
         uint256 agentBefore = usdc.balanceOf(agent);
-        hands.resolveDispute(taskId, false); // agent wins, refund
+        hands.resolveDispute(taskId, false);
 
         assertEq(usdc.balanceOf(agent) - agentBefore, reward);
     }
@@ -211,5 +232,18 @@ contract AgentHandsTest is Test {
         (uint256 avg, uint256 count) = hands.getAgentRating(agent);
         assertEq(avg, 4);
         assertEq(count, 1);
+    }
+
+    // ─── Tests: Upgrade ──────────────────────────────────────
+    function test_UpgradeOnlyOwner() public {
+        AgentHands newImpl = new AgentHands();
+        
+        // Non-owner can't upgrade
+        vm.prank(agent);
+        vm.expectRevert();
+        hands.upgradeToAndCall(address(newImpl), "");
+
+        // Owner can upgrade
+        hands.upgradeToAndCall(address(newImpl), "");
     }
 }

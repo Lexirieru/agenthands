@@ -1,13 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {ReentrancyGuard} from "./lib/ReentrancyGuard.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /// @title AgentHands — Marketplace where AI agents hire humans for physical-world tasks
-/// @notice Supports USDC (Base) and cUSD (Celo) as payment tokens
-/// @dev Tasks flow: Created → Accepted → Completed/Disputed → Resolved
-contract AgentHands is ReentrancyGuard {
+/// @notice UUPS Upgradeable. Supports USDC (Base) and cUSD (Celo) as payment tokens
+/// @dev Tasks flow: Open → Accepted → Submitted → Completed/Disputed → Resolved
+contract AgentHands is 
+    Initializable, 
+    UUPSUpgradeable, 
+    OwnableUpgradeable, 
+    ReentrancyGuard 
+{
+    using SafeERC20 for IERC20;
+
     // ─── Enums ───────────────────────────────────────────────
     enum TaskStatus {
         Open,       // Agent posted, waiting for worker
@@ -46,15 +57,18 @@ contract AgentHands is ReentrancyGuard {
     // Platform fee (basis points, e.g. 250 = 2.5%)
     uint256 public platformFeeBps;
     address public feeRecipient;
-    address public owner;
     
-    // Worker ratings: worker => (totalScore, ratingCount)
+    // Worker ratings
     mapping(address => uint256) public workerTotalScore;
     mapping(address => uint256) public workerRatingCount;
     
-    // Agent ratings: agent => (totalScore, ratingCount)
+    // Agent ratings
     mapping(address => uint256) public agentTotalScore;
     mapping(address => uint256) public agentRatingCount;
+
+    // Rating tracking
+    mapping(uint256 => bool) public workerRatedForTask;
+    mapping(uint256 => bool) public agentRatedForTask;
 
     // ─── Events ──────────────────────────────────────────────
     event TaskCreated(uint256 indexed taskId, address indexed agent, uint256 reward, address paymentToken);
@@ -78,19 +92,13 @@ contract AgentHands is ReentrancyGuard {
     error TaskNotDisputed();
     error NotAgent();
     error NotWorker();
-    error NotOwner();
     error DeadlinePassed();
     error CompletionDeadlinePassed();
-    error TransferFailed();
     error InvalidRating();
     error AlreadyRated();
+    error TaskNotCompleted();
 
     // ─── Modifiers ───────────────────────────────────────────
-    modifier onlyOwner() {
-        if (msg.sender != owner) revert NotOwner();
-        _;
-    }
-
     modifier onlyAgent(uint256 _taskId) {
         if (msg.sender != tasks[_taskId].agent) revert NotAgent();
         _;
@@ -101,12 +109,21 @@ contract AgentHands is ReentrancyGuard {
         _;
     }
 
-    // ─── Constructor ─────────────────────────────────────────
-    constructor(address _feeRecipient, uint256 _platformFeeBps) {
-        owner = msg.sender;
+    // ─── Initializer (replaces constructor) ──────────────────
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address _feeRecipient, uint256 _platformFeeBps) external initializer {
+        __Ownable_init(msg.sender);
+        
         feeRecipient = _feeRecipient;
         platformFeeBps = _platformFeeBps;
     }
+
+    // ─── UUPS Authorization ──────────────────────────────────
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // ─── Admin ───────────────────────────────────────────────
     function setAllowedToken(address _token, bool _allowed) external onlyOwner {
@@ -121,10 +138,6 @@ contract AgentHands is ReentrancyGuard {
 
     // ─── Core: Create Task ───────────────────────────────────
     /// @notice Agent creates a task and locks payment in escrow
-    /// @param _paymentToken Address of USDC/cUSD token
-    /// @param _reward Amount to pay worker (in token decimals)
-    /// @param _deadline Timestamp: worker must accept before this
-    /// @param _completionDeadline Timestamp: worker must complete before this
     function createTask(
         address _paymentToken,
         uint256 _reward,
@@ -139,9 +152,8 @@ contract AgentHands is ReentrancyGuard {
         if (_deadline <= block.timestamp) revert InvalidDeadline();
         if (_completionDeadline <= _deadline) revert InvalidDeadline();
 
-        // Transfer tokens to contract (escrow)
-        bool success = IERC20(_paymentToken).transferFrom(msg.sender, address(this), _reward);
-        if (!success) revert TransferFailed();
+        // Transfer tokens to contract (escrow) — SafeERC20
+        IERC20(_paymentToken).safeTransferFrom(msg.sender, address(this), _reward);
 
         uint256 taskId = ++taskCount;
         tasks[taskId] = Task({
@@ -197,7 +209,6 @@ contract AgentHands is ReentrancyGuard {
         if (task.status != TaskStatus.Submitted) revert TaskNotSubmitted();
 
         task.status = TaskStatus.Completed;
-
         _releaseFunds(task);
 
         emit TaskCompleted(_taskId, task.worker, task.reward);
@@ -210,7 +221,6 @@ contract AgentHands is ReentrancyGuard {
         if (task.status != TaskStatus.Submitted) revert TaskNotSubmitted();
 
         task.status = TaskStatus.Disputed;
-
         emit TaskDisputed(_taskId, msg.sender);
     }
 
@@ -225,9 +235,7 @@ contract AgentHands is ReentrancyGuard {
             _releaseFunds(task);
         } else {
             task.status = TaskStatus.Cancelled;
-            // Refund agent
-            bool success = IERC20(task.paymentToken).transfer(task.agent, task.reward);
-            if (!success) revert TransferFailed();
+            IERC20(task.paymentToken).safeTransfer(task.agent, task.reward);
         }
 
         emit DisputeResolved(_taskId, _workerWins);
@@ -240,21 +248,16 @@ contract AgentHands is ReentrancyGuard {
         if (task.status != TaskStatus.Open) revert TaskNotOpen();
 
         task.status = TaskStatus.Cancelled;
-
-        // Refund agent
-        bool success = IERC20(task.paymentToken).transfer(task.agent, task.reward);
-        if (!success) revert TransferFailed();
+        IERC20(task.paymentToken).safeTransfer(task.agent, task.reward);
 
         emit TaskCancelled(_taskId);
     }
 
     // ─── Ratings ─────────────────────────────────────────────
     /// @notice Agent rates a worker after task completion (1-5)
-    mapping(uint256 => bool) public workerRatedForTask;
-    
     function rateWorker(uint256 _taskId, uint8 _score) external onlyAgent(_taskId) {
         if (_score < 1 || _score > 5) revert InvalidRating();
-        if (tasks[_taskId].status != TaskStatus.Completed) revert TaskNotSubmitted();
+        if (tasks[_taskId].status != TaskStatus.Completed) revert TaskNotCompleted();
         if (workerRatedForTask[_taskId]) revert AlreadyRated();
 
         workerRatedForTask[_taskId] = true;
@@ -266,11 +269,9 @@ contract AgentHands is ReentrancyGuard {
     }
 
     /// @notice Worker rates an agent after task completion (1-5)
-    mapping(uint256 => bool) public agentRatedForTask;
-    
     function rateAgent(uint256 _taskId, uint8 _score) external onlyWorker(_taskId) {
         if (_score < 1 || _score > 5) revert InvalidRating();
-        if (tasks[_taskId].status != TaskStatus.Completed) revert TaskNotSubmitted();
+        if (tasks[_taskId].status != TaskStatus.Completed) revert TaskNotCompleted();
         if (agentRatedForTask[_taskId]) revert AlreadyRated();
 
         agentRatedForTask[_taskId] = true;
@@ -302,11 +303,8 @@ contract AgentHands is ReentrancyGuard {
         uint256 payout = task.reward - fee;
 
         if (fee > 0) {
-            bool feeSuccess = IERC20(task.paymentToken).transfer(feeRecipient, fee);
-            if (!feeSuccess) revert TransferFailed();
+            IERC20(task.paymentToken).safeTransfer(feeRecipient, fee);
         }
-
-        bool success = IERC20(task.paymentToken).transfer(task.worker, payout);
-        if (!success) revert TransferFailed();
+        IERC20(task.paymentToken).safeTransfer(task.worker, payout);
     }
 }
