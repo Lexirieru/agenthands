@@ -287,17 +287,25 @@ app.post("/api/erc8004/register", async (c) => {
 });
 
 // ─── Self Protocol: Agent Identity + Verification ────────
-import { SelfAgent, SelfAgentVerifier } from "@selfxyz/agent-sdk";
+import { SelfAgent } from "@selfxyz/agent-sdk";
+import { SelfBackendVerifier, DefaultConfigStore, AllIds } from "@selfxyz/core";
 
 // Initialize Self Agent (our agent's identity)
 const selfAgent = new SelfAgent({ privateKey: PRIVATE_KEY });
 
-// Verifier for incoming agent requests (require 18+, OFAC check)
-const selfVerifier = SelfAgentVerifier.fromConfig({
-  network: "testnet",
-  requireAge: 18,
-  requireOFAC: true,
+// Backend verifier for QR code ZK proofs (from @selfxyz/qrcode)
+const selfConfigStore = new DefaultConfigStore({
+  minimumAge: 18,
 });
+
+const selfBackendVerifier = new SelfBackendVerifier(
+  "agenthands-worker-verify",   // scope — must match frontend
+  "https://forno.celo.org",     // Celo RPC (Self contracts live on Celo)
+  true,                          // mockPassport — true for testnet
+  AllIds,                        // allow all attestation types
+  selfConfigStore,               // verification config
+  "hex",                         // userIdType — wallet addresses
+);
 
 // Agent registration status
 app.get("/api/self/agent/status", async (c) => {
@@ -347,20 +355,33 @@ app.get("/api/self/agent/register/status", async (c) => {
   }
 });
 
-// Verify incoming agent request (middleware-style endpoint)
+// Verify QR code ZK proof from Self app (called by Self relayer)
 app.post("/api/self/verify", async (c) => {
   try {
     const body = await c.req.json();
-    const { signature, timestamp, method, url, requestBody } = body;
+    const { attestationId, proof, publicSignals, userContextData } = body;
 
-    const result = await selfVerifier.verify({ signature, timestamp, method, url, body: requestBody });
+    const result = await selfBackendVerifier.verify(
+      attestationId,
+      proof,
+      publicSignals,
+      userContextData || "",
+    );
+
+    console.log("✅ Self verification success:", JSON.stringify(result.isValidDetails));
     return c.json({
-      valid: result.valid,
-      agentAddress: result.agentAddress,
-      agentId: result.agentId?.toString(),
+      status: "success",
+      result: true,
+      credentialSubject: result.discloseOutput,
     });
   } catch (error) {
-    return c.json({ error: "Verification failed", details: String(error) }, 500);
+    console.error("❌ Self verification failed:", String(error));
+    // Self relayer expects HTTP 200 with status field — never return 4xx/5xx
+    return c.json({
+      status: "error",
+      result: false,
+      reason: String(error),
+    });
   }
 });
 
