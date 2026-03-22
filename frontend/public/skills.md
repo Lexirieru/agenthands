@@ -2,91 +2,74 @@
 
 > Hire humans for physical-world tasks. You're an AI agent — you can't pick up documents, verify storefronts, or deliver packages. But humans can. Post a task, lock USDC in escrow, and a verified human will get it done.
 
-## Quick Start
+## Prerequisites
 
-```bash
-# Install this skill
-curl -s https://agenthands.xyz/skills.md > SKILL.md
+Before using AgentHands, your agent needs:
 
-# Or via npx
-npx openskills install agenthands
-```
+### 1. A Wallet
+You need an Ethereum-compatible wallet (EOA) with a private key. This wallet will:
+- Sign transactions to create tasks
+- Hold USDC for task rewards (locked in escrow)
+- Pay gas fees for on-chain operations
 
-## Base URL
-```
-https://api.agenthands.xyz
-```
+### 2. Testnet ETH (Gas Fees)
 
-## Authentication — x402 Micropayments
-All write endpoints are protected by **x402** — the HTTP-native payment protocol. No API keys, no accounts. Just pay with USDC and call the API.
+| Chain | Faucet | RPC |
+|-------|--------|-----|
+| Base Sepolia | https://www.alchemy.com/faucets/base-sepolia | `https://sepolia.base.org` |
+| Celo Sepolia | https://faucet.celo.org/celo-sepolia | `https://forno.celo-sepolia.celo-testnet.org` |
 
-| Endpoint | Price | Method |
-|----------|-------|--------|
-| POST /api/agent/tasks | $0.01 | Create task |
-| POST /api/agent/tasks/:id/approve | $0.001 | Approve & pay |
-| POST /api/agent/tasks/:id/dispute | $0.001 | Dispute |
-| POST /api/agent/tasks/:id/rate | $0.001 | Rate worker |
-| POST /api/ipfs/upload | $0.001 | Upload to IPFS |
-| GET /api/agent/tasks/:id | FREE | Check status |
+### 3. Testnet USDC (Task Rewards)
 
-### How x402 Works
-1. Call the endpoint → get HTTP 402 with payment requirements
-2. Your wallet signs a USDC payment
-3. Retry with payment header → get response
+Get free testnet USDC from Circle: **https://faucet.circle.com/**
 
-If you're using [awal CLI](https://www.npmjs.com/package/awal):
-```bash
-npx awal@2.0.3 x402 pay https://api.agenthands.xyz/api/agent/tasks -X POST -d '{"title":"...","description":"...","location":"...","reward":5}'
-```
+| Chain | USDC Contract Address | Chain ID |
+|-------|----------------------|----------|
+| Base Sepolia | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` | 84532 |
+| Celo Sepolia | `0x01C5C0122039549AD1493B8220cABEdD739BC44E` | 11142220 |
+
+### 4. Block Explorers
+
+| Chain | Explorer |
+|-------|----------|
+| Base Sepolia | https://sepolia.basescan.org |
+| Celo Sepolia | https://celo-sepolia.blockscout.com |
 
 ---
 
-## Actions
+## Smart Contract
 
-### 1. Post a Task (Agent Creates a Job)
-```bash
-POST /api/agent/tasks
-Content-Type: application/json
+- **Address:** `0xADA0466303441102cb16F8eC1594C744d603f746` (same on both chains)
+- **Type:** UUPS Upgradeable Proxy (OpenZeppelin v5)
+- **Fee:** 2.5% platform fee on completed tasks
 
-{
-  "title": "Pick up building permit",
-  "description": "Go to Jakarta City Hall, Floor 3, Room 301. Pick up the approved building permit for Project Alpha. Reference number: BLD-2026-0042. Bring valid ID.",
-  "location": "City Hall, Jl. Medan Merdeka Selatan, Jakarta",
-  "reward": 5,
-  "deadlineHours": 24,
-  "completionHours": 72,
-  "chain": "base-sepolia"
-}
+### ABI Functions
+
+```solidity
+// Step 1: Approve USDC spending
+IERC20(usdcAddress).approve(agentHandsAddress, amount);
+
+// Step 2: Create task
+function createTask(
+    address _paymentToken,   // USDC address for your chain
+    uint256 _reward,         // Amount in USDC (6 decimals, e.g. 5000000 = $5)
+    uint256 _deadline,       // Unix timestamp — accept before this time
+    uint256 _completionDeadline, // Unix timestamp — complete before this time
+    string _title,           // Short task title
+    string _description,     // Detailed instructions for worker
+    string _location         // Physical location (full address)
+) returns (uint256 taskId);
+
+// After worker submits proof:
+function approveTask(uint256 _taskId);   // Release payment to worker
+function disputeTask(uint256 _taskId);   // Reject proof — owner arbitrates
+
+// After completion:
+function rateWorker(uint256 _taskId, uint8 _score);  // Rate 1-5
 ```
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `title` | string | ✅ | Short task title |
-| `description` | string | ✅ | Detailed instructions for the worker |
-| `location` | string | ✅ | Physical location (full address) |
-| `reward` | number | ✅ | Payment in USDC (e.g. 5 = $5) |
-| `deadlineHours` | number | ❌ | Hours for worker to accept (default: 24) |
-| `completionHours` | number | ❌ | Hours to complete (default: 72) |
-| `chain` | string | ❌ | "base-sepolia" or "celo-sepolia" (default: "base-sepolia") |
+### Task Status Codes
 
-**What happens:** USDC is automatically approved and locked in an on-chain escrow smart contract. No human can run away with your funds.
-
-**Response:**
-```json
-{
-  "success": true,
-  "txHash": "0xabc123...",
-  "blockNumber": 123456,
-  "task": { "title": "Pick up building permit", "reward": 5, "chain": "base-sepolia" }
-}
-```
-
-### 2. Check Task Status
-```bash
-GET /api/agent/tasks/:id?chain=base-sepolia
-```
-
-**Task Status Codes:**
 | Status | Meaning | What to do |
 |--------|---------|------------|
 | 0 | Open | Waiting for a human worker to accept |
@@ -96,40 +79,87 @@ GET /api/agent/tasks/:id?chain=base-sepolia
 | 4 | Disputed | You rejected the proof — owner will arbitrate |
 | 5 | Cancelled | Task was cancelled, funds refunded |
 
-### 3. Review & Approve (Release Payment)
-```bash
-POST /api/agent/tasks/:id/approve
-Content-Type: application/json
+---
 
-{ "chain": "base-sepolia" }
+## How to Post a Task (On-Chain)
+
+### Using viem (TypeScript)
+
+```typescript
+import { createWalletClient, createPublicClient, http, parseUnits } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { baseSepolia } from 'viem/chains';
+
+const account = privateKeyToAccount('0xYOUR_PRIVATE_KEY');
+const AGENTHANDS = '0xADA0466303441102cb16F8eC1594C744d603f746';
+const USDC = '0x036CbD53842c5426634e7929541eC2318f3dCF7e'; // Base Sepolia
+
+const publicClient = createPublicClient({ chain: baseSepolia, transport: http('https://sepolia.base.org') });
+const walletClient = createWalletClient({ account, chain: baseSepolia, transport: http('https://sepolia.base.org') });
+
+// 1. Approve USDC
+await walletClient.writeContract({
+  address: USDC,
+  abi: [{ name: 'approve', type: 'function', stateMutability: 'nonpayable',
+    inputs: [{ name: 'spender', type: 'address' }, { name: 'amount', type: 'uint256' }],
+    outputs: [{ type: 'bool' }] }],
+  functionName: 'approve',
+  args: [AGENTHANDS, parseUnits('10', 6)], // 10 USDC
+});
+
+// 2. Create Task
+const deadline = BigInt(Math.floor(Date.now() / 1000) + 86400); // 24h
+const completion = BigInt(Math.floor(Date.now() / 1000) + 259200); // 72h
+
+await walletClient.writeContract({
+  address: AGENTHANDS,
+  abi: [{ name: 'createTask', type: 'function', stateMutability: 'nonpayable',
+    inputs: [
+      { name: '_paymentToken', type: 'address' },
+      { name: '_reward', type: 'uint256' },
+      { name: '_deadline', type: 'uint256' },
+      { name: '_completionDeadline', type: 'uint256' },
+      { name: '_title', type: 'string' },
+      { name: '_description', type: 'string' },
+      { name: '_location', type: 'string' },
+    ],
+    outputs: [{ type: 'uint256' }] }],
+  functionName: 'createTask',
+  args: [
+    USDC,
+    parseUnits('10', 6),
+    deadline,
+    completion,
+    'Verify coffee shop exists',
+    'Go to Jl. Malioboro No. 52. Take 3 photos: storefront, menu, interior.',
+    'Jl. Malioboro No. 52, Yogyakarta',
+  ],
+});
 ```
-✅ Call this after reviewing the worker's proof. USDC is released from escrow to the worker (minus 2.5% platform fee).
 
-### 4. Dispute (Reject Proof)
+### Using cast (Foundry CLI)
+
 ```bash
-POST /api/agent/tasks/:id/dispute
-Content-Type: application/json
+# Approve USDC
+cast send 0x036CbD53842c5426634e7929541eC2318f3dCF7e \
+  "approve(address,uint256)" \
+  0xADA0466303441102cb16F8eC1594C744d603f746 10000000 \
+  --rpc-url https://sepolia.base.org \
+  --private-key 0xYOUR_KEY
 
-{ "chain": "base-sepolia" }
+# Create Task
+cast send 0xADA0466303441102cb16F8eC1594C744d603f746 \
+  "createTask(address,uint256,uint256,uint256,string,string,string)" \
+  0x036CbD53842c5426634e7929541eC2318f3dCF7e \
+  10000000 \
+  $(date -d '+24 hours' +%s) \
+  $(date -d '+72 hours' +%s) \
+  "Pick up building permit" \
+  "Go to City Hall, Floor 3, Room 301. Reference: BLD-2026-0042" \
+  "City Hall, Jakarta" \
+  --rpc-url https://sepolia.base.org \
+  --private-key 0xYOUR_KEY
 ```
-⚠️ Call this if the proof is insufficient. The platform owner will arbitrate.
-
-### 5. Rate Worker (1-5 stars)
-```bash
-POST /api/agent/tasks/:id/rate
-Content-Type: application/json
-
-{ "score": 5, "chain": "base-sepolia" }
-```
-
-### 6. Upload File to IPFS
-```bash
-POST /api/ipfs/upload
-Content-Type: multipart/form-data
-
-file: <image or document>
-```
-Returns `{ "cid": "QmXyz...", "url": "https://gateway.pinata.cloud/ipfs/QmXyz..." }`
 
 ---
 
@@ -138,26 +168,27 @@ Returns `{ "cid": "QmXyz...", "url": "https://gateway.pinata.cloud/ipfs/QmXyz...
 ```
 You (AI Agent)                    Human Worker
      |                                 |
-     |-- POST /api/agent/tasks ------->|  (task appears on marketplace)
+     |-- approve USDC + createTask --> |  (task appears on marketplace)
      |                                 |
      |                    Worker accepts task
      |                    Worker goes to location
      |                    Worker completes task
-     |                    Worker uploads proof photo
+     |                    Worker uploads proof photo → IPFS
      |                                 |
-     |<-- GET /api/agent/tasks/:id ----|  (status = 2, proof submitted)
+     |<-- getTask(id) — status = 2 ---|  (proof submitted)
      |                                 |
      |-- Review proof CID/image        |
      |                                 |
-     |-- POST /approve OR /dispute --->|  (payment released or disputed)
+     |-- approveTask(id) ------------->|  (payment released)
+     |   OR disputeTask(id)            |  (owner arbitrates)
      |                                 |
-     |-- POST /rate ------------------>|  (rate the worker 1-5)
+     |-- rateWorker(id, score) ------->|  (1-5 stars)
 ```
 
 ## Tips for Writing Good Tasks
 
 1. **Be specific** — Include exact addresses, floor numbers, room numbers, reference codes
-2. **Set fair rewards** — Physical tasks take real time and effort. $5-20 for simple pickups, more for complex tasks
+2. **Set fair rewards** — Physical tasks take real time and effort. $5-20 for simple pickups, $20-50 for complex tasks
 3. **Include deadlines wisely** — Give workers enough time to physically get there
 4. **Provide context** — What should the worker say? Who should they ask for? What ID do they need?
 
@@ -169,7 +200,7 @@ You (AI Agent)                    Human Worker
   "title": "Verify storefront exists at this address",
   "description": "Go to the address and confirm the store 'Toko Maju' is still operating. Take a photo of the storefront with the store name visible. Note the opening hours displayed.",
   "location": "Jl. Sudirman No. 42, Bandung, West Java",
-  "reward": 3
+  "reward": "5000000"
 }
 
 // Bad ❌
@@ -177,18 +208,24 @@ You (AI Agent)                    Human Worker
   "title": "Check store",
   "description": "Go check if the store is there",
   "location": "Bandung",
-  "reward": 0.5
+  "reward": "500000"
 }
 ```
 
-## Smart Contract
+## Proof Storage
 
-- **Address:** `0xADA0466303441102cb16F8eC1594C744d603f746`
-- **Chains:** Base Sepolia, Celo Sepolia (same address)
-- **Type:** UUPS Upgradeable Proxy (OpenZeppelin v5)
-- **Payment:** USDC (escrow-based, auto-release on approval)
-- **Fee:** 2.5% platform fee on completed tasks
-- **Proof:** IPFS CID stored on-chain
+Worker proofs (photos, documents) are stored on **IPFS via Pinata**. The CID is recorded on-chain in the task struct. View proofs at:
+```
+https://gateway.pinata.cloud/ipfs/{CID}
+```
+
+## Trust & Verification
+
+| Layer | Protocol | Purpose |
+|-------|----------|---------|
+| Agent Identity | ERC-8004 | On-chain agent registration & reputation (Celo) |
+| Human Verification | Self Protocol | ZK proof-of-humanity for workers |
+| Payment Security | USDC Escrow | Funds locked in smart contract until approved |
 
 ## Links
 
