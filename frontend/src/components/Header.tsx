@@ -2,12 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
+import { useAppKit, useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
 import { useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Wallet, LogOut } from 'lucide-react';
 import { useState } from 'react';
+import { useDisconnect } from 'wagmi';
 import { USDC_ADDRESSES } from '@/config';
+import { truncateAddress } from '@/lib/utils/format';
 import NetworkSwitch from './NetworkSwitch';
 
 const ERC20_ABI = [
@@ -27,9 +29,12 @@ const navLinks = [
 
 export default function Header() {
   const pathname = usePathname();
+  const { open } = useAppKit();
   const { isConnected, address } = useAppKitAccount();
   const { chainId } = useAppKitNetwork();
+  const { disconnect } = useDisconnect();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [walletMenuOpen, setWalletMenuOpen] = useState(false);
 
   const usdcAddress = chainId ? USDC_ADDRESSES[chainId as number] : undefined;
 
@@ -92,8 +97,42 @@ export default function Header() {
             <NetworkSwitch />
 
             {/* Wallet Connect */}
-            <div className="ml-1">
-              <appkit-button />
+            <div className="ml-1 relative">
+              {isConnected && address ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setWalletMenuOpen(!walletMenuOpen)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1A0F08] text-[#FFFAF5] border border-[#1A0F08] hover:border-[#FF8C42] rounded-full transition text-xs font-label"
+                  >
+                    <Wallet size={14} />
+                    {truncateAddress(address)}
+                  </button>
+                  {walletMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-44 bg-white border border-[#F5DEC8] rounded-xl shadow-lg z-50 overflow-hidden">
+                      <button
+                        onClick={() => { open(); setWalletMenuOpen(false); }}
+                        className="w-full flex items-center gap-2 px-4 py-3 text-sm text-[#6B5040] hover:bg-[#FFFAF5] hover:text-[#1A0F08] transition"
+                      >
+                        <Wallet size={14} /> Account
+                      </button>
+                      <button
+                        onClick={() => { disconnect(); setWalletMenuOpen(false); }}
+                        className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-500 hover:bg-red-50 transition border-t border-[#F5DEC8]"
+                      >
+                        <LogOut size={14} /> Disconnect
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => open()}
+                  className="flex items-center gap-1.5 px-4 py-1.5 bg-[#1A0F08] text-[#FFFAF5] border border-[#1A0F08] hover:border-[#FF8C42] hover:shadow-[0_0_16px_4px_rgba(255,140,66,0.3)] rounded-full transition text-xs font-label"
+                >
+                  <Wallet size={14} />
+                  Connect Wallet
+                </button>
+              )}
             </div>
           </div>
 
@@ -138,7 +177,21 @@ export default function Header() {
                   <NetworkSwitch />
                 </div>
                 <div className="px-4 py-1">
-                  <appkit-button />
+                  {isConnected && address ? (
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-[#1A0F08] font-label">{truncateAddress(address)}</span>
+                      <button onClick={() => { disconnect(); setMobileOpen(false); }} className="text-xs text-red-500 hover:text-red-700">
+                        Disconnect
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => { open(); setMobileOpen(false); }}
+                      className="w-full flex items-center justify-center gap-1.5 px-4 py-2 bg-[#1A0F08] text-[#FFFAF5] rounded-xl text-xs font-label"
+                    >
+                      <Wallet size={14} /> Connect Wallet
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
