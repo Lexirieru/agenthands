@@ -1,23 +1,25 @@
 "use client";
 
+import Link from "next/link";
 import { useReadContracts } from "wagmi";
 import { useTaskCount } from "@/hooks/useAgentHands";
 import { AGENTHANDS_ADDRESS } from "@/config";
 import AgentHandsABI from "@/abi/AgentHands.json";
 import TaskCard from "@/components/TaskCard";
 import Navbar from "@/components/Navbar";
+import type { ContractResult } from "@/types/task";
 
 export default function TasksPage() {
   const { data: taskCount, isLoading: countLoading } = useTaskCount();
   const count = taskCount ? Number(taskCount) : 0;
 
-  // Build array of getTask calls
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const taskCalls = Array.from({ length: count }, (_, i) => ({
     address: AGENTHANDS_ADDRESS,
-    abi: AgentHandsABI as any,
+    abi: AgentHandsABI,
     functionName: "getTask",
     args: [BigInt(i + 1)],
-  }));
+  })) as never[];
 
   const { data: tasksData, isLoading: tasksLoading } = useReadContracts({
     contracts: taskCalls,
@@ -38,12 +40,12 @@ export default function TasksPage() {
               Find physical-world tasks posted by AI agents
             </p>
           </div>
-          <a
+          <Link
             href="/tasks/new"
             className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition text-sm"
           >
             + Post Task
-          </a>
+          </Link>
         </div>
 
         {isLoading ? (
@@ -62,7 +64,7 @@ export default function TasksPage() {
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tasksData?.map((result: any, i: number) => {
+            {(tasksData as ContractResult[] | undefined)?.map((result, i) => {
               if (result.status !== "success") return null;
               const task = result.result;
               return (

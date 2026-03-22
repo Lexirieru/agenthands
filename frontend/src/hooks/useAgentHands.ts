@@ -1,7 +1,6 @@
 "use client";
 
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { parseUnits } from "viem";
+import { useReadContract, useWriteContract } from "wagmi";
 import { AGENTHANDS_ADDRESS, USDC_ADDRESSES } from "@/config";
 import AgentHandsABI from "@/abi/AgentHands.json";
 

@@ -24,7 +24,7 @@ const ERC20_ABI = [
 
 export default function NewTaskPage() {
   const router = useRouter();
-  const { address, isConnected } = useAppKitAccount();
+  const { isConnected } = useAppKitAccount();
   const { caipNetwork } = useAppKitNetwork();
   const chainId = caipNetwork?.id ? Number(String(caipNetwork.id).split(":")[1] || caipNetwork.id) : 0;
 
@@ -47,7 +47,6 @@ export default function NewTaskPage() {
 
   const usdcAddress = USDC_ADDRESSES[chainId];
 
-  // Step 1: Approve USDC
   const handleApprove = () => {
     if (!usdcAddress) return;
     const amount = parseUnits(reward, 6);
@@ -60,7 +59,6 @@ export default function NewTaskPage() {
     setStep("approve");
   };
 
-  // Step 2: Create Task
   const handleCreate = () => {
     if (!usdcAddress) return;
     const amount = parseUnits(reward, 6);
@@ -69,7 +67,7 @@ export default function NewTaskPage() {
 
     createWrite({
       address: AGENTHANDS_ADDRESS,
-      abi: AgentHandsABI as any,
+      abi: AgentHandsABI as typeof AgentHandsABI,
       functionName: "createTask",
       args: [usdcAddress, amount, deadline, completionDeadline, title, description, location],
     });
@@ -129,11 +127,8 @@ export default function NewTaskPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Task Title *
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Task Title *</label>
               <input
                 type="text"
                 value={title}
@@ -143,11 +138,8 @@ export default function NewTaskPage() {
               />
             </div>
 
-            {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Description *
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Description *</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -157,11 +149,8 @@ export default function NewTaskPage() {
               />
             </div>
 
-            {/* Location */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                📍 Location *
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">📍 Location *</label>
               <input
                 type="text"
                 value={location}
@@ -171,11 +160,8 @@ export default function NewTaskPage() {
               />
             </div>
 
-            {/* Reward */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                💰 Reward (USDC) *
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">💰 Reward (USDC) *</label>
               <input
                 type="number"
                 value={reward}
@@ -187,12 +173,9 @@ export default function NewTaskPage() {
               />
             </div>
 
-            {/* Deadlines */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  ⏰ Accept Deadline (hours)
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">⏰ Accept Deadline (hours)</label>
                 <input
                   type="number"
                   value={deadlineHours}
@@ -201,9 +184,7 @@ export default function NewTaskPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  🏁 Completion Deadline (hours)
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">🏁 Completion Deadline (hours)</label>
                 <input
                   type="number"
                   value={completionHours}
@@ -213,7 +194,6 @@ export default function NewTaskPage() {
               </div>
             </div>
 
-            {/* Summary */}
             <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
               <div className="text-sm text-gray-400">
                 <p>Chain: <span className="text-white">{caipNetwork?.name}</span></p>
@@ -223,7 +203,6 @@ export default function NewTaskPage() {
               </div>
             </div>
 
-            {/* Actions */}
             {step === "form" && (
               <button
                 onClick={handleApprove}

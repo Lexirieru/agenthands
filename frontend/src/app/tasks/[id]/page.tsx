@@ -6,6 +6,7 @@ import { useAppKitAccount } from "@reown/appkit/react";
 import { AGENTHANDS_ADDRESS } from "@/config";
 import AgentHandsABI from "@/abi/AgentHands.json";
 import Navbar from "@/components/Navbar";
+import type { TaskData } from "@/types/task";
 
 const STATUS_LABELS: Record<number, { label: string; color: string; emoji: string }> = {
   0: { label: "Open", color: "bg-emerald-500/20 text-emerald-400", emoji: "🟢" },
@@ -26,7 +27,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
   const { data: task, isLoading, refetch } = useReadContract({
     address: AGENTHANDS_ADDRESS,
-    abi: AgentHandsABI as any,
+    abi: AgentHandsABI as typeof AgentHandsABI,
     functionName: "getTask",
     args: [taskId],
   });
@@ -34,7 +35,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const { writeContract: acceptWrite, data: acceptTx, isPending: accepting } = useWriteContract();
   const { writeContract: submitWrite, data: submitTx, isPending: submitting } = useWriteContract();
   const { writeContract: approveWrite, data: approveTxHash, isPending: approvingTask } = useWriteContract();
-  const { writeContract: disputeWrite, data: disputeTx, isPending: disputing } = useWriteContract();
+  const { writeContract: disputeWrite, isPending: disputing } = useWriteContract();
   const { writeContract: cancelWrite, data: cancelTx, isPending: cancelling } = useWriteContract();
   const { writeContract: rateWorkerWrite, isPending: ratingWorker } = useWriteContract();
   const { writeContract: rateAgentWrite, isPending: ratingAgent } = useWriteContract();
@@ -44,7 +45,6 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const { isSuccess: approveTaskSuccess } = useWaitForTransactionReceipt({ hash: approveTxHash });
   const { isSuccess: cancelSuccess } = useWaitForTransactionReceipt({ hash: cancelTx });
 
-  // Refetch on any success
   if (acceptSuccess || submitSuccess || approveTaskSuccess || cancelSuccess) {
     refetch();
   }
@@ -71,7 +71,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
     );
   }
 
-  const t = task as any;
+  const t = task as unknown as TaskData;
   const status = Number(t.status);
   const statusInfo = STATUS_LABELS[status] || STATUS_LABELS[0];
   const rewardFormatted = (Number(t.reward) / 1e6).toFixed(2);
@@ -80,12 +80,16 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const deadline = new Date(Number(t.deadline) * 1000);
   const completionDeadline = new Date(Number(t.completionDeadline) * 1000);
 
+  const contractCall = {
+    address: AGENTHANDS_ADDRESS,
+    abi: AgentHandsABI as typeof AgentHandsABI,
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
       <Navbar />
 
       <div className="max-w-3xl mx-auto px-6 py-10">
-        {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
@@ -102,7 +106,6 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         </div>
 
-        {/* Details */}
         <div className="space-y-6">
           <div className="p-6 bg-gray-800/50 rounded-xl border border-gray-700/50">
             <h2 className="text-lg font-semibold text-white mb-3">Description</h2>
@@ -130,7 +133,6 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             </div>
           </div>
 
-          {/* Worker info */}
           {t.worker && t.worker !== "0x0000000000000000000000000000000000000000" && (
             <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
               <div className="text-sm text-blue-400 mb-1">👷 Worker</div>
@@ -138,7 +140,6 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             </div>
           )}
 
-          {/* Proof */}
           {t.proofCID && (
             <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
               <div className="text-sm text-yellow-400 mb-1">📸 Proof (IPFS)</div>
@@ -153,19 +154,10 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             </div>
           )}
 
-          {/* Actions */}
           <div className="space-y-3">
-            {/* Worker: Accept Task */}
             {status === 0 && !isAgent && (
               <button
-                onClick={() =>
-                  acceptWrite({
-                    address: AGENTHANDS_ADDRESS,
-                    abi: AgentHandsABI as any,
-                    functionName: "acceptTask",
-                    args: [taskId],
-                  })
-                }
+                onClick={() => acceptWrite({ ...contractCall, functionName: "acceptTask", args: [taskId] })}
                 disabled={accepting}
                 className="w-full py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-700 text-white font-semibold rounded-lg transition"
               >
@@ -173,7 +165,6 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               </button>
             )}
 
-            {/* Worker: Submit Proof */}
             {status === 1 && isWorker && (
               <div className="space-y-3">
                 <input
@@ -184,14 +175,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                   className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
                 />
                 <button
-                  onClick={() =>
-                    submitWrite({
-                      address: AGENTHANDS_ADDRESS,
-                      abi: AgentHandsABI as any,
-                      functionName: "submitProof",
-                      args: [taskId, proofCID],
-                    })
-                  }
+                  onClick={() => submitWrite({ ...contractCall, functionName: "submitProof", args: [taskId, proofCID] })}
                   disabled={submitting || !proofCID}
                   className="w-full py-3 bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-700 text-white font-semibold rounded-lg transition"
                 >
@@ -200,32 +184,17 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               </div>
             )}
 
-            {/* Agent: Approve or Dispute */}
             {status === 2 && isAgent && (
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={() =>
-                    approveWrite({
-                      address: AGENTHANDS_ADDRESS,
-                      abi: AgentHandsABI as any,
-                      functionName: "approveTask",
-                      args: [taskId],
-                    })
-                  }
+                  onClick={() => approveWrite({ ...contractCall, functionName: "approveTask", args: [taskId] })}
                   disabled={approvingTask}
                   className="py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-700 text-white font-semibold rounded-lg transition"
                 >
                   {approvingTask ? "Approving..." : "✅ Approve & Pay"}
                 </button>
                 <button
-                  onClick={() =>
-                    disputeWrite({
-                      address: AGENTHANDS_ADDRESS,
-                      abi: AgentHandsABI as any,
-                      functionName: "disputeTask",
-                      args: [taskId],
-                    })
-                  }
+                  onClick={() => disputeWrite({ ...contractCall, functionName: "disputeTask", args: [taskId] })}
                   disabled={disputing}
                   className="py-3 bg-red-500 hover:bg-red-600 disabled:bg-gray-700 text-white font-semibold rounded-lg transition"
                 >
@@ -234,17 +203,9 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               </div>
             )}
 
-            {/* Agent: Cancel open task */}
             {status === 0 && isAgent && (
               <button
-                onClick={() =>
-                  cancelWrite({
-                    address: AGENTHANDS_ADDRESS,
-                    abi: AgentHandsABI as any,
-                    functionName: "cancelTask",
-                    args: [taskId],
-                  })
-                }
+                onClick={() => cancelWrite({ ...contractCall, functionName: "cancelTask", args: [taskId] })}
                 disabled={cancelling}
                 className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition"
               >
@@ -252,7 +213,6 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               </button>
             )}
 
-            {/* Ratings for completed tasks */}
             {status === 3 && (isAgent || isWorker) && (
               <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/50">
                 <h3 className="text-sm font-semibold text-white mb-3">⭐ Rate</h3>
@@ -269,14 +229,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 </div>
                 {isAgent && (
                   <button
-                    onClick={() =>
-                      rateWorkerWrite({
-                        address: AGENTHANDS_ADDRESS,
-                        abi: AgentHandsABI as any,
-                        functionName: "rateWorker",
-                        args: [taskId, rating],
-                      })
-                    }
+                    onClick={() => rateWorkerWrite({ ...contractCall, functionName: "rateWorker", args: [taskId, rating] })}
                     disabled={ratingWorker}
                     className="w-full py-2 bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 rounded-lg transition text-sm"
                   >
@@ -285,14 +238,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 )}
                 {isWorker && (
                   <button
-                    onClick={() =>
-                      rateAgentWrite({
-                        address: AGENTHANDS_ADDRESS,
-                        abi: AgentHandsABI as any,
-                        functionName: "rateAgent",
-                        args: [taskId, rating],
-                      })
-                    }
+                    onClick={() => rateAgentWrite({ ...contractCall, functionName: "rateAgent", args: [taskId, rating] })}
                     disabled={ratingAgent}
                     className="w-full py-2 bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 rounded-lg transition text-sm"
                   >

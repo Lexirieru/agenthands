@@ -9,7 +9,8 @@ import { projectId, networks, wagmiAdapter, metadata } from "@/config";
 
 const queryClient = new QueryClient();
 
-const modal = createAppKit({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _modal = createAppKit({
   adapters: [wagmiAdapter],
   networks,
   projectId,
