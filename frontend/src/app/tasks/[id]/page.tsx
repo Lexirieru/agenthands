@@ -7,6 +7,8 @@ import { AGENTHANDS_ADDRESS } from "@/config";
 import AgentHandsABI from "@/abi/AgentHands.json";
 import Navbar from "@/components/Navbar";
 import ProofUpload from "@/components/ProofUpload";
+import SelfVerify from "@/components/SelfVerify";
+import AgentBadge from "@/components/AgentBadge";
 import type { TaskData } from "@/types/task";
 
 const STATUS_LABELS: Record<number, { label: string; color: string; emoji: string }> = {
@@ -25,6 +27,11 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const { address } = useAppKitAccount();
   const [proofCID, setProofCID] = useState("");
   const [rating, setRating] = useState(5);
+  const [selfVerified, setSelfVerified] = useState(
+    typeof window !== "undefined" && address
+      ? !!localStorage.getItem(`self_verified_${address}`)
+      : false
+  );
 
   const { data: task, isLoading, refetch } = useReadContract({
     address: AGENTHANDS_ADDRESS,
@@ -120,9 +127,10 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             </div>
             <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/50">
               <div className="text-sm text-gray-500 mb-1">🤖 Agent</div>
-              <div className="text-white font-mono text-sm">
+              <div className="text-white font-mono text-sm mb-1">
                 {t.agent?.slice(0, 8)}...{t.agent?.slice(-6)}
               </div>
+              {t.agent && <AgentBadge agentAddress={t.agent} />}
             </div>
             <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/50">
               <div className="text-sm text-gray-500 mb-1">⏰ Accept Before</div>
@@ -157,13 +165,22 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
           <div className="space-y-3">
             {status === 0 && !isAgent && (
-              <button
-                onClick={() => acceptWrite({ ...contractCall, functionName: "acceptTask", args: [taskId] })}
-                disabled={accepting}
-                className="w-full py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-700 text-white font-semibold rounded-lg transition"
-              >
-                {accepting ? "Accepting..." : "✋ Accept This Task"}
-              </button>
+              <div className="space-y-4">
+                {/* Self Protocol verification gate */}
+                <SelfVerify onVerified={() => setSelfVerified(true)} />
+
+                <button
+                  onClick={() => acceptWrite({ ...contractCall, functionName: "acceptTask", args: [taskId] })}
+                  disabled={accepting || !selfVerified}
+                  className="w-full py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-700 text-white font-semibold rounded-lg transition"
+                >
+                  {!selfVerified
+                    ? "🔒 Verify identity to accept"
+                    : accepting
+                      ? "Accepting..."
+                      : "✋ Accept This Task"}
+                </button>
+              </div>
             )}
 
             {status === 1 && isWorker && (
