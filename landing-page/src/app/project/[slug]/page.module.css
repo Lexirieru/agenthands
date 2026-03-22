@@ -1,0 +1,532 @@
+.projectPage{
+    position: relative;
+    width: 100svw;
+    min-height: 100lvh;
+    font-family: var(--font-courier-new);
+    color: #5C2D0A;
+    /* mix-blend-mode creates a new stacking context - must be on the main container */
+    /* Allows pointer events to pass through to the canvas */
+    pointer-events: none;
+    display: flex;
+    flex-direction: row;
+    gap: 3.5rem;
+    overflow-y: auto;
+    & .mobileClock {
+        position: absolute;
+        top: 1.5rem;
+        right: 2rem;
+        display: none;
+        mix-blend-mode: color-burn;
+        font-weight: bold;
+        opacity: 0;
+
+        @media (max-width: 1200px) {
+            display: block;
+        }
+    }
+    & .projectContent{
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: calc(65% - 1.75rem); /* 60% of the width minus half the gap */
+        height: 100lvh;
+        /* Inherits pointer-events: none from the parent */
+        mix-blend-mode: color-burn;
+
+        & nav {
+            position: relative;
+            margin: 1.5em 2.5em;
+            display: flex;
+            justify-content: flex-start;
+            width: calc(100% - 2.5em * 2);
+            overflow: hidden;
+            @media (max-width: 768px) {
+                width: calc(100% - 20px);    
+                margin-left: 20px;
+                margin-top: 4rem;
+                overflow: visible;
+            }
+            & > ul {
+                display: flex;
+                justify-content: flex-start;
+                list-style: none;
+                gap: 5em;
+                margin-left: 10em;
+                position: relative;
+                font-size: 1rem;
+                @media (max-width: 768px) {
+                    gap: 3rem;
+                    margin: 0 auto;
+                }
+                &::before {
+                    content: "(X)";
+                    position: absolute;
+                    top: 0;
+                    left: -6em;
+                    font-size: 1em;
+                    font-weight: bold;
+                    @media (max-width: 768px) {
+                        transform: translateX(-50%);
+                        left: 50%;
+                        top : -2.5rem;
+                    }
+                }
+                & li {
+                    position: relative;
+                    filter: blur(0px);
+                    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    & p {
+                        font-size: 1em;
+                        pointer-events: all;
+                        font-weight: bold;
+                    }
+                    &::before {
+                        content: "[";
+                        position: absolute;
+                        top: 0;
+                        left: -1.25em;
+                        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    }
+                    &::after {
+                        content: "]";
+                        position: absolute;
+                        top: 0;
+                        right: -1.25em;
+                        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    
+                    }
+                    &:hover {
+                        filter: blur(2px);
+                        font-weight: bold;
+                        &::before {
+                            left: -1em;
+                            font-weight: bold;
+                        }
+                        &::after {
+                            right: -1em;
+                            font-weight: bold;
+    
+                        }
+                    }
+                    & a {
+                        position: relative;
+                        font-size: 1em;
+                        pointer-events: all;
+                        text-align: center;
+                  
+        
+                        &.selected {
+                            font-weight: bold;
+                        }
+                    }
+                }
+            }
+        }
+        & .middleLineContainer {
+            position: absolute;
+            top: 4em;
+            left: 0px;
+            height: 20px;
+            width: 100%;
+            overflow: hidden;
+            border: none;
+            display: inline-block;
+            @media (max-width: 768px) {
+                top: 7rem;
+            }
+            & .middleLine {
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: 1px;
+                width: calc(65vw - 1.75rem); /* 60% of the width minus half the gap */
+                border: none;
+                display: inline-block;
+                margin: 0;
+                padding: 0;
+                background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%236B3A1F' stroke-width='4' stroke-dasharray='4%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+                @media (max-width: 1200px) {
+                    width: calc(100vw);
+                }
+            }
+        }
+ 
+        & .projectDetails {
+            position: relative;
+            margin-left: calc(20px + 3rem);
+            margin-top: 3.5em;
+            width: 100%;
+            /* pointer-events: none is already inherited from projectContent, no need to redefine it */
+            @media (max-width: 768px) {
+                margin-top: 4rem;
+                margin-left: calc(20px + 2rem);
+            }
+            & h1 {
+                font-size: clamp(4.25rem, 5vw, 8.33rem);
+                font-weight: 400;
+                font-family: var(--font-parasitype);
+                opacity: 0;
+                max-width: calc(100vw - 20px - 3rem);
+            }
+            & .projectInfo {
+                margin-top: 2em;
+                display: flex;
+                max-width: 40em;
+                width: 100%;
+                gap: 2rem;
+                text-transform: uppercase;
+                @media (max-width: 768px) {
+                    width: 90%;
+                    gap: 1rem;
+                }
+
+                & .projectDescription {
+                    font-size: 1rem;
+                    font-weight: 400;
+                    font-family: var(--font-courier-new);
+                    white-space: pre-wrap;
+                    opacity: 0;
+                    /* pointer-events: none is already inherited, no need to redefine it */
+                    @media (max-width: 768px) {
+                        width: 100%;
+                    }
+                    & p {
+                        margin-bottom: 1rem;
+                    }
+                    & > .buttonContainer{
+                        position: relative;
+                        margin-top: 1rem;
+                        margin-left: 1rem;
+                        pointer-events: all;
+                        filter: blur(0px);
+                        display: inline-block;
+                        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                        @media (max-width: 768px) {
+                            top: 68%;
+                        }
+                        & > button{
+                            font-weight: bold;
+                            font-family: 'Courier New', Courier, monospace;
+                            font-size: 1rem;
+                            padding: 0;
+                            border :none;
+                            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                            background: none;
+                            color: #5C2D0A;
+                            width: auto;
+                            height: auto;
+                            overflow-y: hidden;
+                            & > span {
+                                display: inline-block;
+                                text-wrap: nowrap;
+                                transform: translateY(-100%);
+                            }    
+                        }
+                      
+                     
+                        &::before {
+                            content: "[";
+                            position: absolute;
+                            top: 0%;
+                            left: -1.25em;
+                            color: #5C2D0A;
+                            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                        }
+                        &::after {
+                            content: "]";
+                            position: absolute;
+                            top: 0;
+                            right: -1.25em;
+                            color: #5C2D0A;
+                
+                            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                
+                        }
+                        &:hover {
+                            filter: blur(3px) !important;
+                            font-weight: bold;
+                            background: none;
+                
+                            &::before {
+                                left: -1em;
+                                font-weight: bold;
+                            }
+                            &::after {
+                                right: -1em;
+                                font-weight: bold;
+                
+                            }
+                        }
+                    }
+                }
+                & .date {
+                    font-size: 1rem;
+                    font-weight: 400;
+                    font-style: italic;
+                    font-family: var(--font-courier-new);
+                    opacity: 0;
+                    /* pointer-events: none is already inherited, no need to redefine it */
+                    @media (max-width: 768px) {
+                        width: 40%;
+                    }
+                }
+                
+            }
+        }
+    }
+    & .projectImages {
+        position: relative;
+        min-width: 0; /* Allows flex to work correctly */
+        width: calc(100% - 65% - 1.75rem);
+        margin-left: calc(65% + 1.75rem);
+        display: inline-block;
+        min-height: 100lvh;
+        margin-bottom: 5rem;
+        & .head {
+            margin: 1.5em 2.5em;
+            text-align: right;
+            mix-blend-mode: color-burn;
+            pointer-events: none;
+            @media (max-width: 1200px) {
+                display: none;
+            }
+
+        }
+
+        & .middleLineContainer {
+            position: absolute;
+            top: 4em;
+            right: 0px;
+            height: 20px;
+            width: 100%;
+            border: none;
+            display: inline-block;
+            overflow: hidden;
+            @media (max-width: 1200px) {
+                right: 20px;
+                top: 0rem;
+            }
+            & .middleLine {
+                position: absolute;
+                top: 0;
+                right: 0;
+                height: 1px;
+                width:  calc(100vw - 65vw - 1.75rem); /* 60% of the width minus half the gap */
+                border: none;
+                display: inline-block;
+                margin: 0;
+                padding: 0;
+                background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%236B3A1F' stroke-width='4' stroke-dasharray='4%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+                @media (max-width: 1200px) {
+                    width: calc(100vw);
+                }
+            }
+        }
+    
+
+        & .imagesDetails {
+            position: relative;
+            margin-top: 3rem;
+            pointer-events: none;
+            @media (max-width: 1200px) {
+                width: calc(100% - 20px);
+            }
+            & .imagesNumber {
+                font-size: 1rem;
+                font-weight: bold;
+                font-family: var(--font-courier-new);
+                text-transform: uppercase;
+                text-align: right;
+                opacity: 0;
+                margin-right: 2.5em;
+                mix-blend-mode: color-burn;
+                @media (max-width: 1200px) {
+                    position: absolute;
+                    top: 2.5rem;
+                    right: 0;
+                    margin-right: 2rem;
+                }
+            }
+        }
+
+        & .projInfos {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            mix-blend-mode: color-burn;
+            pointer-events: none;
+            @media (max-width: 1200px) {
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                width: calc(100% - 20px - 2rem);
+                margin-left: 2rem;
+            }
+
+        }
+        & .projCubes {
+            display: flex;
+            flex-direction: row;
+            gap: .5rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            @media (max-width: 1200px) {
+                margin-top: 0rem;
+                margin-bottom: 0rem;
+            }
+            & .cube {
+                width: 1rem;
+                height: 1rem;
+                background-color: #5C2D0A;
+                opacity: 0;
+            }
+        }
+
+        & .projDescription {
+            display: flex;
+            flex-direction: column;
+            gap: .25rem;
+            width: 60%;
+            pointer-events: none;
+            @media (max-width: 1200px) {
+                width: 70%;
+                gap: 0.5rem;
+            }
+            & p {
+                text-transform: uppercase;
+                font-size: 1rem;
+                font-weight: 400;
+                line-height: 1.25;
+                opacity: 0;
+
+               
+            }
+
+            & > .buttonContainerLink{
+                position: relative;
+                margin-top: 1rem;
+                margin-left: 1rem;
+                pointer-events: all;
+                filter: blur(0px);
+                display: inline-block;
+                width: fit-content;
+                opacity: 0;
+                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                @media (max-width: 768px) {
+                    top: 68%;
+                }
+                & > a{
+                    font-weight: bold;
+                    font-family: 'Courier New', Courier, monospace;
+                    font-size: 1rem;
+                    padding: 0;
+                    border :none;
+                    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    background: none;
+                    color: #5C2D0A;
+                    width: auto;
+                    height: auto;
+                    overflow-y: hidden;
+                    & > span {
+                        display: inline-block;
+                        text-wrap: nowrap;
+                        text-decoration: underline;
+                    }    
+                }
+              
+             
+                &::before {
+                    content: "[";
+                    position: absolute;
+                    top: 0%;
+                    left: -1.25em;
+                    color: #5C2D0A;
+                    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                }
+                &::after {
+                    content: "]";
+                    position: absolute;
+                    top: 0;
+                    right: -1.25em;
+                    color: #5C2D0A;
+        
+                    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        
+                }
+                &:hover {
+                    filter: blur(3px) !important;
+                    font-weight: bold;
+                    background: none;
+        
+                    &::before {
+                        left: -1em;
+                        font-weight: bold;
+                    }
+                    &::after {
+                        right: -1em;
+                        font-weight: bold;
+        
+                    }
+                }
+            }
+    
+        }
+        & .imageContainer {
+            display: flex;
+            flex-direction: column;
+            margin-top: 3rem;
+            gap: 1rem;
+            width: calc(100% - 2.5em);
+            height: 100%;
+            isolation: isolate;
+            mix-blend-mode: normal;
+            pointer-events: none;
+            @media (max-width: 1200px) {
+                margin: 0 auto;
+                margin-top: 3rem;
+            }
+            & .imageFrame {
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                clip-path: inset(25% 25% 25% 25%);
+
+                & img {
+                    width: 100%;
+                    height: auto;
+                    object-fit: cover;
+                    transform-origin: center top;
+                    opacity: 0;
+                }
+            }
+        }
+  
+        /* Images will never have mix-blend-mode - explicit reset */
+        & img {
+            mix-blend-mode: normal;
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+    }
+    
+    /* Responsive: switch to column if not enough space */
+    @media (max-width: 1200px) {
+        flex-direction: column;
+        
+        & .projectContent {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            min-width: 0;
+        }
+        
+        & .projectImages {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            max-width: 100%;
+            margin-left: 20px;
+        }
+    }
+}

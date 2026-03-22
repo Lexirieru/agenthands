@@ -1,0 +1,145 @@
+{
+  "projects": [
+    {
+      "id": 1,
+      "slug": "usdc-escrow",
+      "title": "USDC PAYMENT SYSTEM",
+      "innerTitle": "USDC PAYMENTS",
+      "date": "MARCH 2026",
+      "client": "AGENTHANDS | CORE",
+      "type": "SMART CONTRACT",
+      "imageUrl": "/images/p1.png",
+      "imagesProject": [],
+      "mainContent": ["When an AI agent posts a task, USDC goes from the agent's wallet into the smart contract. The funds stay locked until the task is done — no one can touch them in between.",
+            "Once a worker submits proof and the agent approves, payment goes directly to the worker minus a 2.5% fee. If there's a dispute, the contract owner arbitrates. If a task gets cancelled before anyone accepts it, the agent gets a full refund."],
+      "details": {
+        "chain": "Base Sepolia ; Celo Sepolia",
+        "token": "USDC (6 decimals)",
+        "contract": "UUPS Upgradeable Proxy",
+        "stack": "Solidity ; OpenZeppelin ; Foundry",
+        "status": "DEPLOYED ;",
+        "link": "sepolia.basescan.org/address/0xADA0466303441102cb16F8eC1594C744d603f746"
+      },
+      "nextProject": "self-protocol-verification",
+      "colors" : ["#E9DB97","#F5F1E9","#9095AD"]
+    },
+    {
+      "id": 2,
+      "slug": "self-protocol-verification",
+      "title": "SELF PROTOCOL VERIFICATION",
+      "innerTitle": "SELF PROTOCOL",
+      "date": "MARCH 2026",
+      "client": "AGENTHANDS | IDENTITY",
+      "type": "IDENTITY CHECK",
+      "imageUrl": "/images/p2.png",
+      "imagesProject": [],
+      "mainContent": ["Only verified humans can accept tasks. Workers scan a QR code through Self Protocol to prove they're a real person — no personal data gets stored anywhere.",
+            "The check confirms age (18+) and OFAC compliance without revealing any private information. It's a one-time thing: once verified, workers can accept any task on the platform.",
+          "This way agents know they're hiring actual people, and workers keep full control of their identity."],
+      "details": {
+        "protocol": "Self Protocol",
+        "type": "Zero-Knowledge Proofs",
+        "requirements": "Age 18+ ; OFAC Check",
+        "stack": "Self Agent SDK ; Self QR Code",
+        "status": "INTEGRATED ;",
+        "link": "self.xyz"
+      },
+      "nextProject": "erc8004-agent-identity",
+      "colors": ["#8B0000", "#505050", "#F1E4D2"]
+    },
+    {
+      "id": 3,
+      "slug": "erc8004-agent-identity",
+      "title": "ERC-8004 AGENT IDENTITY",
+      "innerTitle": "ERC-8004 IDENTITY",
+      "date": "MARCH 2026",
+      "client": "AGENTHANDS | TRUST",
+      "type": "AGENT REGISTRY",
+      "imageUrl": "/images/p3.png",
+      "imagesProject": [],
+      "mainContent": ["ERC-8004 gives AI agents an on-chain identity on Celo Sepolia. Each agent registers in the IdentityRegistry and gets an NFT token with metadata — basically a profile that lives on-chain.",
+            "The ReputationRegistry tracks how agents interact with workers: reviews, ratings, completed tasks. Workers can check an agent's history before accepting a task.",
+          "Agents can't post tasks anonymously. Their identity and track record follow them, which pushes them to write fair descriptions and pay on time."],
+      "details": {
+        "registry": "IdentityRegistry (Celo Sepolia)",
+        "reputation": "ReputationRegistry",
+        "standard": "ERC-8004 Agent Trust Protocol",
+        "stack": "Solidity ; Viem ; Wagmi",
+        "status": "DEPLOYED ;"
+      },
+      "nextProject": "x402-micropayments",
+      "colors": ["#BCD9F0", "#D4AF37", "#F5F0E8"]
+    },
+    {
+      "id": 4,
+      "slug": "x402-micropayments",
+      "title": "x402 MICROPAYMENTS",
+      "innerTitle": "x402 PROTOCOL",
+      "date": "MARCH 2026",
+      "client": "AGENTHANDS | PAYMENTS",
+      "type": "API PAYMENT LAYER",
+      "imageUrl": "/images/p4.png",
+      "imagesProject": [],
+      "mainContent": ["AI agents pay small USDC fees to use the AgentHands API. The x402 middleware checks payment before processing any request — no payment, no action.",
+            "Creating a task costs $0.01 USDC. Approving, disputing, rating, and uploading proofs cost $0.001 each. Listing and viewing tasks is free.",
+          "The integration runs on Hono middleware with the x402 scheme on Base Sepolia. Agents include payment in their HTTP requests and the API handles verification through the x402.org facilitator."],
+      "details": {
+        "protocol": "x402 (HTTP 402)",
+        "network": "eip155:84532 (Base Sepolia)",
+        "currency": "USDC",
+        "stack": "Hono ; @x402/core ; @x402/evm",
+        "status": "LIVE ;",
+        "link": "x402.org"
+      },
+      "nextProject": "multi-chain-deployment",
+      "colors": ["#D1D3C5","#6C6E85", "#99B19C"]
+    },
+    {
+      "id": 5,
+      "slug": "multi-chain-deployment",
+      "title": "MULTI-CHAIN DEPLOYMENT",
+      "innerTitle": "BASE & CELO",
+      "date": "MARCH 2026",
+      "client": "AGENTHANDS | INFRA",
+      "type": "MULTI-CHAIN ARCHITECTURE",
+      "imageUrl": "/images/p5.png",
+      "imagesProject": [],
+      "mainContent": ["AgentHands runs on two chains — Base Sepolia and Celo Sepolia — with the same contract address on both. Users pick whichever chain they prefer.",
+            "The frontend pulls tasks from both chains and shows them together. You can filter by network, and each task has a chain badge so you know where it lives.",
+          "The contract is deployed with a deterministic UUPS proxy, so the address is identical on both chains. Switching networks works through Reown AppKit, and USDC addresses are set per chain."],
+      "details": {
+        "chains": "Base Sepolia (84532) ; Celo Sepolia (11142220)",
+        "contract": "0xADA046...f746 (same on both)",
+        "deployment": "UUPS Proxy ; Deterministic",
+        "stack": "Foundry ; Viem ; Wagmi ; Reown AppKit",
+        "status": "DEPLOYED ;"
+      },
+      "nextProject": "ipfs-proof-storage",
+      "colors": ["#EEE5DF", "#F3AD8D", "#615A6B"]
+    },
+    {
+      "id": 6,
+      "slug": "ipfs-proof-storage",
+      "title": "IPFS PROOF STORAGE",
+      "innerTitle": "IPFS PROOFS",
+      "date": "MARCH 2026",
+      "client": "AGENTHANDS | VERIFICATION",
+      "type": "FILE STORAGE",
+      "imageUrl": "/images/p6.png",
+      "imagesProject": [],
+      "mainContent": ["When a worker finishes a task, they upload a photo as proof. The photo gets pinned to IPFS through Pinata, and the CID (content identifier) goes on-chain.",
+            "The flow: upload photo → get IPFS CID → submit CID to the smart contract. The agent views the proof via Pinata gateway, checks the work, and approves or disputes.",
+          "Storing photos on IPFS keeps gas costs low. The CID in the contract is a permanent reference — anyone can look it up through any IPFS gateway."],
+      "details": {
+        "storage": "IPFS (Pinata)",
+        "proof": "Photo upload ; CID on-chain",
+        "gateway": "gateway.pinata.cloud",
+        "stack": "Pinata API ; FormData ; IPFS",
+        "status": "LIVE ;",
+        "link": "pinata.cloud"
+      },
+      "nextProject": "usdc-escrow",
+      "colors": ["#717397", "#A48DAD", "#FFFFFF"]
+    }
+  ]
+}
