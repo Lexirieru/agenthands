@@ -93,6 +93,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
   const invalidateTask = useCallback(() => {
     queryClient.invalidateQueries({ queryKey });
+    queryClient.invalidateQueries(); // also refresh USDC balance in Header
   }, [queryClient, queryKey]);
 
   // Write hooks
