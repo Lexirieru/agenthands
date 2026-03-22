@@ -93,8 +93,8 @@ export default function Header() {
               </span>
             )}
 
-            {/* Network Switch */}
-            <NetworkSwitch />
+            {/* Network Switch — only when connected */}
+            {isConnected && <NetworkSwitch />}
 
             {/* Wallet Connect */}
             <div className="ml-1 relative">
@@ -173,9 +173,11 @@ export default function Header() {
                     ${usdcFormatted} USDC
                   </span>
                 )}
-                <div className="px-4 py-1">
-                  <NetworkSwitch />
-                </div>
+                {isConnected && (
+                  <div className="px-4 py-1">
+                    <NetworkSwitch />
+                  </div>
+                )}
                 <div className="px-4 py-1">
                   {isConnected && address ? (
                     <div className="flex items-center justify-between">
