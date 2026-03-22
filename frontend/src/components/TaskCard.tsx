@@ -1,17 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { Clock, Coins, MapPin } from "lucide-react";
 import ChainBadge from "./ChainBadge";
-
-const STATUS_LABELS: Record<number, { label: string; color: string }> = {
-  0: { label: "Open", color: "bg-emerald-500/20 text-emerald-400" },
-  1: { label: "Accepted", color: "bg-blue-500/20 text-blue-400" },
-  2: { label: "Submitted", color: "bg-yellow-500/20 text-yellow-400" },
-  3: { label: "Completed", color: "bg-green-500/20 text-green-400" },
-  4: { label: "Disputed", color: "bg-red-500/20 text-red-400" },
-  5: { label: "Cancelled", color: "bg-gray-500/20 text-gray-400" },
-  6: { label: "Expired", color: "bg-gray-500/20 text-gray-400" },
-};
+import { formatUSDC, getStatusDisplay, truncateAddress } from "@/lib/utils/format";
 
 interface TaskCardProps {
   id: bigint;
@@ -36,52 +28,53 @@ export default function TaskCard({
   agent,
   chainId,
 }: TaskCardProps) {
-  const statusInfo = STATUS_LABELS[status] || STATUS_LABELS[0];
-  const rewardFormatted = (Number(reward) / 1e6).toFixed(2);
+  const statusInfo = getStatusDisplay(status);
   const deadlineDate = new Date(Number(deadline) * 1000);
   const isExpired = deadlineDate < new Date() && status === 0;
 
   return (
     <Link href={`/tasks/${id.toString()}${chainId ? `?chain=${chainId}` : ""}`}>
-      <div className="p-6 bg-gray-800/50 rounded-xl border border-gray-700/50 hover:border-gray-600 transition cursor-pointer group">
-        <div className="flex items-start justify-between mb-3">
-          <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition line-clamp-1">
+      <div className="bg-white border border-[#F5DEC8] rounded-xl p-5 hover:border-[#FF8C42] transition-all duration-200 cursor-pointer group">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <h3 className="text-[#1A0F08] font-semibold text-lg font-heading group-hover:text-[#D4700A] transition-colors line-clamp-1">
             {title}
           </h3>
-          <span
-            className={`px-2 py-1 text-xs font-medium rounded-full shrink-0 ml-2 ${
-              isExpired ? STATUS_LABELS[6].color : statusInfo.color
-            }`}
-          >
+          <span className={`text-xs font-medium font-label px-2 py-1 rounded-full bg-[#FFF2E8] whitespace-nowrap ${
+            isExpired ? "text-gray-500" : statusInfo.color
+          }`}>
             {isExpired ? "Expired" : statusInfo.label}
           </span>
         </div>
 
-        <p className="text-sm text-gray-400 mb-4 line-clamp-2">
+        {/* Description */}
+        <p className="text-[#6B5040] text-sm mb-4 line-clamp-2">
           {description}
         </p>
 
-        <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-1 text-gray-500">
-            <span>📍</span>
-            <span className="line-clamp-1">{location}</span>
+        {/* Footer */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#A07858] font-label">
+          <div className="flex items-center gap-1">
+            <Coins size={14} className="text-[#D4700A]" />
+            <span className="text-[#1A0F08] font-medium">${formatUSDC(reward)} USDC</span>
           </div>
-          <div className="flex items-center gap-1 text-gray-500">
-            <span>⏰</span>
-            <span>{deadlineDate.toLocaleDateString()}</span>
-          </div>
-        </div>
 
-        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700/50">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500">
-              by {agent.slice(0, 6)}...{agent.slice(-4)}
-            </span>
-            {chainId && <ChainBadge chainId={chainId} />}
+          <div className="flex items-center gap-1">
+            <MapPin size={14} />
+            <span className="line-clamp-1 max-w-[120px]">{location}</span>
           </div>
-          <span className="text-lg font-bold text-emerald-400">
-            ${rewardFormatted} <span className="text-xs text-gray-500">USDC</span>
-          </span>
+
+          <div className="flex items-center gap-1">
+            <Clock size={14} />
+            <span className={isExpired ? "text-red-400" : ""}>
+              {isExpired ? "Expired" : deadlineDate.toLocaleDateString()}
+            </span>
+          </div>
+
+          <div className="sm:ml-auto flex items-center gap-2">
+            {chainId && <ChainBadge chainId={chainId} />}
+            <span className="text-[#A07858]">{truncateAddress(agent)}</span>
+          </div>
         </div>
       </div>
     </Link>

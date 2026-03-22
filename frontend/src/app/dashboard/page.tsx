@@ -1,23 +1,26 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
-import { useReadContracts } from "wagmi";
-import { useAppKitAccount, useAppKitNetwork } from "@reown/appkit/react";
-import { useTaskCount, useUSDCBalance } from "@/hooks/useAgentHands";
-import { AGENTHANDS_ADDRESS } from "@/config";
-import AgentHandsABI from "@/abi/AgentHands.json";
-import TaskCard from "@/components/TaskCard";
-import Navbar from "@/components/Navbar";
-import type { TaskData, ContractResult } from "@/types/task";
+import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { useReadContracts } from 'wagmi';
+import { useAppKitAccount, useAppKitNetwork } from '@reown/appkit/react';
+import { Briefcase, CheckCircle, Clock, Zap } from 'lucide-react';
+import gsap from 'gsap';
+import { useTaskCount, useUSDCBalance } from '@/hooks/useAgentHands';
+import { AGENTHANDS_ADDRESS } from '@/config';
+import AgentHandsABI from '@/abi/AgentHands.json';
+import TaskCard from '@/components/TaskCard';
+import type { TaskData, ContractResult } from '@/types/task';
 
-type Tab = "agent" | "worker";
+type Tab = 'agent' | 'worker';
 
 export default function DashboardPage() {
   const { address, isConnected } = useAppKitAccount();
   const { caipNetwork } = useAppKitNetwork();
-  const chainId = caipNetwork?.id ? Number(String(caipNetwork.id).split(":")[1] || caipNetwork.id) : 0;
-  const [tab, setTab] = useState<Tab>("agent");
+  const chainId = caipNetwork?.id ? Number(String(caipNetwork.id).split(':')[1] || caipNetwork.id) : 0;
+  const [tab, setTab] = useState<Tab>('agent');
+  const statsRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   const { data: taskCount } = useTaskCount();
   const count = taskCount ? Number(taskCount) : 0;
@@ -31,7 +34,7 @@ export default function DashboardPage() {
   const taskCalls = Array.from({ length: count }, (_, i) => ({
     address: AGENTHANDS_ADDRESS,
     abi: AgentHandsABI,
-    functionName: "getTask",
+    functionName: 'getTask',
     args: [BigInt(i + 1)],
   })) as never[];
 
@@ -42,7 +45,7 @@ export default function DashboardPage() {
 
   const allTasks: TaskData[] =
     (tasksData as ContractResult[] | undefined)
-      ?.filter((r) => r.status === "success")
+      ?.filter((r) => r.status === 'success')
       .map((r) => r.result) || [];
 
   const myAgentTasks = allTasks.filter(
@@ -52,123 +55,175 @@ export default function DashboardPage() {
     (t) => t.worker?.toLowerCase() === address?.toLowerCase()
   );
 
-  const activeTasks = tab === "agent" ? myAgentTasks : myWorkerTasks;
+  const activeTasks = tab === 'agent' ? myAgentTasks : myWorkerTasks;
 
   const balanceFormatted = usdcBalance
     ? (Number(usdcBalance) / 1e6).toFixed(2)
-    : "0.00";
+    : '0.00';
+
+  const completedCount = myAgentTasks.filter((t) => Number(t.status) === 3).length +
+    myWorkerTasks.filter((t) => Number(t.status) === 3).length;
+  const activeCount = myAgentTasks.filter((t) => Number(t.status) < 3).length +
+    myWorkerTasks.filter((t) => Number(t.status) < 3 && Number(t.status) > 0).length;
+
+  // GSAP: animate stats
+  useEffect(() => {
+    if (!isLoading && statsRef.current) {
+      const ctx = gsap.context(() => {
+        gsap.from('.stat-card', {
+          opacity: 0,
+          y: 20,
+          duration: 0.5,
+          stagger: 0.1,
+          ease: 'power2.out',
+        });
+      }, statsRef);
+      return () => ctx.revert();
+    }
+  }, [isLoading]);
+
+  // GSAP: animate cards
+  useEffect(() => {
+    if (!isLoading && gridRef.current) {
+      const ctx = gsap.context(() => {
+        gsap.from('.dash-card', {
+          opacity: 0,
+          y: 25,
+          duration: 0.4,
+          stagger: 0.06,
+          ease: 'power2.out',
+        });
+      }, gridRef);
+      return () => ctx.revert();
+    }
+  }, [isLoading, tab]);
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
-        <Navbar />
-        <div className="text-center py-20">
-          <div className="text-6xl mb-4">🔐</div>
-          <h1 className="text-2xl font-bold text-white mb-4">Connect Your Wallet</h1>
-          <p className="text-gray-400 mb-6">Connect your wallet to view your dashboard</p>
-          <appkit-button />
-        </div>
+      <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-16 text-center">
+        <h1 className="text-2xl sm:text-3xl tracking-tight text-[#1A0F08] mb-4 font-bold">Dashboard</h1>
+        <p className="text-[#6B5040] mb-6">Connect your wallet to view your dashboard.</p>
+        <appkit-button />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
-      <Navbar />
+    <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl sm:text-4xl tracking-tight text-[#1A0F08] font-bold">Dashboard</h1>
+          <p className="text-[#A07858] mt-1 font-mono text-sm">
+            {address?.slice(0, 8)}...{address?.slice(-6)}
+          </p>
+        </div>
+        <div className="text-right">
+          <div className="text-sm text-[#A07858] font-label">USDC Balance</div>
+          <div className="text-2xl font-bold text-[#D4700A]">${balanceFormatted}</div>
+          <div className="text-xs text-[#A07858]">{caipNetwork?.name}</div>
+        </div>
+      </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-10">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-            <p className="text-gray-400 mt-1 font-mono text-sm">
-              {address?.slice(0, 8)}...{address?.slice(-6)}
-            </p>
-          </div>
-          <div className="text-right">
-            <div className="text-sm text-gray-500">USDC Balance</div>
-            <div className="text-2xl font-bold text-emerald-400">${balanceFormatted}</div>
-            <div className="text-xs text-gray-500">{caipNetwork?.name}</div>
+      {/* Stats */}
+      <div ref={statsRef} className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <div className="stat-card bg-white border border-[#F5DEC8] rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-[#FF8C42]/20 flex items-center justify-center">
+              <Briefcase size={20} className="text-[#D4700A]" />
+            </div>
+            <div>
+              <p className="text-xs text-[#A07858] font-label">Tasks Posted</p>
+              <p className="text-lg font-bold text-[#1A0F08]">{myAgentTasks.length}</p>
+            </div>
           </div>
         </div>
-
-        <div className="grid grid-cols-4 gap-4 mb-8">
-          <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/50 text-center">
-            <div className="text-2xl font-bold text-white">{myAgentTasks.length}</div>
-            <div className="text-sm text-gray-500">Tasks Posted</div>
-          </div>
-          <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/50 text-center">
-            <div className="text-2xl font-bold text-white">{myWorkerTasks.length}</div>
-            <div className="text-sm text-gray-500">Tasks Accepted</div>
-          </div>
-          <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/50 text-center">
-            <div className="text-2xl font-bold text-emerald-400">
-              {myAgentTasks.filter((t) => Number(t.status) === 3).length +
-                myWorkerTasks.filter((t) => Number(t.status) === 3).length}
+        <div className="stat-card bg-white border border-[#F5DEC8] rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+              <Clock size={20} className="text-blue-600" />
             </div>
-            <div className="text-sm text-gray-500">Completed</div>
-          </div>
-          <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/50 text-center">
-            <div className="text-2xl font-bold text-yellow-400">
-              {myAgentTasks.filter((t) => Number(t.status) < 3).length +
-                myWorkerTasks.filter((t) => Number(t.status) < 3 && Number(t.status) > 0).length}
+            <div>
+              <p className="text-xs text-[#A07858] font-label">Tasks Accepted</p>
+              <p className="text-lg font-bold text-[#1A0F08]">{myWorkerTasks.length}</p>
             </div>
-            <div className="text-sm text-gray-500">Active</div>
           </div>
         </div>
+        <div className="stat-card bg-white border border-[#F5DEC8] rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+              <CheckCircle size={20} className="text-green-600" />
+            </div>
+            <div>
+              <p className="text-xs text-[#A07858] font-label">Completed</p>
+              <p className="text-lg font-bold text-[#1A0F08]">{completedCount}</p>
+            </div>
+          </div>
+        </div>
+        <div className="stat-card bg-white border border-[#F5DEC8] rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-[#FFF2E8] flex items-center justify-center">
+              <Zap size={20} className="text-[#FF8C42]" />
+            </div>
+            <div>
+              <p className="text-xs text-[#A07858] font-label">Active</p>
+              <p className="text-lg font-bold text-[#1A0F08]">{activeCount}</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        <div className="flex gap-1 mb-6 bg-gray-800/50 rounded-lg p-1 w-fit">
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6 bg-[#FFF2E8] p-1 rounded-lg w-full sm:w-auto sm:inline-flex">
+        {(['agent', 'worker'] as Tab[]).map((t) => (
           <button
-            onClick={() => setTab("agent")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-              tab === "agent" ? "bg-emerald-500 text-white" : "text-gray-400 hover:text-white"
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-4 py-2 rounded-md text-sm font-medium font-label transition-colors ${
+              tab === t ? 'bg-[#1A0F08] text-white' : 'text-[#A07858] hover:text-[#1A0F08]'
             }`}
           >
-            🤖 As Agent ({myAgentTasks.length})
+            {t === 'agent' ? `🤖 As Agent (${myAgentTasks.length})` : `👷 As Worker (${myWorkerTasks.length})`}
           </button>
-          <button
-            onClick={() => setTab("worker")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-              tab === "worker" ? "bg-blue-500 text-white" : "text-gray-400 hover:text-white"
-            }`}
-          >
-            👷 As Worker ({myWorkerTasks.length})
-          </button>
-        </div>
+        ))}
+      </div>
 
-        {isLoading ? (
-          <div className="flex justify-center py-10">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400"></div>
-          </div>
-        ) : activeTasks.length === 0 ? (
-          <div className="text-center py-10">
-            <div className="text-4xl mb-3">{tab === "agent" ? "🤖" : "👷"}</div>
-            <p className="text-gray-400">
-              {tab === "agent"
-                ? "You haven't posted any tasks yet"
-                : "You haven't accepted any tasks yet"}
-            </p>
-            {tab === "agent" && (
-              <Link
-                href="/tasks/new"
-                className="inline-block mt-4 px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg transition text-sm"
-              >
-                Post Your First Task
-              </Link>
-            )}
-            {tab === "worker" && (
-              <Link
-                href="/tasks"
-                className="inline-block mt-4 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition text-sm"
-              >
-                Browse Available Tasks
-              </Link>
-            )}
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {activeTasks.map((task, i) => (
+      {/* Task List */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-[#FFF2E8] border border-[#F5DEC8] rounded-xl p-5 animate-pulse h-40" />
+          ))}
+        </div>
+      ) : activeTasks.length === 0 ? (
+        <div className="text-center py-16 text-[#A07858]">
+          <div className="text-4xl mb-3">{tab === 'agent' ? '🤖' : '👷'}</div>
+          <p className="text-[#6B5040]">
+            {tab === 'agent'
+              ? "You haven't posted any tasks yet"
+              : "You haven't accepted any tasks yet"}
+          </p>
+          {tab === 'agent' && (
+            <Link
+              href="/tasks/new"
+              className="inline-block mt-4 px-6 py-2.5 bg-[#1A0F08] hover:bg-[#2a1a0c] text-white font-semibold rounded-lg transition text-sm"
+            >
+              Post Your First Task
+            </Link>
+          )}
+          {tab === 'worker' && (
+            <Link
+              href="/tasks"
+              className="inline-block mt-4 px-6 py-2.5 bg-[#1A0F08] hover:bg-[#2a1a0c] text-white font-semibold rounded-lg transition text-sm"
+            >
+              Browse Available Tasks
+            </Link>
+          )}
+        </div>
+      ) : (
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {activeTasks.map((task, i) => (
+            <div key={i} className="dash-card">
               <TaskCard
-                key={i}
                 id={task.id || BigInt(i + 1)}
                 title={task.title}
                 description={task.description}
@@ -178,10 +233,10 @@ export default function DashboardPage() {
                 status={Number(task.status)}
                 agent={task.agent}
               />
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

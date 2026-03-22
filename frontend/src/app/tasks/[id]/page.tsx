@@ -1,42 +1,48 @@
-"use client";
+'use client';
 
-import { use, useState } from "react";
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { useAppKitAccount } from "@reown/appkit/react";
-import { AGENTHANDS_ADDRESS } from "@/config";
-import AgentHandsABI from "@/abi/AgentHands.json";
-import Navbar from "@/components/Navbar";
-import ProofUpload from "@/components/ProofUpload";
-import SelfVerify from "@/components/SelfVerify";
-import AgentBadge from "@/components/AgentBadge";
-import type { TaskData } from "@/types/task";
+import { use, useState, useEffect, useRef } from 'react';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAppKitAccount } from '@reown/appkit/react';
+import { ArrowLeft, Clock, DollarSign, MapPin, User } from 'lucide-react';
+import Link from 'next/link';
+import gsap from 'gsap';
+import { AGENTHANDS_ADDRESS } from '@/config';
+import AgentHandsABI from '@/abi/AgentHands.json';
+import ProofUpload from '@/components/ProofUpload';
+import SelfVerify from '@/components/SelfVerify';
+import AgentBadge from '@/components/AgentBadge';
+import ChainBadge from '@/components/ChainBadge';
+import { getStatusDisplay, truncateAddress } from '@/lib/utils/format';
+import { toast } from '@/components/Toast';
+import type { TaskData } from '@/types/task';
 
-const STATUS_LABELS: Record<number, { label: string; color: string; emoji: string }> = {
-  0: { label: "Open", color: "bg-emerald-500/20 text-emerald-400", emoji: "🟢" },
-  1: { label: "Accepted", color: "bg-blue-500/20 text-blue-400", emoji: "🔵" },
-  2: { label: "Proof Submitted", color: "bg-yellow-500/20 text-yellow-400", emoji: "📸" },
-  3: { label: "Completed", color: "bg-green-500/20 text-green-400", emoji: "✅" },
-  4: { label: "Disputed", color: "bg-red-500/20 text-red-400", emoji: "⚠️" },
-  5: { label: "Cancelled", color: "bg-gray-500/20 text-gray-400", emoji: "❌" },
-  6: { label: "Expired", color: "bg-gray-500/20 text-gray-400", emoji: "⏰" },
+const STATUS_COLORS: Record<number, string> = {
+  0: 'bg-green-100 text-green-700',
+  1: 'bg-blue-100 text-blue-700',
+  2: 'bg-yellow-100 text-yellow-700',
+  3: 'bg-green-100 text-green-800',
+  4: 'bg-red-100 text-red-700',
+  5: 'bg-gray-100 text-gray-500',
+  6: 'bg-gray-100 text-gray-500',
 };
 
 export default function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const taskId = BigInt(id);
   const { address } = useAppKitAccount();
-  const [proofCID, setProofCID] = useState("");
+  const [proofCID, setProofCID] = useState('');
   const [rating, setRating] = useState(5);
   const [selfVerified, setSelfVerified] = useState(
-    typeof window !== "undefined" && address
+    typeof window !== 'undefined' && address
       ? !!localStorage.getItem(`self_verified_${address}`)
       : false
   );
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: task, isLoading, refetch } = useReadContract({
     address: AGENTHANDS_ADDRESS,
     abi: AgentHandsABI as typeof AgentHandsABI,
-    functionName: "getTask",
+    functionName: 'getTask',
     args: [taskId],
   });
 
@@ -57,12 +63,29 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
     refetch();
   }
 
+  // GSAP entrance animation
+  useEffect(() => {
+    if (!isLoading && task && containerRef.current) {
+      const ctx = gsap.context(() => {
+        gsap.from('.detail-section', {
+          opacity: 0,
+          y: 25,
+          duration: 0.5,
+          stagger: 0.12,
+          ease: 'power2.out',
+        });
+      }, containerRef);
+      return () => ctx.revert();
+    }
+  }, [isLoading, task]);
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
-        <Navbar />
-        <div className="flex justify-center py-20">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400"></div>
+      <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-[#F5DEC8] rounded w-1/3" />
+          <div className="h-4 bg-[#F5DEC8] rounded w-2/3" />
+          <div className="h-40 bg-[#F5DEC8] rounded" />
         </div>
       </div>
     );
@@ -70,18 +93,17 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
   if (!task) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
-        <Navbar />
-        <div className="text-center py-20">
-          <h1 className="text-2xl text-white">Task not found</h1>
-        </div>
+      <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12 text-center text-[#A07858]">
+        <p className="text-lg">Task not found</p>
+        <Link href="/tasks" className="text-[#D4700A] mt-4 inline-block">Back to tasks</Link>
       </div>
     );
   }
 
   const t = task as unknown as TaskData;
   const status = Number(t.status);
-  const statusInfo = STATUS_LABELS[status] || STATUS_LABELS[0];
+  const statusInfo = getStatusDisplay(status);
+  const statusColor = STATUS_COLORS[status] || STATUS_COLORS[0];
   const rewardFormatted = (Number(t.reward) / 1e6).toFixed(2);
   const isAgent = address?.toLowerCase() === t.agent?.toLowerCase();
   const isWorker = address?.toLowerCase() === t.worker?.toLowerCase();
@@ -94,183 +116,231 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
-      <Navbar />
+    <div ref={containerRef} className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      {/* Back */}
+      <Link href="/tasks" className="inline-flex items-center gap-2 text-[#A07858] hover:text-[#1A0F08] mb-6 text-sm">
+        <ArrowLeft size={16} />
+        Back to tasks
+      </Link>
 
-      <div className="max-w-3xl mx-auto px-6 py-10">
-        <div className="flex items-start justify-between mb-6">
+      {/* Header */}
+      <div className="detail-section bg-white border border-[#F5DEC8] rounded-xl p-6 mb-6">
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className={`px-3 py-1 text-sm font-medium rounded-full ${statusInfo.color}`}>
-                {statusInfo.emoji} {statusInfo.label}
+              <span className={`text-xs sm:text-sm font-medium font-label px-3 py-1 rounded-full whitespace-nowrap ${statusColor}`}>
+                {statusInfo.label}
               </span>
-              <span className="text-sm text-gray-500">Task #{id}</span>
+              <span className="text-sm text-[#A07858] font-label">Task #{id}</span>
             </div>
-            <h1 className="text-3xl font-bold text-white">{t.title}</h1>
+            <h1 className="text-xl sm:text-3xl tracking-tight text-[#1A0F08] font-bold">{t.title}</h1>
           </div>
           <div className="text-right">
-            <div className="text-3xl font-bold text-emerald-400">${rewardFormatted}</div>
-            <div className="text-sm text-gray-500">USDC</div>
+            <div className="text-2xl sm:text-3xl font-bold text-[#D4700A]">${rewardFormatted}</div>
+            <div className="text-sm text-[#A07858] font-label">USDC</div>
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="p-6 bg-gray-800/50 rounded-xl border border-gray-700/50">
-            <h2 className="text-lg font-semibold text-white mb-3">Description</h2>
-            <p className="text-gray-300 whitespace-pre-wrap">{t.description}</p>
+        {/* Description */}
+        <div className="mb-6">
+          <p className="text-[#6B5040] whitespace-pre-wrap">{t.description}</p>
+        </div>
+
+        {/* Details grid */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="p-4 bg-[#FFFAF5] rounded-xl border border-[#F5DEC8]">
+            <div className="text-sm text-[#A07858] mb-1 flex items-center gap-1 font-label">
+              <MapPin size={14} /> Location
+            </div>
+            <div className="text-[#1A0F08] font-medium">{t.location}</div>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/50">
-              <div className="text-sm text-gray-500 mb-1">📍 Location</div>
-              <div className="text-white">{t.location}</div>
+          <div className="p-4 bg-[#FFFAF5] rounded-xl border border-[#F5DEC8]">
+            <div className="text-sm text-[#A07858] mb-1 flex items-center gap-1 font-label">
+              <User size={14} /> Agent
             </div>
-            <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/50">
-              <div className="text-sm text-gray-500 mb-1">🤖 Agent</div>
-              <div className="text-white font-mono text-sm mb-1">
-                {t.agent?.slice(0, 8)}...{t.agent?.slice(-6)}
-              </div>
-              {t.agent && <AgentBadge agentAddress={t.agent} />}
+            <div className="text-[#1A0F08] font-mono text-sm mb-1">
+              {truncateAddress(t.agent || '')}
             </div>
-            <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/50">
-              <div className="text-sm text-gray-500 mb-1">⏰ Accept Before</div>
-              <div className="text-white">{deadline.toLocaleString()}</div>
-            </div>
-            <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/50">
-              <div className="text-sm text-gray-500 mb-1">🏁 Complete Before</div>
-              <div className="text-white">{completionDeadline.toLocaleString()}</div>
-            </div>
+            {t.agent && <AgentBadge agentAddress={t.agent} />}
           </div>
-
-          {t.worker && t.worker !== "0x0000000000000000000000000000000000000000" && (
-            <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-              <div className="text-sm text-blue-400 mb-1">👷 Worker</div>
-              <div className="text-white font-mono text-sm">{t.worker}</div>
+          <div className="p-4 bg-[#FFFAF5] rounded-xl border border-[#F5DEC8]">
+            <div className="text-sm text-[#A07858] mb-1 flex items-center gap-1 font-label">
+              <Clock size={14} /> Accept Before
             </div>
-          )}
-
-          {t.proofCID && (
-            <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-              <div className="text-sm text-yellow-400 mb-1">📸 Proof (IPFS)</div>
-              <a
-                href={`https://gateway.pinata.cloud/ipfs/${t.proofCID}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white hover:text-emerald-400 font-mono text-sm break-all"
-              >
-                {t.proofCID}
-              </a>
+            <div className="text-[#1A0F08]">{deadline.toLocaleString()}</div>
+          </div>
+          <div className="p-4 bg-[#FFFAF5] rounded-xl border border-[#F5DEC8]">
+            <div className="text-sm text-[#A07858] mb-1 flex items-center gap-1 font-label">
+              <DollarSign size={14} /> Complete Before
             </div>
-          )}
+            <div className="text-[#1A0F08]">{completionDeadline.toLocaleString()}</div>
+          </div>
+        </div>
 
-          <div className="space-y-3">
-            {status === 0 && !isAgent && (
-              <div className="space-y-4">
-                {/* Self Protocol verification gate */}
-                <SelfVerify onVerified={() => setSelfVerified(true)} />
+        {/* Worker info */}
+        {t.worker && t.worker !== '0x0000000000000000000000000000000000000000' && (
+          <div className="p-4 bg-blue-50 rounded-xl border border-blue-200 mb-4">
+            <div className="text-sm text-blue-600 mb-1 font-label">👷 Worker</div>
+            <div className="text-[#1A0F08] font-mono text-sm">{t.worker}</div>
+          </div>
+        )}
 
-                <button
-                  onClick={() => acceptWrite({ ...contractCall, functionName: "acceptTask", args: [taskId] })}
-                  disabled={accepting || !selfVerified}
-                  className="w-full py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-700 text-white font-semibold rounded-lg transition"
-                >
-                  {!selfVerified
-                    ? "🔒 Verify identity to accept"
-                    : accepting
-                      ? "Accepting..."
-                      : "✋ Accept This Task"}
-                </button>
-              </div>
-            )}
+        {/* Proof */}
+        {t.proofCID && (
+          <div className="p-4 bg-[#FFF2E8] rounded-xl border border-[#F5DEC8] mb-4">
+            <div className="text-sm text-[#D4700A] mb-1 font-label">📸 Proof (IPFS)</div>
+            <a
+              href={`https://gateway.pinata.cloud/ipfs/${t.proofCID}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#1A0F08] hover:text-[#D4700A] font-mono text-sm break-all"
+            >
+              {t.proofCID}
+            </a>
+          </div>
+        )}
 
-            {status === 1 && isWorker && (
-              <div className="space-y-3">
-                <ProofUpload onCIDReady={(cid) => setProofCID(cid)} />
-                <div className="text-xs text-gray-500">
-                  Or paste CID manually:
-                </div>
-                <input
-                  type="text"
-                  value={proofCID}
-                  onChange={(e) => setProofCID(e.target.value)}
-                  placeholder="IPFS CID (e.g. QmXyz...)"
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
-                />
-                <button
-                  onClick={() => submitWrite({ ...contractCall, functionName: "submitProof", args: [taskId, proofCID] })}
-                  disabled={submitting || !proofCID}
-                  className="w-full py-3 bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-700 text-white font-semibold rounded-lg transition"
-                >
-                  {submitting ? "Submitting..." : "📸 Submit Proof On-Chain"}
-                </button>
-              </div>
-            )}
+        {/* Chain badge */}
+        <div className="flex items-center gap-2">
+          <ChainBadge chainId={84532} size="md" />
+        </div>
+      </div>
 
-            {status === 2 && isAgent && (
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => approveWrite({ ...contractCall, functionName: "approveTask", args: [taskId] })}
-                  disabled={approvingTask}
-                  className="py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-700 text-white font-semibold rounded-lg transition"
-                >
-                  {approvingTask ? "Approving..." : "✅ Approve & Pay"}
-                </button>
-                <button
-                  onClick={() => disputeWrite({ ...contractCall, functionName: "disputeTask", args: [taskId] })}
-                  disabled={disputing}
-                  className="py-3 bg-red-500 hover:bg-red-600 disabled:bg-gray-700 text-white font-semibold rounded-lg transition"
-                >
-                  {disputing ? "Disputing..." : "⚠️ Dispute"}
-                </button>
-              </div>
-            )}
+      {/* Actions */}
+      <div className="detail-section space-y-4">
+        {/* Accept task */}
+        {status === 0 && !isAgent && (
+          <div className="bg-white border border-[#F5DEC8] rounded-xl p-6 space-y-4">
+            <SelfVerify onVerified={() => setSelfVerified(true)} />
+            <button
+              onClick={() => {
+                acceptWrite({ ...contractCall, functionName: 'acceptTask', args: [taskId] });
+                toast('info', 'Confirm transaction in wallet...');
+              }}
+              disabled={accepting || !selfVerified}
+              className="w-full py-3 bg-[#1A0F08] hover:bg-[#2a1a0c] disabled:bg-[#A07858] text-white font-semibold rounded-lg transition text-sm"
+            >
+              {!selfVerified
+                ? '🔒 Verify identity to accept'
+                : accepting
+                  ? 'Accepting...'
+                  : '✋ Accept This Task'}
+            </button>
+          </div>
+        )}
 
-            {status === 0 && isAgent && (
+        {/* Submit proof */}
+        {status === 1 && isWorker && (
+          <div className="bg-white border border-[#F5DEC8] rounded-xl p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-[#1A0F08]">Submit Proof</h2>
+            <ProofUpload onCIDReady={(cid) => setProofCID(cid)} />
+            <div className="text-xs text-[#A07858] font-label">Or paste CID manually:</div>
+            <input
+              type="text"
+              value={proofCID}
+              onChange={(e) => setProofCID(e.target.value)}
+              placeholder="IPFS CID (e.g. QmXyz...)"
+              className="w-full px-4 py-3 bg-[#FFFAF5] border border-[#F5DEC8] rounded-lg text-[#1A0F08] placeholder-[#A07858] focus:outline-none focus:border-[#FF8C42] text-sm"
+            />
+            <button
+              onClick={() => {
+                submitWrite({ ...contractCall, functionName: 'submitProof', args: [taskId, proofCID] });
+                toast('info', 'Submitting proof on-chain...');
+              }}
+              disabled={submitting || !proofCID}
+              className="w-full py-3 bg-[#FF8C42] hover:bg-[#D4700A] disabled:bg-[#A07858] text-white font-semibold rounded-lg transition text-sm"
+            >
+              {submitting ? 'Submitting...' : '📸 Submit Proof On-Chain'}
+            </button>
+          </div>
+        )}
+
+        {/* Approve / Dispute */}
+        {status === 2 && isAgent && (
+          <div className="bg-white border border-[#F5DEC8] rounded-xl p-6">
+            <h2 className="text-lg font-semibold text-[#1A0F08] mb-4">Review Submission</h2>
+            <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => cancelWrite({ ...contractCall, functionName: "cancelTask", args: [taskId] })}
-                disabled={cancelling}
-                className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition"
+                onClick={() => {
+                  approveWrite({ ...contractCall, functionName: 'approveTask', args: [taskId] });
+                  toast('info', 'Approving task...');
+                }}
+                disabled={approvingTask}
+                className="py-3 bg-green-600 hover:bg-green-700 disabled:bg-[#A07858] text-white font-semibold rounded-lg transition text-sm"
               >
-                {cancelling ? "Cancelling..." : "Cancel Task"}
+                {approvingTask ? 'Approving...' : '✅ Approve & Pay'}
+              </button>
+              <button
+                onClick={() => {
+                  disputeWrite({ ...contractCall, functionName: 'disputeTask', args: [taskId] });
+                  toast('info', 'Disputing task...');
+                }}
+                disabled={disputing}
+                className="py-3 bg-red-500 hover:bg-red-600 disabled:bg-[#A07858] text-white font-semibold rounded-lg transition text-sm"
+              >
+                {disputing ? 'Disputing...' : '⚠️ Dispute'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Cancel */}
+        {status === 0 && isAgent && (
+          <div className="bg-white border border-[#F5DEC8] rounded-xl p-6">
+            <button
+              onClick={() => {
+                cancelWrite({ ...contractCall, functionName: 'cancelTask', args: [taskId] });
+                toast('info', 'Cancelling task...');
+              }}
+              disabled={cancelling}
+              className="w-full py-3 bg-[#FFF2E8] hover:bg-[#F5DEC8] text-[#1A0F08] font-semibold rounded-lg transition text-sm"
+            >
+              {cancelling ? 'Cancelling...' : 'Cancel Task'}
+            </button>
+          </div>
+        )}
+
+        {/* Rate */}
+        {status === 3 && (isAgent || isWorker) && (
+          <div className="bg-white border border-[#F5DEC8] rounded-xl p-6">
+            <h3 className="text-sm font-semibold text-[#1A0F08] mb-3">⭐ Rate</h3>
+            <div className="flex items-center gap-2 mb-3">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setRating(star)}
+                  className={`text-2xl transition ${star <= rating ? 'text-[#FF8C42]' : 'text-[#F5DEC8]'}`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+            {isAgent && (
+              <button
+                onClick={() => {
+                  rateWorkerWrite({ ...contractCall, functionName: 'rateWorker', args: [taskId, rating] });
+                  toast('info', 'Rating worker...');
+                }}
+                disabled={ratingWorker}
+                className="w-full py-2 bg-[#FFF2E8] text-[#D4700A] hover:bg-[#F5DEC8] rounded-lg transition text-sm font-medium"
+              >
+                {ratingWorker ? 'Rating...' : 'Rate Worker'}
               </button>
             )}
-
-            {status === 3 && (isAgent || isWorker) && (
-              <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700/50">
-                <h3 className="text-sm font-semibold text-white mb-3">⭐ Rate</h3>
-                <div className="flex items-center gap-2 mb-3">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => setRating(star)}
-                      className={`text-2xl ${star <= rating ? "text-yellow-400" : "text-gray-600"}`}
-                    >
-                      ★
-                    </button>
-                  ))}
-                </div>
-                {isAgent && (
-                  <button
-                    onClick={() => rateWorkerWrite({ ...contractCall, functionName: "rateWorker", args: [taskId, rating] })}
-                    disabled={ratingWorker}
-                    className="w-full py-2 bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 rounded-lg transition text-sm"
-                  >
-                    {ratingWorker ? "Rating..." : "Rate Worker"}
-                  </button>
-                )}
-                {isWorker && (
-                  <button
-                    onClick={() => rateAgentWrite({ ...contractCall, functionName: "rateAgent", args: [taskId, rating] })}
-                    disabled={ratingAgent}
-                    className="w-full py-2 bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 rounded-lg transition text-sm"
-                  >
-                    {ratingAgent ? "Rating..." : "Rate Agent"}
-                  </button>
-                )}
-              </div>
+            {isWorker && (
+              <button
+                onClick={() => {
+                  rateAgentWrite({ ...contractCall, functionName: 'rateAgent', args: [taskId, rating] });
+                  toast('info', 'Rating agent...');
+                }}
+                disabled={ratingAgent}
+                className="w-full py-2 bg-[#FFF2E8] text-[#D4700A] hover:bg-[#F5DEC8] rounded-lg transition text-sm font-medium"
+              >
+                {ratingAgent ? 'Rating...' : 'Rate Agent'}
+              </button>
             )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
