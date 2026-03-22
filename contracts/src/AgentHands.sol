@@ -81,6 +81,8 @@ contract AgentHands is
     event WorkerRated(uint256 indexed taskId, address indexed worker, uint8 score);
     event AgentRated(uint256 indexed taskId, address indexed agent, uint8 score);
     event TokenAllowed(address token, bool allowed);
+    event TaskExpired(uint256 indexed taskId, address indexed agent, uint256 refund);
+    event TaskAutoCompleted(uint256 indexed taskId, address indexed worker, uint256 payout);
 
     // ─── Errors ──────────────────────────────────────────────
     error InvalidToken();
@@ -97,6 +99,7 @@ contract AgentHands is
     error InvalidRating();
     error AlreadyRated();
     error TaskNotCompleted();
+    error NotExpired();
 
     // ─── Modifiers ───────────────────────────────────────────
     modifier onlyAgent(uint256 _taskId) {
@@ -251,6 +254,41 @@ contract AgentHands is
         IERC20(task.paymentToken).safeTransfer(task.agent, task.reward);
 
         emit TaskCancelled(_taskId);
+    }
+
+    // ─── Core: Claim Expired ────────────────────────────────
+    /// @notice Anyone can trigger refund/auto-complete for expired tasks. Funds always go to rightful owner.
+    /// Case 1: Open + deadline passed → 100% refund to agent
+    /// Case 2: Accepted + completion deadline passed (worker never submitted) → 100% refund to agent  
+    /// Case 3: Submitted + completion deadline + 7 days passed (agent never reviewed) → auto-approve to worker
+    function claimExpired(uint256 _taskId) external nonReentrant {
+        Task storage task = tasks[_taskId];
+
+        // Case 1: Nobody accepted before deadline
+        if (task.status == TaskStatus.Open && block.timestamp > task.deadline) {
+            task.status = TaskStatus.Expired;
+            IERC20(task.paymentToken).safeTransfer(task.agent, task.reward);
+            emit TaskExpired(_taskId, task.agent, task.reward);
+            return;
+        }
+
+        // Case 2: Worker accepted but never submitted before completion deadline
+        if (task.status == TaskStatus.Accepted && block.timestamp > task.completionDeadline) {
+            task.status = TaskStatus.Expired;
+            IERC20(task.paymentToken).safeTransfer(task.agent, task.reward);
+            emit TaskExpired(_taskId, task.agent, task.reward);
+            return;
+        }
+
+        // Case 3: Worker submitted but agent never approved/disputed within 7 days after completion deadline
+        if (task.status == TaskStatus.Submitted && block.timestamp > task.completionDeadline + 7 days) {
+            task.status = TaskStatus.Completed;
+            _releaseFunds(task);
+            emit TaskAutoCompleted(_taskId, task.worker, task.reward);
+            return;
+        }
+
+        revert NotExpired();
     }
 
     // ─── Ratings ─────────────────────────────────────────────

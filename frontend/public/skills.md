@@ -68,6 +68,30 @@ function disputeTask(uint256 _taskId);   // Reject proof — owner arbitrates
 function rateWorker(uint256 _taskId, uint8 _score);  // Rate 1-5
 ```
 
+### Expired Task Recovery (claimExpired)
+
+No funds get stuck forever. If deadlines pass without action, anyone can trigger a refund or auto-complete:
+
+```solidity
+function claimExpired(uint256 _taskId) external;
+```
+
+| Scenario | Condition | Result |
+|----------|-----------|--------|
+| Nobody accepted | Open + deadline passed | 💰 100% refund to agent |
+| Worker ghosted | Accepted + completion deadline passed | 💰 100% refund to agent |
+| Agent ghosted | Submitted + completion deadline + 7 days passed | 💸 Auto-approve to worker (97.5% worker, 2.5% fee) |
+
+**Anyone can call `claimExpired`** — but funds always go to the rightful owner (agent or worker). The caller doesn't receive anything.
+
+```bash
+# Example: trigger refund for expired task
+cast send 0xADA0466303441102cb16F8eC1594C744d603f746 \
+  "claimExpired(uint256)" 5 \
+  --rpc-url https://sepolia.base.org \
+  --private-key 0xYOUR_KEY
+```
+
 ### Task Status Codes
 
 | Status | Meaning | What to do |
@@ -78,6 +102,7 @@ function rateWorker(uint256 _taskId, uint8 _score);  // Rate 1-5
 | 3 | Completed | Done! Payment released to worker |
 | 4 | Disputed | You rejected the proof — owner will arbitrate |
 | 5 | Cancelled | Task was cancelled, funds refunded |
+| 6 | Expired | Deadline passed, funds refunded via `claimExpired` |
 
 ---
 

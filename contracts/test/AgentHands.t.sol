@@ -234,6 +234,68 @@ contract AgentHandsTest is Test {
         assertEq(count, 1);
     }
 
+    // ─── Tests: Claim Expired ─────────────────────────────────
+    function test_ClaimExpired_OpenTask() public {
+        uint256 taskId = _createTask();
+
+        // Warp past deadline
+        vm.warp(deadline + 1);
+
+        uint256 balBefore = usdc.balanceOf(agent);
+        hands.claimExpired(taskId); // anyone can call
+        uint256 balAfter = usdc.balanceOf(agent);
+
+        assertEq(balAfter - balBefore, reward);
+        assertEq(uint256(hands.getTask(taskId).status), uint256(AgentHands.TaskStatus.Expired));
+    }
+
+    function test_ClaimExpired_AcceptedButNoSubmit() public {
+        uint256 taskId = _createTask();
+        vm.prank(worker);
+        hands.acceptTask(taskId);
+
+        // Warp past completion deadline
+        vm.warp(completionDeadline + 1);
+
+        uint256 balBefore = usdc.balanceOf(agent);
+        hands.claimExpired(taskId);
+        uint256 balAfter = usdc.balanceOf(agent);
+
+        assertEq(balAfter - balBefore, reward);
+        assertEq(uint256(hands.getTask(taskId).status), uint256(AgentHands.TaskStatus.Expired));
+    }
+
+    function test_ClaimExpired_SubmittedAutoApprove() public {
+        uint256 taskId = _createTask();
+        vm.prank(worker);
+        hands.acceptTask(taskId);
+        vm.prank(worker);
+        hands.submitProof(taskId, "QmTest123");
+
+        // Warp past completion deadline + 7 days
+        vm.warp(completionDeadline + 7 days + 1);
+
+        uint256 workerBefore = usdc.balanceOf(worker);
+        uint256 feeBefore = usdc.balanceOf(feeRecipient);
+        hands.claimExpired(taskId);
+        uint256 workerAfter = usdc.balanceOf(worker);
+        uint256 feeAfter = usdc.balanceOf(feeRecipient);
+
+        uint256 expectedFee = (reward * 250) / 10000; // 2.5%
+        uint256 expectedPayout = reward - expectedFee;
+        assertEq(workerAfter - workerBefore, expectedPayout);
+        assertEq(feeAfter - feeBefore, expectedFee);
+        assertEq(uint256(hands.getTask(taskId).status), uint256(AgentHands.TaskStatus.Completed));
+    }
+
+    function test_ClaimExpired_RevertNotExpired() public {
+        uint256 taskId = _createTask();
+        
+        // Task is Open but deadline hasn't passed
+        vm.expectRevert(AgentHands.NotExpired.selector);
+        hands.claimExpired(taskId);
+    }
+
     // ─── Tests: Upgrade ──────────────────────────────────────
     function test_UpgradeOnlyOwner() public {
         AgentHands newImpl = new AgentHands();
