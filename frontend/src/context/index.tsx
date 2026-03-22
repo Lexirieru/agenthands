@@ -20,6 +20,13 @@ const _modal = createAppKit({
     84532: "https://avatars.githubusercontent.com/u/108554348?s=200&v=4",
     11142220: "https://avatars.githubusercontent.com/u/37552875?s=200&v=4",
   },
+  themeMode: "light" as const,
+  themeVariables: {
+    "--w3m-accent": "#FF8C42",
+    "--w3m-color-mix": "#FFFAF5",
+    "--w3m-color-mix-strength": 20,
+    "--w3m-border-radius-master": "2px",
+  },
   features: {
     analytics: true,
   },
