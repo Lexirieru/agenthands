@@ -167,3 +167,28 @@ body {
   translate: -50% -50%;
   border-radius: 9999px;
 }
+
+/* Reown AppKit button overrides */
+appkit-button,
+appkit-network-button,
+w3m-button,
+w3m-network-button {
+  --w3m-accent: #FF8C42 !important;
+  --wui-color-accent-100: #FF8C42 !important;
+  --wui-color-accent-090: #E07830 !important;
+}
+
+appkit-button::part(button),
+w3m-button::part(button) {
+  background-color: #1A0F08 !important;
+  border: 1px solid #F5DEC8 !important;
+  border-radius: 9999px !important;
+  color: #FFFAF5 !important;
+  font-size: 13px !important;
+}
+
+appkit-button::part(button):hover,
+w3m-button::part(button):hover {
+  border-color: #FF8C42 !important;
+  box-shadow: 0 0 16px 4px rgba(255, 140, 66, 0.3) !important;
+}
