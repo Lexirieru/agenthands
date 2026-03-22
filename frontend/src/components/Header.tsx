@@ -88,8 +88,10 @@ export default function Header() {
 
             {/* USDC Balance */}
             {isConnected && usdcFormatted && (
-              <span className="text-xs bg-[#FFF2E8] text-[#D4700A] px-3 py-1.5 rounded-full border border-[#F5DEC8] font-label mr-1">
-                ${usdcFormatted} USDC
+              <span className="text-xs bg-[#FFF2E8] text-[#D4700A] px-3 py-1.5 rounded-full border border-[#F5DEC8] font-label mr-1 inline-flex items-center gap-1.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="https://cdn.morpho.org/assets/logos/usdc.svg" alt="USDC" className="h-4 w-4" />
+                ${usdcFormatted}
               </span>
             )}
 
@@ -169,8 +171,10 @@ export default function Header() {
               {/* Mobile wallet */}
               <div className="mt-2 pt-2 border-t border-[#F5DEC8] flex flex-col gap-2">
                 {isConnected && usdcFormatted && (
-                  <span className="text-xs text-[#D4700A] px-4 py-1 font-label">
-                    ${usdcFormatted} USDC
+                  <span className="text-xs text-[#D4700A] px-4 py-1 font-label inline-flex items-center gap-1.5">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="https://cdn.morpho.org/assets/logos/usdc.svg" alt="USDC" className="h-4 w-4" />
+                    ${usdcFormatted}
                   </span>
                 )}
                 {isConnected && (

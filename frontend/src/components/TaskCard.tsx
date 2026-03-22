@@ -54,9 +54,10 @@ export default function TaskCard({
 
         {/* Footer */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#A07858] font-label">
-          <div className="flex items-center gap-1">
-            <Coins size={14} className="text-[#D4700A]" />
-            <span className="text-[#1A0F08] font-medium">${formatUSDC(reward)} USDC</span>
+          <div className="flex items-center gap-1.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="https://cdn.morpho.org/assets/logos/usdc.svg" alt="USDC" className="h-4 w-4" />
+            <span className="text-[#1A0F08] font-medium">${formatUSDC(reward)}</span>
           </div>
 
           <div className="flex items-center gap-1">
