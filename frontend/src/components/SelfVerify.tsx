@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAppKitAccount } from '@reown/appkit/react';
 import { Shield, CheckCircle, Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { SelfAppBuilder } from '@selfxyz/qrcode';
+import type { SelfApp } from '@selfxyz/qrcode';
 
 const SelfQR = dynamic(() => import('./SelfQR'), {
   ssr: false,
@@ -21,12 +23,35 @@ interface SelfVerifyProps {
 export default function SelfVerify({ onVerified }: SelfVerifyProps) {
   const { address } = useAppKitAccount();
   const [showQR, setShowQR] = useState(false);
+  const [selfApp, setSelfApp] = useState<SelfApp | null>(null);
 
   const initialVerified = typeof window !== 'undefined' && address
     ? !!localStorage.getItem(`self_verified_${address}`)
     : false;
 
   const [verified, setVerified] = useState(initialVerified);
+
+  useEffect(() => {
+    try {
+      const app = new SelfAppBuilder({
+        appName: 'AgentHands',
+        scope: 'agenthands-worker-verify',
+        endpoint: `${process.env.NEXT_PUBLIC_API_URL || 'https://agenthands-production.up.railway.app'}/api/self/verify`,
+        endpointType: 'staging_https',
+        userId: address || '0x0000000000000000000000000000000000000000',
+        userIdType: 'hex',
+        disclosures: {
+          name: true,
+          nationality: true,
+          date_of_birth: true,
+          minimumAge: 18,
+        },
+      }).build();
+      setSelfApp(app);
+    } catch (error) {
+      console.error('Failed to initialize Self app:', error);
+    }
+  }, [address]);
 
   const handleSuccess = useCallback(() => {
     setVerified(true);
@@ -61,27 +86,17 @@ export default function SelfVerify({ onVerified }: SelfVerifyProps) {
       {showQR ? (
         <div className="flex flex-col items-center gap-4">
           <div className="bg-white p-4 rounded-xl border border-[var(--border)]">
-            <SelfQR
-              selfApp={{
-                appName: 'AgentHands',
-                scope: 'agenthands-worker-verify',
-                endpoint: `${process.env.NEXT_PUBLIC_API_URL || 'https://agenthands-production.up.railway.app'}/api/self/verify`,
-                endpointType: 'staging_https',
-                version: 2,
-                logoBase64: '',
-                userId: address || '0x0000000000000000000000000000000000000000',
-                userIdType: 'hex',
-                devMode: false,
-                disclosures: {
-                  name: true,
-                  nationality: true,
-                  date_of_birth: true,
-                  minimumAge: 18,
-                },
-              }}
-              onSuccess={handleSuccess}
-              darkMode={false}
-            />
+            {selfApp ? (
+              <SelfQR
+                selfApp={selfApp}
+                onSuccess={handleSuccess}
+                darkMode={false}
+              />
+            ) : (
+              <div className="flex items-center justify-center p-8">
+                <Loader2 className="animate-spin text-[#D4700A]" size={24} />
+              </div>
+            )}
           </div>
           <button
             onClick={() => setShowQR(false)}
