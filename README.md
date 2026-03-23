@@ -224,6 +224,17 @@ bun run index.ts        # http://localhost:3001
 | Landing Page | https://agenthands.vercel.app |
 | Frontend App | https://app-agenthands.vercel.app |
 | Backend API | https://agenthands-production.up.railway.app |
+| Demo Video | https://youtu.be/f5tsuHEAP78 |
+
+## 🎬 Demo Video
+
+The demo video was **generated entirely by the AI agent (MyCelo)** using [Remotion](https://remotion.dev) — a React-based programmatic video framework. No manual video editing was involved.
+
+- **Visuals:** 13 animated scenes built with React components, `@remotion/transitions` (fade, slide, wipe), and `@remotion/google-fonts`
+- **Voiceover:** AI-generated narration via ElevenLabs TTS API
+- **Background Music:** "Fragments" by AERØHEAD (copyright-free ambient)
+- **Sound Effects:** Whoosh, ding, shutter, and switch from `@remotion/sfx`
+- **Rendering:** Server-side rendered to MP4 via Remotion CLI
 
 ## 🤖 Agent Skill
 
