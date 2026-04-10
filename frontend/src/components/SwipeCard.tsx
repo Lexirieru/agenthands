@@ -84,20 +84,19 @@ export default function SwipeCard({ task, index, total }: Props) {
       {/* ── Right-side Actions (TikTok Style) ── */}
       <div className="absolute right-3 bottom-24 z-20 flex flex-col items-center gap-5">
         
-        {/* Status / Heart - Like Interaction Style */}
+        {/* Status / Check - Done/Open Style */}
         <div className="flex flex-col items-center gap-1">
           <button 
             onClick={(e) => {
               e.preventDefault();
-              // Haptic feedback or heart animation could go here
             }}
             className={`w-12 h-12 rounded-full border-2 border-white/80 flex items-center justify-center shadow-lg active:scale-90 transition-transform ${
-             status === 0 ? "bg-[#D4700A]" : "bg-[#2775CA]"
+             status === 3 ? "bg-[#22c55e]" : "bg-[#D4700A]"
           }`}>
-             {status === 0 ? <Heart size={22} className="text-white fill-white" /> : <CheckCircle2 size={22} className="text-white" />}
+             {status === 3 ? <CheckCircle2 size={22} className="text-white fill-none" /> : <Heart size={22} className="text-white fill-white" />}
           </button>
-          <span className="text-[10px] font-bold text-white shadow-black drop-shadow-md">
-            {status === 0 ? "Open" : "Busy"}
+          <span className="text-[10px] font-bold text-white shadow-black drop-shadow-md uppercase">
+            {status === 3 ? "Done" : "Open"}
           </span>
         </div>
 
