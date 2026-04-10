@@ -1,36 +1,17 @@
 "use client";
 
-import { createAppKit } from "@reown/appkit/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import React, { type ReactNode } from "react";
-import { cookieToInitialState, WagmiProvider, type Config } from "wagmi";
-import { projectId, networks, wagmiAdapter, metadata } from "@/config";
+import { cookieToInitialState, WagmiProvider } from "wagmi";
+import { config } from "@/config";
+import { useAutoConnect } from "@/hooks/useAutoConnect";
 
 const queryClient = new QueryClient();
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _modal = createAppKit({
-  adapters: [wagmiAdapter],
-  networks,
-  projectId,
-  metadata,
-  allowUnsupportedChain: true,
-  chainImages: {
-    84532: "https://avatars.githubusercontent.com/u/108554348?s=200&v=4",
-    11142220: "https://avatars.githubusercontent.com/u/37552875?s=200&v=4",
-  },
-  themeMode: "light" as const,
-  themeVariables: {
-    "--w3m-accent": "#D4700A",
-    "--w3m-color-mix": "#ffffff",
-    "--w3m-color-mix-strength": 20,
-    "--w3m-border-radius-master": "2px",
-  },
-  features: {
-    analytics: true,
-  },
-});
+function AutoConnect({ children }: { children: ReactNode }) {
+  useAutoConnect();
+  return <>{children}</>;
+}
 
 export default function ContextProvider({
   children,
@@ -39,19 +20,12 @@ export default function ContextProvider({
   children: ReactNode;
   cookies: string | null;
 }) {
-  const initialState = cookieToInitialState(
-    wagmiAdapter.wagmiConfig as Config,
-    cookies
-  );
+  const initialState = cookieToInitialState(config, cookies);
 
   return (
-    <WagmiProvider
-      config={wagmiAdapter.wagmiConfig as Config}
-      initialState={initialState}
-    >
+    <WagmiProvider config={config} initialState={initialState}>
       <QueryClientProvider client={queryClient}>
-        {children}
-        <ReactQueryDevtools initialIsOpen={false} />
+        <AutoConnect>{children}</AutoConnect>
       </QueryClientProvider>
     </WagmiProvider>
   );

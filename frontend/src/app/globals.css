@@ -9,7 +9,6 @@
   --card-solid: #EDD3B0;
   --border: #D4A878;
   --muted: #8B4513;
-  --header-height: 4rem;
 }
 
 @theme inline {
@@ -18,10 +17,6 @@
   --color-accent: var(--accent);
   --color-card: var(--card);
   --color-border: var(--border);
-}
-
-html {
-  scroll-behavior: smooth;
 }
 
 body {
@@ -36,90 +31,11 @@ body {
   background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-courier-new), ui-monospace, monospace;
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* ─── App Background Layers ─── */
-.app-bg {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-/* Lateral bar — mirrors landing-page .lateralBar */
-.app-bg-lateral {
-  position: absolute;
-  top: 0;
-  left: 20px;
-  width: 1px;
-  height: 100%;
-  background-color: #6B3A1F;
-  mix-blend-mode: color-burn;
-  opacity: 0.35;
-}
-
-/* Warm radial glows — mimics shader gradient blobs */
-.app-bg-glow {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(120px);
-  opacity: 0.5;
-}
-.app-bg-glow--top {
-  top: -10%;
-  right: -5%;
-  width: 55vw;
-  height: 55vw;
-  max-width: 700px;
-  max-height: 700px;
-  background: radial-gradient(circle, #D4A060 0%, #C48840 40%, transparent 70%);
-}
-.app-bg-glow--mid {
-  top: 40%;
-  left: -10%;
-  width: 50vw;
-  height: 50vw;
-  max-width: 600px;
-  max-height: 600px;
-  background: radial-gradient(circle, #C89050 0%, #DDB880 45%, transparent 70%);
-  opacity: 0.35;
-}
-.app-bg-glow--bottom {
-  bottom: -5%;
-  right: 15%;
-  width: 40vw;
-  height: 40vw;
-  max-width: 500px;
-  max-height: 500px;
-  background: radial-gradient(circle, #D4A060 0%, #C08050 40%, transparent 70%);
-  opacity: 0.3;
-}
-
-/* Horizontal dashed lines — mirrors landing-page .middleLine */
-.app-bg-dash {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%236B3A1F' stroke-width='4' stroke-dasharray='4%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
-  mix-blend-mode: color-burn;
-  opacity: 0.25;
-}
-.app-bg-dash--1 { top: 25%; }
-.app-bg-dash--2 { top: 75%; }
-
-/* Grain texture overlay — matches landing-page shader grain at ~10% */
-.app-bg-grain {
-  position: absolute;
-  inset: 0;
-  opacity: 0.1;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 180px 180px;
-  mix-blend-mode: multiply;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
 }
 
 .font-heading {
@@ -132,12 +48,17 @@ body {
   font-family: var(--font-courier-new), ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar:horizontal { height: 5px; }
-::-webkit-scrollbar-corner { background: transparent; }
-::-webkit-scrollbar-track { background-color: transparent; }
-::-webkit-scrollbar-thumb { background: #E8CCAE; border-radius: 3px; }
+/* Hide scrollbars */
+::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Number input — hide spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 
 /* Toast animation */
 @keyframes slide-in {
@@ -146,142 +67,9 @@ body {
 }
 .animate-slide-in { animation: slide-in 0.3s ease-out; }
 
-/* Shimmer animation */
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-.shimmer-animation {
-  position: relative;
-  overflow: hidden;
-}
-.shimmer-animation::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(212, 112, 10, 0.08), rgba(212, 112, 10, 0.04), transparent);
-  animation: shimmer 3s ease-in-out infinite;
-  animation-delay: 1s;
-}
-
-/* Icon animations */
-@keyframes icon-float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-5px); }
-  100% { transform: translateY(0px); }
-}
-.float-animation { animation: icon-float 3s ease-in-out infinite; }
-
-/* Hash pattern */
-.hash-pattern {
-  background: repeating-linear-gradient(-45deg, #D4A06A 0px, #D4A06A 1px, transparent 1px, transparent 8px);
-  opacity: 0.5;
-}
-
-@keyframes dash-move { to { stroke-dashoffset: 12; } }
-.dashed-border-anim { animation: dash-move 0.4s linear infinite; }
-
-/* Feature pill */
-.feature-pill {
-  --pill-duration: 600ms;
-  --pill-ease: ease;
-  --pill-glow: 0 0 24px 8px rgba(212, 112, 10, 0.8);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 9999px;
-  border: 2px solid #E8CCAE;
-  background: rgba(237, 211, 176, 0.9);
-  backdrop-filter: blur(12px);
-  font-family: ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: #5C2D0A;
-  white-space: nowrap;
-  position: relative;
-  overflow: hidden;
-  transition: background-color var(--pill-duration) var(--pill-ease), color var(--pill-duration) var(--pill-ease), border-color var(--pill-duration) var(--pill-ease), box-shadow var(--pill-duration) var(--pill-ease), gap var(--pill-duration) var(--pill-ease);
-}
-.feature-pill:hover {
-  background: #5C2D0A;
-  color: #D4700A;
-  border-color: #D4700A;
-  box-shadow: var(--pill-glow);
-  gap: 12px;
-}
-.feature-pill .pill-arrow {
-  width: 24px; height: 24px;
-  border-radius: 9999px;
-  background: #FF8C42;
-  display: grid;
-  place-items: center;
-  position: relative;
-  transition: transform var(--pill-duration) var(--pill-ease), background-color var(--pill-duration) var(--pill-ease);
-}
-.feature-pill:hover .pill-arrow { background: #FF8C42; color: #5C2D0A; }
-.feature-pill::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(-45deg, rgba(212,112,10,0.12) 0px, rgba(212,112,10,0.12) 1px, transparent 1px, transparent 6px);
-  opacity: 0;
-  transition: opacity var(--pill-duration) var(--pill-ease);
-  pointer-events: none;
-}
-.feature-pill:hover::before { opacity: 1; }
-
-/* CTA button */
-.cta-btn {
-  --cta-duration: 600ms;
-  --cta-ease: ease;
-  position: relative;
-  overflow: hidden;
-  transition: box-shadow var(--cta-duration) var(--cta-ease), border-color var(--cta-duration) var(--cta-ease), gap var(--cta-duration) var(--cta-ease);
-}
-.cta-btn::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(-45deg, rgba(212,112,10,0.1) 0px, rgba(212,112,10,0.1) 1px, transparent 1px, transparent 6px);
-  opacity: 0;
-  transition: opacity var(--cta-duration) var(--cta-ease);
-  pointer-events: none;
-}
-.cta-btn:hover { box-shadow: 0 0 24px 8px rgba(212,112,10,0.8); border-color: #D4700A; }
-.cta-btn:hover::before { opacity: 1; }
-
-/* Concentric circles */
-.concentric-circle {
-  position: absolute;
-  left: 50%; top: 50%;
-  translate: -50% -50%;
-  border-radius: 9999px;
-}
-
-/* Reown AppKit button overrides */
-appkit-button,
-appkit-network-button,
-w3m-button,
-w3m-network-button {
-  --w3m-accent: #D4700A !important;
-  --wui-color-accent-100: #D4700A !important;
-  --wui-color-accent-090: #B85E08 !important;
-}
-
-appkit-button::part(button),
-w3m-button::part(button) {
-  background-color: #5C2D0A !important;
-  border: 1px solid #D4A878 !important;
-  border-radius: 9999px !important;
-  color: #FFF2E8 !important;
-  font-size: 13px !important;
-}
-
-appkit-button::part(button):hover,
-w3m-button::part(button):hover {
-  border-color: #D4700A !important;
-  box-shadow: 0 0 16px 4px rgba(212, 112, 10, 0.3) !important;
+/* MiniPay safe area */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }

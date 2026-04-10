@@ -1,7 +1,7 @@
 "use client";
 
 import { useReadContract, useWriteContract } from "wagmi";
-import { AGENTHANDS_ADDRESS, USDC_ADDRESSES } from "@/config";
+import { AGENTHANDS_ADDRESS, USDC_ADDRESS } from "@/config";
 import AgentHandsABI from "@/abi/AgentHands.json";
 
 const ERC20_ABI = [
@@ -71,14 +71,13 @@ export function useAgentRating(agent: `0x${string}`) {
   });
 }
 
-export function useUSDCBalance(address: `0x${string}` | undefined, chainId: number) {
-  const usdcAddress = USDC_ADDRESSES[chainId];
+export function useUSDCBalance(address: `0x${string}` | undefined) {
   return useReadContract({
-    address: usdcAddress,
+    address: USDC_ADDRESS,
     abi: ERC20_ABI,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
-    query: { enabled: !!address && !!usdcAddress },
+    query: { enabled: !!address },
   });
 }
 

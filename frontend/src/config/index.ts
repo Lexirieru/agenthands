@@ -1,35 +1,42 @@
-import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
-import { baseSepolia, celoSepolia } from "@reown/appkit/networks";
-import type { AppKitNetwork } from "@reown/appkit/networks";
+import { http, createConfig, cookieStorage, createStorage } from "wagmi";
+import { type Chain } from "viem";
+import { injected } from "wagmi/connectors";
 
-export const projectId =
-  process.env.NEXT_PUBLIC_PROJECT_ID || "b56e18d47c72ab683b10814fe9495694";
+// Celo Sepolia for development — switch to celo mainnet after contract deploy
+export const celoSepolia: Chain = {
+  id: 11142220,
+  name: "Celo Sepolia",
+  nativeCurrency: { name: "CELO", symbol: "CELO", decimals: 18 },
+  rpcUrls: {
+    default: { http: ["https://alfajores-forno.celo-testnet.org"] },
+  },
+  blockExplorers: {
+    default: { name: "CeloScan", url: "https://alfajores.celoscan.io" },
+  },
+  testnet: true,
+};
 
-// Use built-in Reown network definitions so balance fetching works
-export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [
-  baseSepolia,
-  celoSepolia,
-];
+export const CHAIN = celoSepolia;
 
-export const wagmiAdapter = new WagmiAdapter({
-  networks,
-  projectId,
+export const config = createConfig({
+  chains: [celoSepolia],
+  connectors: [injected()],
+  transports: {
+    [celoSepolia.id]: http("https://alfajores-forno.celo-testnet.org"),
+  },
+  storage: createStorage({ storage: cookieStorage }),
   ssr: true,
 });
 
-export const metadata = {
-  name: "AgentHands",
-  description: "Hands for your agent — hire humans for physical-world tasks",
-  url: "https://agenthands.xyz",
-  icons: ["https://agenthands.xyz/icon.png"],
-};
-
-// Contract addresses (same on both chains — deterministic deploy)
+// Contract address (deployed on Celo Sepolia)
 export const AGENTHANDS_ADDRESS =
   "0xADA0466303441102cb16F8eC1594C744d603f746" as `0x${string}`;
 
-// USDC addresses per chain (from Circle faucet)
-export const USDC_ADDRESSES: Record<number, `0x${string}`> = {
-  84532: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",    // Base Sepolia
-  11142220: "0x01C5C0122039549AD1493B8220cABEdD739BC44E", // Celo Sepolia
-};
+// USDC on Celo Sepolia
+export const USDC_ADDRESS =
+  "0x01C5C0122039549AD1493B8220cABEdD739BC44E" as `0x${string}`;
+
+// ── Mainnet addresses (uncomment after deploy) ──
+// import { celo } from "wagmi/chains";
+// export const CHAIN = celo;
+// USDC Mainnet: 0xcebA9300f2b948710d2653dD7B07f33A8B32118C

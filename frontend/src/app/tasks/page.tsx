@@ -2,49 +2,19 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createPublicClient, http } from "viem";
-import { baseSepolia, celoAlfajores } from "viem/chains";
 import { Search } from "lucide-react";
 import gsap from "gsap";
-import { AGENTHANDS_ADDRESS } from "@/config";
+import { AGENTHANDS_ADDRESS, CHAIN } from "@/config";
 import AgentHandsABI from "@/abi/AgentHands.json";
 import TaskCard from "@/components/TaskCard";
-import ChainBadge from "@/components/ChainBadge";
+import SwipeStack from "@/components/SwipeStack";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import type { TaskData } from "@/types/task";
 
-interface TaskData {
-  id: bigint;
-  agent: string;
-  worker: string;
-  paymentToken: string;
-  reward: bigint;
-  deadline: bigint;
-  completionDeadline: bigint;
-  title: string;
-  description: string;
-  location: string;
-  proofCID: string;
-  status: number;
-  createdAt: bigint;
-  chainId: number;
-}
-
-const CHAINS = [
-  {
-    id: 84532,
-    name: "Base Sepolia",
-    client: createPublicClient({
-      chain: baseSepolia,
-      transport: http("https://sepolia.base.org"),
-    }),
-  },
-  {
-    id: 11142220,
-    name: "Celo Sepolia",
-    client: createPublicClient({
-      chain: { ...celoAlfajores, id: 11142220 as number, name: "Celo Sepolia" },
-      transport: http("https://forno.celo-sepolia.celo-testnet.org"),
-    }),
-  },
-];
+const client = createPublicClient({
+  chain: CHAIN,
+  transport: http(CHAIN.rpcUrls.default.http[0]),
+});
 
 const statusFilters: { label: string; value: number | "all" }[] = [
   { label: "All", value: "all" },
@@ -54,23 +24,23 @@ const statusFilters: { label: string; value: number | "all" }[] = [
   { label: "Completed", value: 3 },
 ];
 
-async function fetchTasksFromChain(chain: (typeof CHAINS)[number]): Promise<TaskData[]> {
+async function fetchAllTasks(): Promise<TaskData[]> {
   try {
-    const count = await chain.client.readContract({
+    const count = (await client.readContract({
       address: AGENTHANDS_ADDRESS,
       abi: AgentHandsABI,
       functionName: "taskCount",
-    }) as bigint;
+    })) as bigint;
 
     const tasks: TaskData[] = [];
     for (let i = BigInt(1); i <= count; i++) {
-      const task = await chain.client.readContract({
+      const task = (await client.readContract({
         address: AGENTHANDS_ADDRESS,
         abi: AgentHandsABI,
         functionName: "getTask",
         args: [i],
-      }) as TaskData;
-      tasks.push({ ...task, chainId: chain.id });
+      })) as TaskData;
+      tasks.push({ ...task, id: i });
     }
     return tasks;
   } catch {
@@ -82,23 +52,24 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<TaskData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<number | "all">("all");
-  const [chainFilter, setChainFilter] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const gridRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     async function loadTasks() {
       setIsLoading(true);
-      const results = await Promise.all(CHAINS.map(fetchTasksFromChain));
-      const allTasks = results.flat().sort((a, b) => Number(b.createdAt) - Number(a.createdAt));
-      setTasks(allTasks);
+      const results = await fetchAllTasks();
+      const sorted = results.sort((a, b) => Number(b.createdAt) - Number(a.createdAt));
+      setTasks(sorted);
       setIsLoading(false);
     }
     loadTasks();
   }, []);
 
+  // Desktop GSAP animation
   useEffect(() => {
-    if (!isLoading && gridRef.current) {
+    if (!isMobile && !isLoading && gridRef.current) {
       const ctx = gsap.context(() => {
         gsap.from(".task-card", {
           opacity: 0,
@@ -110,18 +81,34 @@ export default function TasksPage() {
       }, gridRef);
       return () => ctx.revert();
     }
-  }, [isLoading, tasks]);
+  }, [isMobile, isLoading, tasks]);
 
   const filteredTasks = tasks
     .filter((t) => filter === "all" || Number(t.status) === filter)
-    .filter((t) => !chainFilter || t.chainId === chainFilter)
-    .filter((t) =>
-      !search ||
-      t.title.toLowerCase().includes(search.toLowerCase()) ||
-      t.description.toLowerCase().includes(search.toLowerCase()) ||
-      t.location.toLowerCase().includes(search.toLowerCase())
+    .filter(
+      (t) =>
+        !search ||
+        t.title.toLowerCase().includes(search.toLowerCase()) ||
+        t.description.toLowerCase().includes(search.toLowerCase()) ||
+        t.location.toLowerCase().includes(search.toLowerCase())
     );
 
+  // ── Mobile: TikTok swipe feed ──
+  if (isMobile) {
+    return (
+      <div className="flex flex-col flex-1 min-h-0">
+        {isLoading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-[#D4700A]/20 border-t-[#D4700A] rounded-full animate-spin" />
+          </div>
+        ) : (
+          <SwipeStack tasks={filteredTasks} />
+        )}
+      </div>
+    );
+  }
+
+  // ── Desktop: classic grid layout ──
   return (
     <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       <h1 className="text-3xl sm:text-4xl font-heading tracking-tight text-[#5C2D0A] mb-8">
@@ -140,7 +127,6 @@ export default function TasksPage() {
             className="w-full bg-[var(--card-solid)] border border-[var(--border)] rounded-lg pl-10 pr-4 py-2.5 text-sm text-[#5C2D0A] placeholder-[#8B4513] focus:outline-none focus:border-[#D4700A] font-label"
           />
         </div>
-
         <div className="flex items-center gap-2 flex-wrap">
           {statusFilters.map((f) => (
             <button
@@ -158,35 +144,6 @@ export default function TasksPage() {
         </div>
       </div>
 
-      {/* Chain filter */}
-      <div className="flex items-center gap-3 mb-6">
-        <span className="text-xs text-[#8B4513] font-label">Chain:</span>
-        <button
-          onClick={() => setChainFilter(null)}
-          className={`px-3 py-1 rounded-full text-xs font-label transition ${
-            !chainFilter
-              ? "bg-[#5C2D0A] text-white"
-              : "bg-[var(--card)] text-[#8B4513] hover:text-[#5C2D0A]"
-          }`}
-        >
-          All ({tasks.length})
-        </button>
-        {CHAINS.map((chain) => {
-          const count = tasks.filter((t) => t.chainId === chain.id).length;
-          const isActive = chainFilter === chain.id;
-          return (
-            <button
-              key={chain.id}
-              onClick={() => setChainFilter(isActive ? null : chain.id)}
-              className={`inline-flex items-center gap-1 rounded-full transition ${isActive ? "ring-2 ring-[#D4700A] ring-offset-1 ring-offset-[var(--background)]" : "opacity-70 hover:opacity-100"}`}
-            >
-              <ChainBadge chainId={chain.id} />
-              <span className="text-xs text-[#8B4513] pr-1">({count})</span>
-            </button>
-          );
-        })}
-      </div>
-
       {/* Task Grid */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -202,7 +159,7 @@ export default function TasksPage() {
       ) : (
         <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredTasks.map((task, i) => (
-            <div key={`${task.chainId}-${task.id?.toString() || i}`} className="task-card">
+            <div key={task.id?.toString() || i} className="task-card">
               <TaskCard
                 id={task.id || BigInt(i + 1)}
                 title={task.title}
@@ -212,7 +169,6 @@ export default function TasksPage() {
                 deadline={task.deadline}
                 status={Number(task.status)}
                 agent={task.agent}
-                chainId={task.chainId}
               />
             </div>
           ))}

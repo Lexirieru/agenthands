@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { useAppKitAccount } from '@reown/appkit/react';
+import { useAccount } from 'wagmi';
 import { Shield, CheckCircle, Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { SelfAppBuilder } from '@selfxyz/qrcode';
@@ -21,7 +21,7 @@ interface SelfVerifyProps {
 }
 
 export default function SelfVerify({ onVerified }: SelfVerifyProps) {
-  const { address } = useAppKitAccount();
+  const { address } = useAccount();
   const [showQR, setShowQR] = useState(false);
   const [selfApp, setSelfApp] = useState<SelfApp | null>(null);
 
