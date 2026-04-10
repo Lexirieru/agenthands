@@ -52,7 +52,7 @@ export default function ProfilePage() {
         </div>
 
         <a
-          href={`https://alfajores.celoscan.io/address/${address}`}
+          href={`https://celo-sepolia.blockscout.com/address/${address}`}
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 w-full py-3 bg-[var(--card)] rounded-xl text-sm text-[#5C2D0A] font-label min-h-[44px]"
         >

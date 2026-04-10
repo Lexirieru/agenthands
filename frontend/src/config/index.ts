@@ -8,10 +8,10 @@ export const celoSepolia: Chain = {
   name: "Celo Sepolia",
   nativeCurrency: { name: "CELO", symbol: "CELO", decimals: 18 },
   rpcUrls: {
-    default: { http: ["https://alfajores-forno.celo-testnet.org"] },
+    default: { http: ["https://forno.celo-sepolia.celo-testnet.org"] },
   },
   blockExplorers: {
-    default: { name: "CeloScan", url: "https://alfajores.celoscan.io" },
+    default: { name: "CeloScan", url: "https://celo-sepolia.blockscout.com" },
   },
   testnet: true,
 };
@@ -22,7 +22,7 @@ export const config = createConfig({
   chains: [celoSepolia],
   connectors: [injected()],
   transports: {
-    [celoSepolia.id]: http("https://alfajores-forno.celo-testnet.org"),
+    [celoSepolia.id]: http("https://forno.celo-sepolia.celo-testnet.org"),
   },
   storage: createStorage({ storage: cookieStorage }),
   ssr: true,
