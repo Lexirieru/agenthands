@@ -84,17 +84,6 @@ export default function SwipeCard({ task, index, total }: Props) {
       {/* ── Right-side Actions (TikTok Style) ── */}
       <div className="absolute right-3 bottom-24 z-20 flex flex-col items-center gap-5">
         
-        {/* Agent Info / Avatar */}
-        <Link 
-          href={`/profile/${task.agent}`}
-          className="flex flex-col items-center gap-1 group"
-        >
-          <div className="w-12 h-12 rounded-full border-2 border-white/80 bg-white/10 backdrop-blur-md flex items-center justify-center shadow-lg group-active:scale-90 transition-transform overflow-hidden">
-             <User size={24} className="text-white" />
-          </div>
-          <span className="text-[10px] font-bold text-white shadow-black drop-shadow-md">Agent</span>
-        </Link>
-
         {/* Status / Heart - Like Interaction Style */}
         <div className="flex flex-col items-center gap-1">
           <button 
