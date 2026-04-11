@@ -67,9 +67,22 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 .animate-slide-in { animation: slide-in 0.3s ease-out; }
 
-/* MiniPay safe area */
+/* MiniPay safe area & native look */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
+}
+
+.minipay-header {
+  height: 56px;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.minipay-tab-bar {
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(15px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }

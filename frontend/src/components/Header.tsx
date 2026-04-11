@@ -27,25 +27,26 @@ export default function Header() {
   const isActive = (href: string) => pathname === href;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--border)]">
-      {/* ── Mobile header ── */}
-      <div className="md:hidden bg-[var(--card-solid)]/90 backdrop-blur-xl">
-        <div className="flex items-center justify-between px-4 py-3 max-w-md mx-auto">
-          <div className="flex items-center gap-2">
-            <Image src="/AgentHandsLogo.png" alt="AgentHands" width={28} height={28} />
-            <span className="text-lg font-bold text-[#5C2D0A] tracking-tight">AgentHands</span>
-          </div>
+    <header className="sticky top-0 z-40 border-b border-white/10 md:border-[var(--border)]">
+      {/* ── Mobile/MiniPay header ── */}
+      <div className="md:hidden bg-black/80 backdrop-blur-xl minipay-header">
+        <div className="flex items-center justify-between px-4 py-3 max-w-md mx-auto h-full">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-[#D4700A] flex items-center justify-center p-1.5 shadow-lg">
+              <Image src="/AgentHandsLogo.png" alt="AgentHands" width={20} height={20} className="invert" />
+            </div>
+            <span className="text-lg font-black text-white tracking-tighter uppercase italic">AgentHands</span>
+          </Link>
           <div className="flex items-center gap-2">
             {isConnected && usdcFormatted && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--card)] border border-[var(--border)] text-xs font-medium text-[#D4700A]">
-                <img src="https://cdn.morpho.org/assets/logos/usdc.svg" alt="USDC" className="h-4 w-4" />
+              <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/10 border border-white/10 text-[10px] font-black text-[#D4700A]">
                 ${usdcFormatted}
               </span>
             )}
             {isConnected && address && (
-              <span className="px-3 py-1.5 rounded-full bg-[#5C2D0A] text-white text-xs font-medium">
-                {address.slice(0, 4)}...{address.slice(-4)}
-              </span>
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-black font-black text-[10px] border-2 border-[#D4700A]">
+                {address.slice(2, 4).toUpperCase()}
+              </div>
             )}
           </div>
         </div>
