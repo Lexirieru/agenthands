@@ -33,7 +33,7 @@ export default function Header() {
         <div className="flex items-center justify-between px-4 py-3 max-w-md mx-auto h-full">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-[#D4700A] flex items-center justify-center p-1.5 shadow-lg">
-              <Image src="/AgentHandsLogo.png" alt="AgentHands" width={20} height={20} className="invert" />
+              <Image src="/AgentHandsLogo.png" alt="AgentHands" width={20} height={20}/>
             </div>
             <span className="text-lg font-black text-white tracking-tighter uppercase italic">AgentHands</span>
           </Link>

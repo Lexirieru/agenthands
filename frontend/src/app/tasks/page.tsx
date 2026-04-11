@@ -95,6 +95,7 @@ export default function TasksPage() {
 
   // ── Mobile: TikTok swipe feed ──
   if (isMobile) {
+    const openTasks = filteredTasks.filter((t) => Number(t.status) === 0);
     return (
       <div className="flex flex-col flex-1 min-h-0">
         {isLoading ? (
@@ -102,7 +103,7 @@ export default function TasksPage() {
             <div className="w-8 h-8 border-2 border-[#D4700A]/20 border-t-[#D4700A] rounded-full animate-spin" />
           </div>
         ) : (
-          <SwipeStack tasks={filteredTasks} />
+          <SwipeStack tasks={openTasks} />
         )}
       </div>
     );

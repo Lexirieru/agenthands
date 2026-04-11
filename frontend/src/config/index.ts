@@ -1,27 +1,19 @@
 import { http, createConfig, cookieStorage, createStorage } from "wagmi";
-import { type Chain } from "viem";
+import { celo, celoSepolia } from "wagmi/chains";
 import { injected } from "wagmi/connectors";
 
-// Celo Sepolia for development — switch to celo mainnet after contract deploy
-export const celoSepolia: Chain = {
-  id: 11142220,
-  name: "Celo Sepolia",
-  nativeCurrency: { name: "CELO", symbol: "CELO", decimals: 18 },
-  rpcUrls: {
-    default: { http: ["https://forno.celo-sepolia.celo-testnet.org"] },
-  },
-  blockExplorers: {
-    default: { name: "CeloScan", url: "https://celo-sepolia.blockscout.com" },
-  },
-  testnet: true,
-};
-
+// Active chain setup - Default to Sepolia for dev, easily switchable to celo
 export const CHAIN = celoSepolia;
 
 export const config = createConfig({
-  chains: [celoSepolia],
-  connectors: [injected()],
+  chains: [celo, celoSepolia],
+  connectors: [
+    injected({
+      target: "metaMask", // Optional: MiniPay handles injected provider
+    }),
+  ],
   transports: {
+    [celo.id]: http(),
     [celoSepolia.id]: http("https://forno.celo-sepolia.celo-testnet.org"),
   },
   storage: createStorage({ storage: cookieStorage }),
@@ -36,7 +28,4 @@ export const AGENTHANDS_ADDRESS =
 export const USDC_ADDRESS =
   "0x01C5C0122039549AD1493B8220cABEdD739BC44E" as `0x${string}`;
 
-// ── Mainnet addresses (uncomment after deploy) ──
-// import { celo } from "wagmi/chains";
-// export const CHAIN = celo;
 // USDC Mainnet: 0xcebA9300f2b948710d2653dD7B07f33A8B32118C

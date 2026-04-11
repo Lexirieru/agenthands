@@ -15,7 +15,7 @@ type Tab = 'agent' | 'worker';
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
-  const [tab, setTab] = useState<Tab>('agent');
+  const [tab, setTab] = useState<Tab>('worker');
   const statsRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -146,7 +146,7 @@ export default function DashboardPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 mb-4 bg-[var(--card)] p-1 rounded-xl">
-        {(['agent', 'worker'] as Tab[]).map((t) => (
+        {(['worker'] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -154,11 +154,7 @@ export default function DashboardPage() {
               tab === t ? 'bg-[#5C2D0A] text-white' : 'text-[#8B4513]'
             }`}
           >
-            {t === 'agent' ? (
-              <><Bot size={14} className="inline mr-1" />Agent ({myAgentTasks.length})</>
-            ) : (
               <><HardHat size={14} className="inline mr-1" />Worker ({myWorkerTasks.length})</>
-            )}
           </button>
         ))}
       </div>

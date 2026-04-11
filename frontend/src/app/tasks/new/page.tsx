@@ -66,7 +66,8 @@ export default function NewTaskPage() {
       abi: ERC20_ABI,
       functionName: 'approve',
       args: [AGENTHANDS_ADDRESS, amount],
-    });
+      feeCurrency: USDC_ADDRESS,
+    } as any);
     setStep('approve');
     toast('info', 'Approve USDC in your wallet...');
   };
@@ -81,7 +82,8 @@ export default function NewTaskPage() {
       abi: AgentHandsABI as typeof AgentHandsABI,
       functionName: 'createTask',
       args: [USDC_ADDRESS, amount, deadline, completionDeadline, title, description, location],
-    });
+      feeCurrency: USDC_ADDRESS,
+    } as any);
     setStep('create');
     toast('info', 'Creating task on-chain...');
   };
