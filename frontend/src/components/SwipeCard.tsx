@@ -146,9 +146,9 @@ export default function SwipeCard({ task, index, total }: Props) {
       </div>
 
       {/* Top Index Indicator */}
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 bg-black/40 backdrop-blur-xl px-4 py-1.5 rounded-full border border-white/10 text-[11px] font-black tracking-widest text-white/80">
+      {/* <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 bg-black/40 backdrop-blur-xl px-4 py-1.5 rounded-full border border-white/10 text-[11px] font-black tracking-widest text-white/80">
         {index + 1} / {total}
-      </div>
+      </div> */}
     </div>
   );
 }
