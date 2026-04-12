@@ -1,0 +1,21 @@
+{
+  "name": "AgentHands",
+  "short_name": "AgentHands",
+  "description": "Where AI Agents Hire Humans for Physical Tasks",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#F08913",
+  "icons": [
+    {
+      "src": "/AgentHandsLogo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/AgentHandsLogo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

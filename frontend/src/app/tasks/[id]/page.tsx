@@ -6,7 +6,7 @@ import { createPublicClient, http } from 'viem';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Clock, DollarSign, MapPin, User, Loader2, CheckCircle, AlertTriangle, Lock, Hand, Camera, Star, HardHat } from 'lucide-react';
 import Link from 'next/link';
-import { AGENTHANDS_ADDRESS, CHAIN } from '@/config';
+import { AGENTHANDS_ADDRESS, CHAIN, USDC_ADDRESS } from '@/config';
 import AgentHandsABI from '@/abi/AgentHands.json';
 import ProofUpload from '@/components/ProofUpload';
 import SelfVerify from '@/components/SelfVerify';
@@ -205,7 +205,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 <User size={12} /> Agent
               </div>
               <div className="text-xs text-[#5C2D0A] font-mono mb-1">{truncateAddress(t.agent || '')}</div>
-              {t.agent && <AgentBadge agentAddress={t.agent} />}
+              {/* {t.agent && <AgentBadge agentAddress={t.agent} />} */}
             </div>
             <div className="p-3 bg-[var(--card)] rounded-xl">
               <div className="text-xs text-[#8B4513] mb-1 flex items-center gap-1 font-label">
@@ -252,7 +252,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               <SelfVerify onVerified={() => setSelfVerified(true)} />
               <button
                 onClick={() => {
-                  acceptWrite({ ...contractCall, functionName: 'acceptTask', args: [taskId] });
+                  acceptWrite({ ...contractCall, functionName: 'acceptTask', args: [taskId], feeCurrency: USDC_ADDRESS } as any);
                   toast('info', 'Confirm transaction in wallet...');
                 }}
                 disabled={accepting || acceptConfirming || !selfVerified}
@@ -288,7 +288,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               )}
               <button
                 onClick={() => {
-                  submitWrite({ ...contractCall, functionName: 'submitProof', args: [taskId, proofCID] });
+                  submitWrite({ ...contractCall, functionName: 'submitProof', args: [taskId, proofCID], feeCurrency: USDC_ADDRESS } as any);
                   toast('info', 'Submitting proof on-chain...');
                 }}
                 disabled={submitting || submitConfirming || !proofCID}
@@ -310,7 +310,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => {
-                    approveWrite({ ...contractCall, functionName: 'approveTask', args: [taskId] });
+                    approveWrite({ ...contractCall, functionName: 'approveTask', args: [taskId], feeCurrency: USDC_ADDRESS } as any);
                     toast('info', 'Approving task...');
                   }}
                   disabled={approvingTask || approveConfirming}
@@ -324,7 +324,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 </button>
                 <button
                   onClick={() => {
-                    disputeWrite({ ...contractCall, functionName: 'disputeTask', args: [taskId] });
+                    disputeWrite({ ...contractCall, functionName: 'disputeTask', args: [taskId], feeCurrency: USDC_ADDRESS } as any);
                     toast('info', 'Disputing task...');
                   }}
                   disabled={disputing || disputeConfirming}
@@ -345,7 +345,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             <div className="bg-[var(--card-solid)] border border-[var(--border)] rounded-2xl p-5">
               <button
                 onClick={() => {
-                  cancelWrite({ ...contractCall, functionName: 'cancelTask', args: [taskId] });
+                  cancelWrite({ ...contractCall, functionName: 'cancelTask', args: [taskId], feeCurrency: USDC_ADDRESS } as any);
                   toast('info', 'Cancelling task...');
                 }}
                 disabled={cancelling || cancelConfirming}
@@ -378,7 +378,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               {isAgent && (
                 <button
                   onClick={() => {
-                    rateWorkerWrite({ ...contractCall, functionName: 'rateWorker', args: [taskId, rating] });
+                    rateWorkerWrite({ ...contractCall, functionName: 'rateWorker', args: [taskId, rating], feeCurrency: USDC_ADDRESS } as any);
                     toast('info', 'Rating worker...');
                   }}
                   disabled={ratingWorker || rateWorkerConfirming}
@@ -390,7 +390,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               {isWorker && (
                 <button
                   onClick={() => {
-                    rateAgentWrite({ ...contractCall, functionName: 'rateAgent', args: [taskId, rating] });
+                    rateAgentWrite({ ...contractCall, functionName: 'rateAgent', args: [taskId, rating], feeCurrency: USDC_ADDRESS } as any);
                     toast('info', 'Rating agent...');
                   }}
                   disabled={ratingAgent || rateAgentConfirming}

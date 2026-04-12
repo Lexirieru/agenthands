@@ -3,11 +3,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useAccount } from "wagmi";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { formatUnits } from "viem";
-import { Wallet } from "lucide-react";
+import { Wallet, LogOut } from "lucide-react";
 import { useUSDCBalance } from "@/hooks/useAgentHands";
 import { truncateAddress } from "@/lib/utils/format";
+import { useState, useEffect } from "react";
 
 const navLinks = [
   { href: "/tasks", label: "TASKS" },
@@ -17,7 +18,12 @@ const navLinks = [
 export default function Header() {
   const pathname = usePathname();
   const { address, isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
+  const { disconnect } = useDisconnect();
   const { data: rawBalance } = useUSDCBalance(address as `0x${string}` | undefined);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const usdcFormatted =
     rawBalance !== undefined
@@ -26,6 +32,17 @@ export default function Header() {
 
   const isActive = (href: string) => pathname === href;
 
+  // Wallet Connection Logic
+  const handleConnect = () => {
+    // Priority: injected (MiniPay/MetaMask) -> walletConnect
+    const connector = connectors.find(c => c.id === 'injected') || connectors[0];
+    if (connector) {
+      connect({ connector });
+    }
+  };
+
+  if (!mounted) return null;
+
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 md:border-[var(--border)]">
       {/* ── Mobile/MiniPay header ── */}
@@ -33,7 +50,7 @@ export default function Header() {
         <div className="flex items-center justify-between px-4 py-3 max-w-md mx-auto h-full">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-[#D4700A] flex items-center justify-center p-1.5 shadow-lg">
-              <Image src="/AgentHandsLogo.png" alt="AgentHands" width={20} height={20} className="invert" />
+              <Image src="/AgentHandsLogo.png" alt="AgentHands" width={20} height={20}/>
             </div>
             <span className="text-lg font-black text-white tracking-tighter uppercase italic">AgentHands</span>
           </Link>
@@ -43,10 +60,20 @@ export default function Header() {
                 ${usdcFormatted}
               </span>
             )}
-            {isConnected && address && (
-              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-black font-black text-[10px] border-2 border-[#D4700A]">
+            {isConnected && address ? (
+              <button 
+                onClick={() => disconnect()}
+                className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-black font-black text-[10px] border-2 border-[#D4700A]"
+              >
                 {address.slice(2, 4).toUpperCase()}
-              </div>
+              </button>
+            ) : (
+              <button 
+                onClick={handleConnect}
+                className="p-2 rounded-full bg-[#D4700A] text-white"
+              >
+                <Wallet size={16} />
+              </button>
             )}
           </div>
         </div>
@@ -94,15 +121,23 @@ export default function Header() {
 
                 {/* Wallet */}
                 {isConnected && address ? (
-                  <span className="flex items-center gap-1.5 px-3 py-1.5 bg-[#5C2D0A] text-white border border-[#5C2D0A] rounded-full text-xs font-label">
-                    <Wallet size={14} />
-                    {truncateAddress(address)}
-                  </span>
+                  <button 
+                    onClick={() => disconnect()}
+                    className="group flex items-center gap-1.5 px-3 py-1.5 bg-[#5C2D0A] text-white border border-[#5C2D0A] rounded-full text-xs font-label hover:bg-red-900 transition-colors"
+                  >
+                    <Wallet size={14} className="group-hover:hidden" />
+                    <LogOut size={14} className="hidden group-hover:block" />
+                    <span className="group-hover:hidden">{truncateAddress(address)}</span>
+                    <span className="hidden group-hover:block">Disconnect</span>
+                  </button>
                 ) : (
-                  <span className="flex items-center gap-1.5 px-4 py-1.5 bg-[#5C2D0A] text-white rounded-full text-xs font-label">
+                  <button 
+                    onClick={handleConnect}
+                    className="flex items-center gap-1.5 px-6 py-1.5 bg-[#D4700A] text-white rounded-full text-xs font-bold font-label hover:bg-[#B35D08] transition-all shadow-lg shadow-[#D4700A]/20"
+                  >
                     <Wallet size={14} />
-                    Connecting...
-                  </span>
+                    Connect Wallet
+                  </button>
                 )}
               </div>
             </nav>

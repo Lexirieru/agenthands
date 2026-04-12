@@ -22,19 +22,19 @@ export default function SwipeCard({ task, index, total }: Props) {
     <div className="h-full w-full bg-[#000000] flex flex-col relative overflow-hidden text-white font-sans">
       {/* ── Background Immersive ── */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 z-0" />
-      
+
       {/* ── Content Area ── */}
       <div className="relative z-10 flex-1 flex flex-col pt-16 pb-24 px-4">
-        
+
         {/* Main Reward Visual (TikTok Video Replacement) */}
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="relative group scale-110">
             {/* Animated Glow behind Reward */}
             <div className="absolute inset-0 bg-[#D4700A]/30 blur-3xl rounded-full animate-pulse" />
-            
+
             <div className="relative flex flex-col items-center">
               <div className="w-28 h-28 rounded-full bg-[#2775CA] flex items-center justify-center p-5 shadow-2xl mb-6 ring-4 ring-black/20">
-                <img src="https://cdn.morpho.org/assets/logos/usdc.svg" alt="USDC" className="w-full h-full invert" />
+                <img src="https://cdn.morpho.org/assets/logos/usdc.svg" alt="USDC" className="w-full h-full" />
               </div>
               <h1 className="text-7xl font-bold tracking-tighter text-white drop-shadow-lg">
                 ${rewardFormatted}
@@ -63,7 +63,7 @@ export default function SwipeCard({ task, index, total }: Props) {
           <h2 className="text-xl font-bold text-white mb-2 leading-tight drop-shadow-md">
             {task.title}
           </h2>
-          
+
           <p className="text-sm text-white/90 line-clamp-2 mb-4 leading-relaxed drop-shadow-sm font-medium">
             {task.description}
           </p>
@@ -83,10 +83,10 @@ export default function SwipeCard({ task, index, total }: Props) {
 
       {/* ── Right-side Actions (TikTok Style) ── */}
       <div className="absolute right-3 bottom-24 z-20 flex flex-col items-center gap-5">
-        
+
         {/* Status / Check - Done/Open Style */}
         <div className="flex flex-col items-center gap-1">
-          <button 
+          <button
             onClick={(e) => {
               e.preventDefault();
             }}
@@ -109,7 +109,7 @@ export default function SwipeCard({ task, index, total }: Props) {
         </Link>
 
         {/* Share Button */}
-        <button 
+        <button
           onClick={(e) => {
             e.preventDefault();
             if (navigator.share) {
@@ -146,9 +146,9 @@ export default function SwipeCard({ task, index, total }: Props) {
       </div>
 
       {/* Top Index Indicator */}
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 bg-black/40 backdrop-blur-xl px-4 py-1.5 rounded-full border border-white/10 text-[11px] font-black tracking-widest text-white/80">
+      {/* <div className="absolute top-6 left-1/2 -translate-x-1/2 z-30 bg-black/40 backdrop-blur-xl px-4 py-1.5 rounded-full border border-white/10 text-[11px] font-black tracking-widest text-white/80">
         {index + 1} / {total}
-      </div>
+      </div> */}
     </div>
   );
 }

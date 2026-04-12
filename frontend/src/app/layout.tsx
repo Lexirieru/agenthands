@@ -24,6 +24,12 @@ export const metadata: Metadata = {
   keywords: ['AI agents', 'marketplace', 'USDC', 'escrow', 'blockchain', 'Celo', 'MiniPay', 'AgentHands'],
   authors: [{ name: 'AgentHands' }],
   creator: 'AgentHands',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'AgentHands',
+  },
   icons: { icon: '/favicon.ico' },
   openGraph: {
     type: 'website',

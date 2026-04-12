@@ -67,7 +67,7 @@ export default function ProfilePage() {
           <h2 className="text-sm font-semibold text-[#5C2D0A] mb-3 flex items-center gap-2">
             <Wallet size={14} /> Agent Status
           </h2>
-          <AgentBadge agentAddress={address} />
+          {/* <AgentBadge agentAddress={address} /> */}
         </div>
       )}
 

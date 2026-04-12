@@ -1,32 +1,9 @@
 import { http, createConfig, cookieStorage, createStorage } from "wagmi";
-import { type Chain } from "viem";
-import { injected } from "wagmi/connectors";
+import { celo, celoSepolia } from "wagmi/chains";
+import { injected, walletConnect } from "wagmi/connectors";
 
-// Celo Sepolia for development — switch to celo mainnet after contract deploy
-export const celoSepolia: Chain = {
-  id: 11142220,
-  name: "Celo Sepolia",
-  nativeCurrency: { name: "CELO", symbol: "CELO", decimals: 18 },
-  rpcUrls: {
-    default: { http: ["https://forno.celo-sepolia.celo-testnet.org"] },
-  },
-  blockExplorers: {
-    default: { name: "CeloScan", url: "https://celo-sepolia.blockscout.com" },
-  },
-  testnet: true,
-};
-
-export const CHAIN = celoSepolia;
-
-export const config = createConfig({
-  chains: [celoSepolia],
-  connectors: [injected()],
-  transports: {
-    [celoSepolia.id]: http("https://forno.celo-sepolia.celo-testnet.org"),
-  },
-  storage: createStorage({ storage: cookieStorage }),
-  ssr: true,
-});
+// Get Project ID from environment - default for fallback
+const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || "3fcc6b444f69e6b35d2630d06f157140";
 
 // Contract address (deployed on Celo Sepolia)
 export const AGENTHANDS_ADDRESS =
@@ -36,7 +13,26 @@ export const AGENTHANDS_ADDRESS =
 export const USDC_ADDRESS =
   "0x01C5C0122039549AD1493B8220cABEdD739BC44E" as `0x${string}`;
 
-// ── Mainnet addresses (uncomment after deploy) ──
-// import { celo } from "wagmi/chains";
-// export const CHAIN = celo;
 // USDC Mainnet: 0xcebA9300f2b948710d2653dD7B07f33A8B32118C
+
+
+// Active chain setup - Default to Sepolia for dev, easily switchable to celo
+export const CHAIN = celoSepolia;
+
+// // Export contract addresses here if needed globally
+// export const AGENTHANDS_ADDRESS = "0x4D13d54Ca71164873F6423CfC8cE02379F864cdC";
+// export const USDC_ADDRESS = "0x765DE816845861e75A25fCA122bb6898B8B1282a"; // Celo Sepolia USDC
+
+export const config = createConfig({
+  chains: [celo, celoSepolia],
+  connectors: [
+    injected(), // Support MiniPay & other browser wallets
+    walletConnect({ projectId }), // Support mobile wallets via QR
+  ],
+  transports: {
+    [celo.id]: http(),
+    [celoSepolia.id]: http("https://forno.celo-sepolia.celo-testnet.org"),
+  },
+  storage: createStorage({ storage: cookieStorage }),
+  ssr: true,
+});
