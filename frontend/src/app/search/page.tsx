@@ -1,29 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createPublicClient, http } from "viem";
+import { createPublicClient, http, fallback } from "viem";
 import { AGENTHANDS_ADDRESS, CHAIN } from "@/config";
 import AgentHandsABI from "@/abi/AgentHands.json";
 import { formatUSDC, getStatusDisplay, truncateAddress } from "@/lib/utils/format";
 import { MapPin, Clock } from "lucide-react";
 import Link from "next/link";
-
-interface TaskData {
-  id: bigint;
-  agent: string;
-  worker: string;
-  reward: bigint;
-  deadline: bigint;
-  title: string;
-  description: string;
-  location: string;
-  status: number;
-  createdAt: bigint;
-}
+import type { TaskData } from "@/types/task";
 
 const client = createPublicClient({
   chain: CHAIN,
-  transport: http(CHAIN.rpcUrls.default.http[0]),
+  transport: fallback([
+    http("https://alfajores-forno.celo-testnet.org"),
+    http("https://forno.celo-sepolia.celo-testnet.org"),
+  ]),
 });
 
 const statusFilters = [
@@ -45,23 +36,36 @@ export default function SearchPage() {
       setIsLoading(true);
       try {
         const count = (await client.readContract({
-          address: AGENTHANDS_ADDRESS,
+          address: AGENTHANDS_ADDRESS as `0x${string}`,
           abi: AgentHandsABI,
           functionName: "taskCount",
         })) as bigint;
 
-        const results: TaskData[] = [];
-        for (let i = BigInt(1); i <= count; i++) {
-          const task = (await client.readContract({
-            address: AGENTHANDS_ADDRESS,
-            abi: AgentHandsABI,
-            functionName: "getTask",
-            args: [i],
-          })) as TaskData;
-          results.push({ ...task, id: i });
-        }
-        setTasks(results.sort((a, b) => Number(b.createdAt) - Number(a.createdAt)));
-      } catch {
+        const total = Number(count);
+        if (total === 0) { setTasks([]); setIsLoading(false); return; }
+
+        const contracts = Array.from({ length: total }, (_, i) => ({
+          address: AGENTHANDS_ADDRESS as `0x${string}`,
+          abi: AgentHandsABI,
+          functionName: "getTask",
+          args: [BigInt(i + 1)],
+        }));
+
+        // @ts-ignore
+        const results = await client.multicall({ contracts, allowFailure: true });
+
+        const parsed = results
+          .map((res: any, i: number) => {
+            if (res.status === "success") {
+              return { ...res.result, id: BigInt(i + 1), status: Number(res.result.status) } as TaskData;
+            }
+            return null;
+          })
+          .filter((t: TaskData | null): t is TaskData => t !== null);
+
+        setTasks(parsed.sort((a: TaskData, b: TaskData) => Number(b.createdAt) - Number(a.createdAt)));
+      } catch (err) {
+        console.error("Search fetch error:", err);
         setTasks([]);
       }
       setIsLoading(false);

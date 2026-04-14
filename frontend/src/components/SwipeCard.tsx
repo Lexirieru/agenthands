@@ -1,19 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, Clock, User } from "lucide-react";
+import { MapPin, Clock, ArrowRight, Share2 } from "lucide-react";
 import { formatUSDC, getStatusDisplay, truncateAddress } from "@/lib/utils/format";
 import type { TaskData } from "@/types/task";
-
-const STATUS_COLORS: Record<number, string> = {
-  0: "text-green-600 bg-green-900/10 border-green-400/20",
-  1: "text-blue-600 bg-blue-900/10 border-blue-400/20",
-  2: "text-yellow-600 bg-yellow-900/10 border-yellow-400/20",
-  3: "text-green-700 bg-green-900/15 border-green-500/20",
-  4: "text-red-600 bg-red-900/10 border-red-400/20",
-  5: "text-[#8B4513] bg-[var(--card)] border-[var(--border)]",
-  6: "text-[#8B4513] bg-[var(--card)] border-[var(--border)]",
-};
 
 interface Props {
   task: TaskData;
@@ -28,86 +18,98 @@ export default function SwipeCard({ task, index, total }: Props) {
   const isExpired = deadlineDate < new Date() && status === 0;
   const rewardFormatted = formatUSDC(task.reward);
 
-  return (
-    <div className="h-full flex flex-col px-4 py-3">
-      {/* Top row */}
-      <div className="flex items-center justify-between mb-1 shrink-0">
-        <p className="text-4xl font-bold text-[#5C2D0A] tracking-tight">
-          ${rewardFormatted}
-        </p>
-        <span
-          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${
-            isExpired
-              ? "text-[#8B4513] bg-[var(--card)] border-[var(--border)]"
-              : STATUS_COLORS[status] || STATUS_COLORS[0]
-          }`}
-        >
-          {isExpired ? "Expired" : statusInfo.label}
-        </span>
-      </div>
-      <p className="text-[10px] text-[#8B4513] mb-2 shrink-0">USDC Reward</p>
+  const statusStyle: Record<number, string> = {
+    0: "bg-emerald-100 text-emerald-700",
+    1: "bg-blue-100 text-blue-700",
+    2: "bg-amber-100 text-amber-700",
+    3: "bg-emerald-100 text-emerald-800",
+    4: "bg-red-100 text-red-700",
+    5: "bg-gray-100 text-gray-500",
+  };
 
-      {/* Reward visual — full width accent bar */}
-      <div className="flex-1 min-h-0 relative -mx-4 flex items-center justify-center">
-        <div className="w-full h-full flex flex-col items-center justify-center px-8">
-          <div className="w-full max-w-sm p-6 bg-[#D4700A]/10 rounded-2xl border border-[#D4700A]/20">
-            <div className="flex items-center gap-3 mb-4">
-              <img
-                src="https://cdn.morpho.org/assets/logos/usdc.svg"
-                alt="USDC"
-                className="h-12 w-12"
-              />
-              <div>
-                <div className="text-4xl font-bold text-[#D4700A]">${rewardFormatted}</div>
-                <div className="text-xs text-[#8B4513]">USDC Escrow Locked</div>
-              </div>
+  return (
+    <div className="h-full w-full flex flex-col px-4 pt-3 pb-20 bg-[#F5E6D3]">
+
+      {/* Card */}
+      <div className="flex-1 flex flex-col bg-[var(--card-solid)] rounded-2xl overflow-hidden shadow-sm border border-[var(--border)]">
+
+        {/* Top: reward + status */}
+        <div className="p-5 pb-4">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-semibold text-[#2C1810] tracking-tight">${rewardFormatted}</span>
+              <span className="text-sm text-[#9B8574]">USDC</span>
             </div>
-            <div className="flex items-center gap-4 text-xs text-[#8B4513]">
-              <div className="flex items-center gap-1">
-                <MapPin size={12} className="text-[#D4700A]" />
-                <span className="line-clamp-1">{task.location}</span>
+            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+              isExpired ? "bg-gray-100 text-gray-500" : (statusStyle[status] || statusStyle[0])
+            }`}>
+              {isExpired ? "Expired" : statusInfo.label}
+            </span>
+          </div>
+
+          {/* Title */}
+          <h2 className="text-[17px] font-semibold text-[#2C1810] leading-snug mb-2">
+            {task.title}
+          </h2>
+
+          {/* Description */}
+          <p className="text-[14px] text-[#7A6B5D] leading-relaxed line-clamp-3">
+            {task.description}
+          </p>
+        </div>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Bottom meta */}
+        <div className="px-5 pb-5">
+          <div className="border-t border-[var(--border)]/50 pt-4 space-y-2.5">
+            <div className="flex items-center gap-2 text-[13px] text-[#7A6B5D]">
+              <MapPin size={14} className="text-[#C47A2A] shrink-0" />
+              <span className="truncate">{task.location}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[13px] text-[#7A6B5D]">
+                <Clock size={14} className={isExpired ? "text-red-400" : "text-[#C47A2A]"} />
+                <span>{isExpired ? "Expired" : deadlineDate.toLocaleDateString()}</span>
               </div>
-              <div className="flex items-center gap-1">
-                <Clock size={12} className="text-[#D4700A]" />
-                <span className={isExpired ? "text-red-500" : ""}>
-                  {isExpired ? "Expired" : deadlineDate.toLocaleDateString()}
-                </span>
-              </div>
+              <span className="text-[12px] text-[#B0A090] font-mono">{truncateAddress(task.agent)}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Question + description */}
-      <div className="mt-2 mb-3 shrink-0">
-        <h2 className="text-base font-semibold text-[#5C2D0A] leading-snug mb-1">
-          {task.title}
-        </h2>
-        <p className="text-[#8B4513] text-xs line-clamp-2">{task.description}</p>
-        <div className="flex items-center gap-1.5 mt-2 text-[10px] text-[#8B4513]">
-          <User size={10} />
-          <span className="font-mono">{truncateAddress(task.agent)}</span>
-          <span className="text-[#D4A878]">·</span>
-          <span>{index + 1}/{total}</span>
-        </div>
-      </div>
-
-      {/* Action button */}
-      <div className="flex gap-3 shrink-0">
-        <Link
-          href={`/tasks/${task.id?.toString() || "0"}`}
-          className="flex-1 py-3 rounded-xl bg-[#D4700A]/10 border border-[#D4700A]/20 text-[#D4700A] font-semibold text-sm text-center active:scale-[0.97] transition-transform"
-        >
-          View Details
-        </Link>
-        {status === 0 && !isExpired && (
+      {/* Actions */}
+      <div className="flex gap-2.5 mt-3">
+        {status === 0 && !isExpired ? (
           <Link
             href={`/tasks/${task.id?.toString() || "0"}`}
-            className="flex-1 py-3 rounded-xl bg-[#5C2D0A] border border-[#5C2D0A] text-white font-semibold text-sm text-center active:scale-[0.97] transition-transform"
+            className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[#5C2D0A] text-white font-semibold text-[15px] active:scale-[0.98] transition-transform"
           >
-            Accept Task
+            Accept Task <ArrowRight size={16} />
+          </Link>
+        ) : (
+          <Link
+            href={`/tasks/${task.id?.toString() || "0"}`}
+            className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[var(--card-solid)] text-[#5C2D0A] font-semibold text-[15px] border border-[var(--border)] active:scale-[0.98] transition-transform"
+          >
+            View Details <ArrowRight size={16} />
           </Link>
         )}
+        <button
+          onClick={() => {
+            if (navigator.share) {
+              navigator.share({
+                title: task.title,
+                text: task.description,
+                url: window.location.origin + `/tasks/${task.id?.toString()}`,
+              }).catch(() => {});
+            }
+          }}
+          className="w-[52px] flex items-center justify-center rounded-xl bg-[var(--card-solid)] border border-[var(--border)] active:scale-[0.95] transition-transform"
+        >
+          <Share2 size={18} className="text-[#7A6B5D]" />
+        </button>
       </div>
     </div>
   );

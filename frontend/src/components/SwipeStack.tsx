@@ -85,9 +85,9 @@ export default function SwipeStack({
   };
 
   const variants = {
-    enter: (d: number) => ({ y: d > 0 ? "100%" : "-100%" }),
-    center: { y: 0 },
-    exit: (d: number) => ({ y: d > 0 ? "-100%" : "100%" }),
+    enter: (d: number) => ({ y: d > 0 ? "100%" : "-100%", opacity: 0.5, scale: 0.95 }),
+    center: { y: 0, opacity: 1, scale: 1 },
+    exit: (d: number) => ({ y: d > 0 ? "-100%" : "100%", opacity: 0.5, scale: 0.95 }),
   };
 
   return (

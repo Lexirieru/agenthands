@@ -61,6 +61,16 @@ export default function ProfilePage() {
         </a>
       </div>
 
+      {/* Agent Badge */}
+      {address && (
+        <div className="bg-[var(--card-solid)] border border-[var(--border)] rounded-2xl p-5 mb-4">
+          <h2 className="text-sm font-semibold text-[#5C2D0A] mb-3 flex items-center gap-2">
+            <Wallet size={14} /> Agent Status
+          </h2>
+          {/* <AgentBadge agentAddress={address} /> */}
+        </div>
+      )}
+
       {/* Self Verify */}
       <div className="bg-[var(--card-solid)] border border-[var(--border)] rounded-2xl p-5">
         <h2 className="text-sm font-semibold text-[#5C2D0A] mb-3">Identity Verification</h2>
