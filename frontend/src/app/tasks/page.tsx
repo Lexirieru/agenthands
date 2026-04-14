@@ -135,7 +135,8 @@ export default function TasksPage() {
 
   // ── Mobile View: Swipe + Integrated Search/Filter ──
   if (isMobile) {
-    const displayTasks = filter === "all" ? filteredTasks.filter(t => Number(t.status) === 0) : filteredTasks;
+    const now = Date.now() / 1000;
+    const displayTasks = filteredTasks.filter(t => Number(t.status) === 0 && Number(t.deadline) > now);
 
     return (
       <div className="flex flex-col flex-1 min-h-0 relative">

@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useReadContracts, useAccount } from 'wagmi';
-import { Briefcase, CheckCircle, Clock, Zap, Bot, HardHat, Loader2 } from 'lucide-react';
+import { useReadContracts, useAccount, useConnect } from 'wagmi';
+import { Briefcase, CheckCircle, Clock, Zap, Bot, HardHat, Loader2, Wallet } from 'lucide-react';
 import gsap from 'gsap';
 import { useTaskCount } from '@/hooks/useAgentHands';
 import { AGENTHANDS_ADDRESS } from '@/config';
@@ -15,6 +15,7 @@ type Tab = 'agent' | 'worker';
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
   const [tab, setTab] = useState<Tab>('worker');
   const statsRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -75,12 +76,26 @@ export default function DashboardPage() {
     }
   }, [isLoading, tab]);
 
+  const handleConnect = () => {
+    const connector = connectors.find(c => c.id === 'injected') || connectors[0];
+    if (connector) connect({ connector });
+  };
+
   if (!isConnected) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100dvh-7.5rem)] px-4 text-center">
-        <h1 className="text-xl font-bold text-[#5C2D0A] mb-2">Dashboard</h1>
-        <p className="text-sm text-[#8B4513] mb-4">Connecting wallet...</p>
-        <Loader2 size={24} className="text-[#D4700A] animate-spin" />
+        <div className="w-20 h-20 rounded-full bg-[var(--card-solid)] border border-[var(--border)] flex items-center justify-center mb-4">
+          <Wallet size={32} className="text-[#8B4513]" />
+        </div>
+        <h1 className="text-lg font-semibold text-[#5C2D0A] mb-2">Dashboard</h1>
+        <p className="text-sm text-[#8B4513] mb-6">Connect wallet to view your tasks</p>
+        <button
+          onClick={handleConnect}
+          className="flex items-center gap-2 px-8 py-3 bg-[#5C2D0A] text-white font-semibold rounded-xl text-sm active:scale-[0.98] transition-transform min-h-[48px]"
+        >
+          <Wallet size={16} />
+          Connect Wallet
+        </button>
       </div>
     );
   }

@@ -1,14 +1,14 @@
 "use client";
 
-import { useAccount } from "wagmi";
+import { useAccount, useConnect } from "wagmi";
 import { formatUnits } from "viem";
-import { User, Wallet, ExternalLink, Loader2 } from "lucide-react";
+import { User, Wallet, ExternalLink } from "lucide-react";
 import { useUSDCBalance } from "@/hooks/useAgentHands";
 import SelfVerify from "@/components/SelfVerify";
-import AgentBadge from "@/components/AgentBadge";
 
 export default function ProfilePage() {
   const { address, isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
   const { data: rawBalance } = useUSDCBalance(address as `0x${string}` | undefined);
 
   const usdcFormatted =
@@ -16,11 +16,26 @@ export default function ProfilePage() {
       ? parseFloat(formatUnits(rawBalance, 6)).toFixed(2)
       : "0.00";
 
+  const handleConnect = () => {
+    const connector = connectors.find(c => c.id === 'injected') || connectors[0];
+    if (connector) connect({ connector });
+  };
+
   if (!isConnected) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100dvh-7.5rem)] px-4 text-center">
-        <Loader2 size={24} className="text-[#D4700A] animate-spin mb-3" />
-        <p className="text-sm text-[#8B4513]">Connecting wallet...</p>
+        <div className="w-20 h-20 rounded-full bg-[var(--card-solid)] border border-[var(--border)] flex items-center justify-center mb-4">
+          <Wallet size={32} className="text-[#8B4513]" />
+        </div>
+        <p className="text-lg font-semibold text-[#5C2D0A] mb-2">Connect Your Wallet</p>
+        <p className="text-sm text-[#8B4513] mb-6">Connect to view your profile and balance</p>
+        <button
+          onClick={handleConnect}
+          className="flex items-center gap-2 px-8 py-3 bg-[#5C2D0A] text-white font-semibold rounded-xl text-sm active:scale-[0.98] transition-transform min-h-[48px]"
+        >
+          <Wallet size={16} />
+          Connect Wallet
+        </button>
       </div>
     );
   }

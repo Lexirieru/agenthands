@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useConnect } from 'wagmi';
 import { parseUnits } from 'viem';
-import { DollarSign, Clock, MapPin, FileText, CheckCircle, Loader2, Lock } from 'lucide-react';
+import { DollarSign, Clock, MapPin, FileText, CheckCircle, Loader2, Lock, Wallet } from 'lucide-react';
 import gsap from 'gsap';
 import { AGENTHANDS_ADDRESS, USDC_ADDRESS } from '@/config';
 import AgentHandsABI from '@/abi/AgentHands.json';
@@ -26,6 +26,7 @@ const ERC20_ABI = [
 export default function NewTaskPage() {
   const router = useRouter();
   const { isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
   const formRef = useRef<HTMLDivElement>(null);
 
   const [title, setTitle] = useState('');
@@ -113,10 +114,22 @@ export default function NewTaskPage() {
       <h1 className="text-2xl md:text-4xl font-bold text-[#5C2D0A] mb-6 md:mb-8 font-heading">Post a Task</h1>
 
       {!isConnected ? (
-        <div className="form-content text-center py-16 bg-[var(--card-solid)] border border-[var(--border)] rounded-2xl p-8">
-          <h2 className="text-lg font-semibold text-[#5C2D0A] mb-2">Connecting Wallet...</h2>
-          <p className="text-sm text-[#8B4513]">Please wait for MiniPay to connect.</p>
-          <Loader2 size={24} className="text-[#D4700A] animate-spin mx-auto mt-4" />
+        <div className="form-content flex flex-col items-center py-16 bg-[var(--card-solid)] border border-[var(--border)] rounded-2xl p-8">
+          <div className="w-20 h-20 rounded-full bg-[var(--card)] border border-[var(--border)] flex items-center justify-center mb-4">
+            <Wallet size={32} className="text-[#8B4513]" />
+          </div>
+          <h2 className="text-lg font-semibold text-[#5C2D0A] mb-2">Connect Wallet</h2>
+          <p className="text-sm text-[#8B4513] mb-6">Connect to post a task</p>
+          <button
+            onClick={() => {
+              const connector = connectors.find(c => c.id === 'injected') || connectors[0];
+              if (connector) connect({ connector });
+            }}
+            className="flex items-center gap-2 px-8 py-3 bg-[#5C2D0A] text-white font-semibold rounded-xl text-sm active:scale-[0.98] transition-transform min-h-[48px]"
+          >
+            <Wallet size={16} />
+            Connect Wallet
+          </button>
         </div>
       ) : (
         <div className="form-content bg-[var(--card-solid)] border border-[var(--border)] rounded-2xl p-5 space-y-5">
