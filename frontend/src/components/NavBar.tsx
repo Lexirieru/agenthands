@@ -97,22 +97,20 @@ export default function NavBar() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--card-solid)]/95 backdrop-blur-xl border-t border-[var(--border)] minipay-tab-bar">
-      <div className="max-w-md mx-auto flex justify-around py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--card-solid)]/95 backdrop-blur-lg border-t border-[var(--border)]">
+      <div className="max-w-md mx-auto flex justify-around py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
         {tabs.map(({ href, label, Icon }) => {
           const active = isActive(href);
           return (
             <Link
               key={href}
               href={href}
-              className={`flex flex-col items-center gap-0.5 px-4 py-1 text-[10px] font-black uppercase tracking-tighter transition-all ${
-                active ? "text-[#D4700A] scale-110" : "text-[#8B4513]"
+              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 min-w-[48px] transition-colors ${
+                active ? "text-[#D4700A]" : "text-[#8B4513]"
               }`}
             >
-              <div className={active ? "drop-shadow-[0_0_8px_rgba(212,112,10,0.4)]" : ""}>
-                <Icon active={active} />
-              </div>
-              <span>{label}</span>
+              <Icon active={active} />
+              <span className="text-[10px] font-medium">{label}</span>
             </Link>
           );
         })}

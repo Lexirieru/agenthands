@@ -45,34 +45,33 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--border)]">
-      {/* ── Mobile/MiniPay header ── */}
-      <div className="md:hidden bg-[var(--card-solid)]/90 backdrop-blur-xl minipay-header">
-        <div className="flex items-center justify-between px-4 py-3 max-w-md mx-auto h-full">
+      {/* ── Mobile header ── */}
+      <div className="md:hidden bg-[var(--card-solid)]/90 backdrop-blur-lg">
+        <div className="flex items-center justify-between px-4 py-2.5 max-w-md mx-auto">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#D4700A] flex items-center justify-center p-1.5 shadow-lg">
-              <Image src="/AgentHandsLogo.png" alt="AgentHands" width={20} height={20}/>
-            </div>
-            <span className="text-lg font-black text-[#5C2D0A] tracking-tighter uppercase italic">AgentHands</span>
+            <Image src="/AgentHandsLogo.png" alt="AgentHands" width={24} height={24} />
+            <span className="text-base font-bold text-[#5C2D0A]">AgentHands</span>
           </Link>
           <div className="flex items-center gap-2">
             {isConnected && usdcFormatted && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[var(--card)] border border-[var(--border)] text-[10px] font-black text-[#D4700A]">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[var(--card)] border border-[var(--border)] text-xs font-medium text-[#D4700A]">
+                <img src="https://cdn.morpho.org/assets/logos/usdc.svg" alt="" className="h-3.5 w-3.5" />
                 ${usdcFormatted}
               </span>
             )}
             {isConnected && address ? (
               <button
                 onClick={() => disconnect()}
-                className="w-8 h-8 rounded-full bg-[#5C2D0A] flex items-center justify-center text-white font-black text-[10px] border-2 border-[#D4700A]"
+                className="h-8 px-2.5 rounded-full bg-[#5C2D0A] text-white text-xs font-medium"
               >
-                {address.slice(2, 4).toUpperCase()}
+                {address.slice(0, 4)}...{address.slice(-3)}
               </button>
             ) : (
               <button
                 onClick={handleConnect}
-                className="p-2 rounded-full bg-[#D4700A] text-white"
+                className="h-8 px-3 rounded-full bg-[#D4700A] text-white text-xs font-medium flex items-center gap-1"
               >
-                <Wallet size={16} />
+                <Wallet size={13} /> Connect
               </button>
             )}
           </div>
