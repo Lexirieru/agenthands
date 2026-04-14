@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 function IconFeed({ active }: { active: boolean }) {
-  const c = active ? "#FFFFFF" : "#888888";
+  const c = active ? "#D4700A" : "#8B4513";
   return (
     <svg
       width="22"
@@ -23,7 +23,7 @@ function IconFeed({ active }: { active: boolean }) {
 }
 
 function IconExplore({ active }: { active: boolean }) {
-  const c = active ? "#FFFFFF" : "#888888";
+  const c = active ? "#D4700A" : "#8B4513";
   return (
     <svg
       width="22"
@@ -42,7 +42,7 @@ function IconExplore({ active }: { active: boolean }) {
 }
 
 function IconPortfolio({ active }: { active: boolean }) {
-  const c = active ? "#FFFFFF" : "#888888";
+  const c = active ? "#D4700A" : "#8B4513";
   return (
     <svg
       width="22"
@@ -63,7 +63,7 @@ function IconPortfolio({ active }: { active: boolean }) {
 }
 
 function IconProfile({ active }: { active: boolean }) {
-  const c = active ? "#FFFFFF" : "#888888";
+  const c = active ? "#D4700A" : "#8B4513";
   return (
     <svg
       width="22"
@@ -97,20 +97,19 @@ export default function NavBar() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-t border-white/10 minipay-tab-bar">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--card-solid)]/95 backdrop-blur-xl border-t border-[var(--border)] minipay-tab-bar">
       <div className="max-w-md mx-auto flex justify-around py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         {tabs.map(({ href, label, Icon }) => {
           const active = isActive(href);
-          const c = active ? "#FFFFFF" : "#888888";
           return (
             <Link
               key={href}
               href={href}
               className={`flex flex-col items-center gap-0.5 px-4 py-1 text-[10px] font-black uppercase tracking-tighter transition-all ${
-                active ? "text-white scale-110" : "text-gray-500"
+                active ? "text-[#D4700A] scale-110" : "text-[#8B4513]"
               }`}
             >
-              <div className={active ? "drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" : ""}>
+              <div className={active ? "drop-shadow-[0_0_8px_rgba(212,112,10,0.4)]" : ""}>
                 <Icon active={active} />
               </div>
               <span>{label}</span>
