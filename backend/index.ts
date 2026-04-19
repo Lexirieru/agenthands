@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { createWalletClient, createPublicClient, http, parseUnits } from "viem";
+import { createWalletClient, createPublicClient, http, parseEther } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { baseSepolia, celoAlfajores } from "viem/chains";
+import { celoSepolia } from "viem/chains";
 import { paymentMiddlewareFromConfig } from "@x402/hono";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
@@ -13,51 +13,100 @@ const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}`;
 const AGENTHANDS_ADDRESS = process.env.AGENTHANDS_ADDRESS as `0x${string}`;
 const PINATA_JWT = process.env.PINATA_JWT;
 const PAY_TO = process.env.WALLET_ADDRESS as `0x${string}`;
+const CELO_SEPOLIA_RPC =
+  process.env.CELO_SEPOLIA_RPC || "https://forno.celo-sepolia.celo-testnet.org";
 
-const CHAINS: Record<string, { rpc: string; usdc: `0x${string}`; chain: typeof baseSepolia }> = {
-  "base-sepolia": {
-    rpc: process.env.BASE_SEPOLIA_RPC || "https://sepolia.base.org",
-    usdc: (process.env.USDC_BASE_SEPOLIA || "0x036CbD53842c5426634e7929541eC2318f3dCF7e") as `0x${string}`,
-    chain: baseSepolia,
-  },
-};
+// x402 network identifier for Celo Sepolia (CAIP-2: eip155:<chainId>)
+const X402_NETWORK = `eip155:${celoSepolia.id}` as const;
 
-// ─── ABI (minimal) ──────────────────────────────────────
-const ERC20_ABI = [
-  { name: "approve", type: "function", stateMutability: "nonpayable", inputs: [{ name: "spender", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ type: "bool" }] },
-  { name: "balanceOf", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ type: "uint256" }] },
-] as const;
-
+// ─── ABI (minimal, native-coin only) ─────────────────────
 const AGENTHANDS_ABI = [
-  { name: "createTask", type: "function", stateMutability: "nonpayable", inputs: [{ name: "_paymentToken", type: "address" }, { name: "_reward", type: "uint256" }, { name: "_deadline", type: "uint256" }, { name: "_completionDeadline", type: "uint256" }, { name: "_title", type: "string" }, { name: "_description", type: "string" }, { name: "_location", type: "string" }], outputs: [{ type: "uint256" }] },
-  { name: "approveTask", type: "function", stateMutability: "nonpayable", inputs: [{ name: "_taskId", type: "uint256" }], outputs: [] },
-  { name: "disputeTask", type: "function", stateMutability: "nonpayable", inputs: [{ name: "_taskId", type: "uint256" }], outputs: [] },
-  { name: "getTask", type: "function", stateMutability: "view", inputs: [{ name: "_taskId", type: "uint256" }], outputs: [{ type: "tuple", components: [{ name: "id", type: "uint256" }, { name: "agent", type: "address" }, { name: "worker", type: "address" }, { name: "paymentToken", type: "address" }, { name: "reward", type: "uint256" }, { name: "deadline", type: "uint256" }, { name: "completionDeadline", type: "uint256" }, { name: "title", type: "string" }, { name: "description", type: "string" }, { name: "location", type: "string" }, { name: "proofCID", type: "string" }, { name: "status", type: "uint8" }, { name: "createdAt", type: "uint256" }] }] },
-  { name: "taskCount", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
-  { name: "rateWorker", type: "function", stateMutability: "nonpayable", inputs: [{ name: "_taskId", type: "uint256" }, { name: "_score", type: "uint8" }], outputs: [] },
+  {
+    name: "createTask",
+    type: "function",
+    stateMutability: "payable",
+    inputs: [
+      { name: "_deadline", type: "uint256" },
+      { name: "_completionDeadline", type: "uint256" },
+      { name: "_title", type: "string" },
+      { name: "_description", type: "string" },
+      { name: "_location", type: "string" },
+    ],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    name: "approveTask",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "_taskId", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    name: "disputeTask",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "_taskId", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    name: "getTask",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "_taskId", type: "uint256" }],
+    outputs: [
+      {
+        type: "tuple",
+        components: [
+          { name: "id", type: "uint256" },
+          { name: "agent", type: "address" },
+          { name: "worker", type: "address" },
+          { name: "reward", type: "uint256" },
+          { name: "deadline", type: "uint256" },
+          { name: "completionDeadline", type: "uint256" },
+          { name: "title", type: "string" },
+          { name: "description", type: "string" },
+          { name: "location", type: "string" },
+          { name: "proofCID", type: "string" },
+          { name: "status", type: "uint8" },
+          { name: "createdAt", type: "uint256" },
+        ],
+      },
+    ],
+  },
+  {
+    name: "taskCount",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    name: "rateWorker",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "_taskId", type: "uint256" },
+      { name: "_score", type: "uint8" },
+    ],
+    outputs: [],
+  },
 ] as const;
 
-// ─── Clients ─────────────────────────────────────────────
+// ─── Clients (Celo Sepolia, native CELO) ─────────────────
 const account = privateKeyToAccount(PRIVATE_KEY);
+const publicClient = createPublicClient({
+  chain: celoSepolia,
+  transport: http(CELO_SEPOLIA_RPC),
+});
+const walletClient = createWalletClient({
+  account,
+  chain: celoSepolia,
+  transport: http(CELO_SEPOLIA_RPC),
+});
 
-function getClients(chainKey: string) {
-  const config = CHAINS[chainKey];
-  if (!config) throw new Error(`Unknown chain: ${chainKey}`);
-  const publicClient = createPublicClient({ chain: config.chain, transport: http(config.rpc) });
-  const walletClient = createWalletClient({ account, chain: config.chain, transport: http(config.rpc) });
-  return { publicClient, walletClient, config };
-}
-
-// ─── ERC-8004: Agent Identity ────────────────────────────
+// ─── ERC-8004: Agent Identity (on Celo Sepolia) ──────────
 const IDENTITY_REGISTRY = "0x8004A818BFB912233c491871b3d84c89A494BD9e" as `0x${string}`;
 const REPUTATION_REGISTRY = "0x8004B663056A597Dffe9eCcC1965A193B7388713" as `0x${string}`;
-
-const celoSepoliaChain = {
-  ...celoAlfajores,
-  id: 11142220 as const,
-  name: "Celo Sepolia",
-  rpcUrls: { default: { http: ["https://forno.celo-sepolia.celo-testnet.org"] as const } },
-};
 
 const IDENTITY_ABI = [
   { name: "register", type: "function", stateMutability: "nonpayable", inputs: [{ name: "metadataURI", type: "string" }], outputs: [{ type: "uint256" }] },
@@ -70,33 +119,27 @@ const REPUTATION_ABI = [
   { name: "getClients", type: "function", stateMutability: "view", inputs: [{ name: "agentId", type: "uint256" }], outputs: [{ type: "address[]" }] },
 ] as const;
 
-function getCeloClients() {
-  const publicClient = createPublicClient({ chain: celoSepoliaChain, transport: http("https://forno.celo-sepolia.celo-testnet.org") });
-  const walletClient = createWalletClient({ account, chain: celoSepoliaChain, transport: http("https://forno.celo-sepolia.celo-testnet.org") });
-  return { publicClient, walletClient };
-}
-
-// ─── x402 Route Config ───────────────────────────────────
+// ─── x402 Route Config (agents pay CELO per API call) ────
 const x402Routes = {
   "POST /api/agent/tasks": {
-    accepts: { scheme: "exact" as const, price: "$0.01", network: "eip155:84532", payTo: PAY_TO },
-    description: "Create a task on AgentHands — hire a human for a physical-world job.",
+    accepts: { scheme: "exact" as const, price: "$0.01", network: X402_NETWORK, payTo: PAY_TO },
+    description: "Create a task on AgentHands — hire a human for a physical-world job (paid in native CELO).",
     mimeType: "application/json",
   },
   "POST /api/agent/tasks/*/approve": {
-    accepts: { scheme: "exact" as const, price: "$0.001", network: "eip155:84532", payTo: PAY_TO },
-    description: "Approve task proof and release USDC payment.",
+    accepts: { scheme: "exact" as const, price: "$0.001", network: X402_NETWORK, payTo: PAY_TO },
+    description: "Approve task proof and release payment.",
   },
   "POST /api/agent/tasks/*/dispute": {
-    accepts: { scheme: "exact" as const, price: "$0.001", network: "eip155:84532", payTo: PAY_TO },
+    accepts: { scheme: "exact" as const, price: "$0.001", network: X402_NETWORK, payTo: PAY_TO },
     description: "Dispute task proof.",
   },
   "POST /api/agent/tasks/*/rate": {
-    accepts: { scheme: "exact" as const, price: "$0.001", network: "eip155:84532", payTo: PAY_TO },
+    accepts: { scheme: "exact" as const, price: "$0.001", network: X402_NETWORK, payTo: PAY_TO },
     description: "Rate a worker (1-5 stars).",
   },
   "POST /api/ipfs/upload": {
-    accepts: { scheme: "exact" as const, price: "$0.001", network: "eip155:84532", payTo: PAY_TO },
+    accepts: { scheme: "exact" as const, price: "$0.001", network: X402_NETWORK, payTo: PAY_TO },
     description: "Upload a file to IPFS.",
   },
 };
@@ -135,13 +178,16 @@ app.get("/", (c) => c.json({
   description: "Marketplace for AI agents to hire humans for physical-world tasks",
   status: "ok",
   agent: account.address,
+  chain: celoSepolia.name,
+  chainId: celoSepolia.id,
+  currency: "CELO",
   docs: "/skills.md",
-  x402: { enabled: true, network: "eip155:84532", currency: "USDC" },
+  x402: { enabled: true, network: X402_NETWORK, currency: "CELO" },
 }));
 
 // ─── x402 Payment Middleware ─────────────────────────────
 const facilitator = new HTTPFacilitatorClient({ url: "https://x402.org/facilitator" });
-const schemes = [{ network: "eip155:84532", server: new ExactEvmScheme() }];
+const schemes = [{ network: X402_NETWORK, server: new ExactEvmScheme() }];
 
 app.use("/api/agent/*", paymentMiddlewareFromConfig(x402Routes, [facilitator], schemes));
 app.use("/api/ipfs/*", paymentMiddlewareFromConfig(x402Routes, [facilitator], schemes));
@@ -149,48 +195,56 @@ app.use("/api/ipfs/*", paymentMiddlewareFromConfig(x402Routes, [facilitator], sc
 // ─── Agent: Create Task ──────────────────────────────────
 app.post("/api/agent/tasks", async (c) => {
   const body = await c.req.json();
-  const { title, description, location, reward, deadlineHours = 24, completionHours = 72, chain = "base-sepolia", webhookUrl } = body;
+  const { title, description, location, reward, deadlineHours = 24, completionHours = 72, webhookUrl } = body;
 
   if (!title || !description || !location || !reward) {
     return c.json({ error: "Missing required fields: title, description, location, reward" }, 400);
   }
 
-  const { publicClient, walletClient, config } = getClients(chain);
-  const amount = parseUnits(String(reward), 6);
+  const amount = parseEther(String(reward)); // reward is in CELO, converted to wei
   const deadline = BigInt(Math.floor(Date.now() / 1000) + Number(deadlineHours) * 3600);
   const completionDeadline = BigInt(Math.floor(Date.now() / 1000) + Number(completionHours) * 3600);
 
-  const approveTx = await walletClient.writeContract({
-    address: config.usdc, abi: ERC20_ABI, functionName: "approve",
-    args: [AGENTHANDS_ADDRESS, amount],
-  });
-  await publicClient.waitForTransactionReceipt({ hash: approveTx });
-
   const createTx = await walletClient.writeContract({
-    address: AGENTHANDS_ADDRESS, abi: AGENTHANDS_ABI, functionName: "createTask",
-    args: [config.usdc, amount, deadline, completionDeadline, title, description, location],
+    address: AGENTHANDS_ADDRESS,
+    abi: AGENTHANDS_ABI,
+    functionName: "createTask",
+    args: [deadline, completionDeadline, title, description, location],
+    value: amount,
   });
   const receipt = await publicClient.waitForTransactionReceipt({ hash: createTx });
 
-  // Extract taskId from logs
-  const taskCount = await publicClient.readContract({ address: AGENTHANDS_ADDRESS, abi: AGENTHANDS_ABI, functionName: "taskCount" });
+  const taskCount = await publicClient.readContract({
+    address: AGENTHANDS_ADDRESS,
+    abi: AGENTHANDS_ABI,
+    functionName: "taskCount",
+  });
   const taskId = taskCount.toString();
 
-  // Register webhook if provided
   if (webhookUrl) {
     webhooks.set(taskId, webhookUrl);
     console.log(`🔔 Webhook registered for task #${taskId} → ${webhookUrl}`);
   }
 
-  return c.json({ success: true, txHash: createTx, blockNumber: Number(receipt.blockNumber), taskId, webhookRegistered: !!webhookUrl, task: { title, description, location, reward, chain } });
+  return c.json({
+    success: true,
+    txHash: createTx,
+    blockNumber: Number(receipt.blockNumber),
+    taskId,
+    webhookRegistered: !!webhookUrl,
+    task: { title, description, location, reward, currency: "CELO" },
+  });
 });
 
 // ─── Agent: Approve ──────────────────────────────────────
 app.post("/api/agent/tasks/:id/approve", async (c) => {
   const taskId = BigInt(c.req.param("id"));
-  const { chain = "base-sepolia" } = await c.req.json().catch(() => ({}));
-  const { publicClient, walletClient } = getClients(chain);
-  const tx = await walletClient.writeContract({ address: AGENTHANDS_ADDRESS, abi: AGENTHANDS_ABI, functionName: "approveTask", args: [taskId] });
+  const tx = await walletClient.writeContract({
+    address: AGENTHANDS_ADDRESS,
+    abi: AGENTHANDS_ABI,
+    functionName: "approveTask",
+    args: [taskId],
+  });
   await publicClient.waitForTransactionReceipt({ hash: tx });
   return c.json({ success: true, txHash: tx });
 });
@@ -198,9 +252,12 @@ app.post("/api/agent/tasks/:id/approve", async (c) => {
 // ─── Agent: Dispute ──────────────────────────────────────
 app.post("/api/agent/tasks/:id/dispute", async (c) => {
   const taskId = BigInt(c.req.param("id"));
-  const { chain = "base-sepolia" } = await c.req.json().catch(() => ({}));
-  const { publicClient, walletClient } = getClients(chain);
-  const tx = await walletClient.writeContract({ address: AGENTHANDS_ADDRESS, abi: AGENTHANDS_ABI, functionName: "disputeTask", args: [taskId] });
+  const tx = await walletClient.writeContract({
+    address: AGENTHANDS_ADDRESS,
+    abi: AGENTHANDS_ABI,
+    functionName: "disputeTask",
+    args: [taskId],
+  });
   await publicClient.waitForTransactionReceipt({ hash: tx });
   return c.json({ success: true, txHash: tx });
 });
@@ -208,10 +265,14 @@ app.post("/api/agent/tasks/:id/dispute", async (c) => {
 // ─── Agent: Rate ─────────────────────────────────────────
 app.post("/api/agent/tasks/:id/rate", async (c) => {
   const taskId = BigInt(c.req.param("id"));
-  const { score, chain = "base-sepolia" } = await c.req.json();
+  const { score } = await c.req.json();
   if (!score || score < 1 || score > 5) return c.json({ error: "Score must be 1-5" }, 400);
-  const { publicClient, walletClient } = getClients(chain);
-  const tx = await walletClient.writeContract({ address: AGENTHANDS_ADDRESS, abi: AGENTHANDS_ABI, functionName: "rateWorker", args: [taskId, score] });
+  const tx = await walletClient.writeContract({
+    address: AGENTHANDS_ADDRESS,
+    abi: AGENTHANDS_ABI,
+    functionName: "rateWorker",
+    args: [taskId, score],
+  });
   await publicClient.waitForTransactionReceipt({ hash: tx });
   return c.json({ success: true, txHash: tx });
 });
@@ -219,11 +280,15 @@ app.post("/api/agent/tasks/:id/rate", async (c) => {
 // ─── Agent: Get Task (FREE) ──────────────────────────────
 app.get("/api/agent/tasks/:id", async (c) => {
   const taskId = BigInt(c.req.param("id"));
-  const chain = c.req.query("chain") || "base-sepolia";
-  const { publicClient } = getClients(chain);
-  const task = await publicClient.readContract({ address: AGENTHANDS_ADDRESS, abi: AGENTHANDS_ABI, functionName: "getTask", args: [taskId] });
-  // Serialize BigInt values to strings
-  const serialized = JSON.parse(JSON.stringify(task, (_key, value) => typeof value === "bigint" ? value.toString() : value));
+  const task = await publicClient.readContract({
+    address: AGENTHANDS_ADDRESS,
+    abi: AGENTHANDS_ABI,
+    functionName: "getTask",
+    args: [taskId],
+  });
+  const serialized = JSON.parse(
+    JSON.stringify(task, (_key, value) => (typeof value === "bigint" ? value.toString() : value))
+  );
   return c.json({ task: serialized });
 });
 
@@ -246,29 +311,63 @@ app.post("/api/agent/tasks/:id/webhook", async (c) => {
 
 // ─── Agent: List All Tasks (FREE) ────────────────────────
 app.get("/api/agent/tasks", async (c) => {
-  const chain = c.req.query("chain") || "base-sepolia";
-  const { publicClient } = getClients(chain);
-  const count = await publicClient.readContract({ address: AGENTHANDS_ADDRESS, abi: AGENTHANDS_ABI, functionName: "taskCount" });
+  const count = await publicClient.readContract({
+    address: AGENTHANDS_ADDRESS,
+    abi: AGENTHANDS_ABI,
+    functionName: "taskCount",
+  });
   const tasks = [];
   for (let i = 1n; i <= count; i++) {
-    const task = await publicClient.readContract({ address: AGENTHANDS_ADDRESS, abi: AGENTHANDS_ABI, functionName: "getTask", args: [i] });
-    tasks.push(JSON.parse(JSON.stringify(task, (_key, value) => typeof value === "bigint" ? value.toString() : value)));
+    const task = await publicClient.readContract({
+      address: AGENTHANDS_ADDRESS,
+      abi: AGENTHANDS_ABI,
+      functionName: "getTask",
+      args: [i],
+    });
+    tasks.push(
+      JSON.parse(JSON.stringify(task, (_key, value) => (typeof value === "bigint" ? value.toString() : value)))
+    );
   }
   return c.json({ tasks, total: Number(count) });
 });
 
 // ─── ERC-8004: Status ────────────────────────────────────
 app.get("/api/erc8004/status", async (c) => {
-  const { publicClient } = getCeloClients();
   try {
-    const balance = await publicClient.readContract({ address: IDENTITY_REGISTRY, abi: IDENTITY_ABI, functionName: "balanceOf", args: [account.address] });
+    const balance = await publicClient.readContract({
+      address: IDENTITY_REGISTRY,
+      abi: IDENTITY_ABI,
+      functionName: "balanceOf",
+      args: [account.address],
+    });
     if (Number(balance) === 0) return c.json({ registered: false, agent: account.address });
 
-    const tokenId = await publicClient.readContract({ address: IDENTITY_REGISTRY, abi: IDENTITY_ABI, functionName: "tokenOfOwnerByIndex", args: [account.address, 0n] });
-    const uri = await publicClient.readContract({ address: IDENTITY_REGISTRY, abi: IDENTITY_ABI, functionName: "tokenURI", args: [tokenId] });
-    const clients = await publicClient.readContract({ address: REPUTATION_REGISTRY, abi: REPUTATION_ABI, functionName: "getClients", args: [tokenId] });
+    const tokenId = await publicClient.readContract({
+      address: IDENTITY_REGISTRY,
+      abi: IDENTITY_ABI,
+      functionName: "tokenOfOwnerByIndex",
+      args: [account.address, 0n],
+    });
+    const uri = await publicClient.readContract({
+      address: IDENTITY_REGISTRY,
+      abi: IDENTITY_ABI,
+      functionName: "tokenURI",
+      args: [tokenId],
+    });
+    const clients = await publicClient.readContract({
+      address: REPUTATION_REGISTRY,
+      abi: REPUTATION_ABI,
+      functionName: "getClients",
+      args: [tokenId],
+    });
 
-    return c.json({ registered: true, agent: account.address, tokenId: Number(tokenId), metadataURI: uri, reviewCount: clients.length });
+    return c.json({
+      registered: true,
+      agent: account.address,
+      tokenId: Number(tokenId),
+      metadataURI: uri,
+      reviewCount: clients.length,
+    });
   } catch (error) {
     return c.json({ registered: false, agent: account.address, error: String(error) });
   }
@@ -276,12 +375,21 @@ app.get("/api/erc8004/status", async (c) => {
 
 // ─── ERC-8004: Register ──────────────────────────────────
 app.post("/api/erc8004/register", async (c) => {
-  const { publicClient, walletClient } = getCeloClients();
-  const balance = await publicClient.readContract({ address: IDENTITY_REGISTRY, abi: IDENTITY_ABI, functionName: "balanceOf", args: [account.address] });
+  const balance = await publicClient.readContract({
+    address: IDENTITY_REGISTRY,
+    abi: IDENTITY_ABI,
+    functionName: "balanceOf",
+    args: [account.address],
+  });
   if (Number(balance) > 0) return c.json({ error: "Agent already registered" }, 400);
 
   const { metadataURI } = await c.req.json().catch(() => ({ metadataURI: "" }));
-  const tx = await walletClient.writeContract({ address: IDENTITY_REGISTRY, abi: IDENTITY_ABI, functionName: "register", args: [metadataURI || ""] });
+  const tx = await walletClient.writeContract({
+    address: IDENTITY_REGISTRY,
+    abi: IDENTITY_ABI,
+    functionName: "register",
+    args: [metadataURI || ""],
+  });
   const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
   return c.json({ success: true, txHash: tx, blockNumber: Number(receipt.blockNumber) });
 });
@@ -290,39 +398,31 @@ app.post("/api/erc8004/register", async (c) => {
 import { SelfAgent } from "@selfxyz/agent-sdk";
 import { SelfBackendVerifier, DefaultConfigStore, AllIds } from "@selfxyz/core";
 
-// Initialize Self Agent (our agent's identity)
 const selfAgent = new SelfAgent({ privateKey: PRIVATE_KEY });
 
-// Backend verifier for QR code ZK proofs (from @selfxyz/qrcode)
 const selfConfigStore = new DefaultConfigStore({
   minimumAge: 18,
 });
 
 const selfBackendVerifier = new SelfBackendVerifier(
-  "agenthands-worker-verify",   // scope — must match frontend
-  "https://agenthands-production.up.railway.app/api/self/verify", // endpoint — must match frontend (used for scope hash)
-  true,                          // mockPassport — true for staging (uses Celo Sepolia)
-  AllIds,                        // allow all attestation types
-  selfConfigStore,               // verification config
-  "hex",                         // userIdType — wallet addresses
+  "agenthands-worker-verify",
+  "https://agenthands-production.up.railway.app/api/self/verify",
+  true,
+  AllIds,
+  selfConfigStore,
+  "hex"
 );
 
-// Agent registration status
 app.get("/api/self/agent/status", async (c) => {
   try {
     const isRegistered = await selfAgent.isRegistered();
     const info = isRegistered ? await selfAgent.getInfo() : null;
-    return c.json({
-      address: selfAgent.address,
-      registered: isRegistered,
-      info,
-    });
+    return c.json({ address: selfAgent.address, registered: isRegistered, info });
   } catch (error) {
     return c.json({ address: selfAgent.address, registered: false, error: String(error) });
   }
 });
 
-// Start agent registration (returns QR for human to scan)
 app.post("/api/self/agent/register", async (c) => {
   try {
     const res = await fetch("https://app.ai.self.xyz/api/agent/register", {
@@ -342,7 +442,6 @@ app.post("/api/self/agent/register", async (c) => {
   }
 });
 
-// Poll registration status
 app.get("/api/self/agent/register/status", async (c) => {
   const token = c.req.query("token");
   if (!token) return c.json({ error: "Missing token" }, 400);
@@ -355,7 +454,6 @@ app.get("/api/self/agent/register/status", async (c) => {
   }
 });
 
-// Verify QR code ZK proof from Self app (called by Self relayer)
 app.post("/api/self/verify", async (c) => {
   try {
     const body = await c.req.json();
@@ -365,7 +463,7 @@ app.post("/api/self/verify", async (c) => {
       attestationId,
       proof,
       publicSignals,
-      userContextData || "",
+      userContextData || ""
     );
 
     console.log("✅ Self verification success:", JSON.stringify(result.isValidDetails));
@@ -376,16 +474,10 @@ app.post("/api/self/verify", async (c) => {
     });
   } catch (error) {
     console.error("❌ Self verification failed:", String(error));
-    // Self relayer expects HTTP 200 with status field — never return 4xx/5xx
-    return c.json({
-      status: "error",
-      result: false,
-      reason: String(error),
-    });
+    return c.json({ status: "error", result: false, reason: String(error) });
   }
 });
 
-// Agent credentials
 app.get("/api/self/agent/credentials", async (c) => {
   try {
     const creds = await selfAgent.getCredentials();
@@ -407,17 +499,28 @@ app.post("/api/ipfs/upload", async (c) => {
   pinataForm.append("pinataMetadata", JSON.stringify({ name: `agenthands-proof-${Date.now()}` }));
 
   const res = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
-    method: "POST", headers: { Authorization: `Bearer ${PINATA_JWT}` }, body: pinataForm,
+    method: "POST",
+    headers: { Authorization: `Bearer ${PINATA_JWT}` },
+    body: pinataForm,
   });
-  if (!res.ok) { const err = await res.text(); return c.json({ error: "Pinata upload failed", details: err }, 500); }
+  if (!res.ok) {
+    const err = await res.text();
+    return c.json({ error: "Pinata upload failed", details: err }, 500);
+  }
 
-  const data = await res.json();
-  return c.json({ success: true, cid: data.IpfsHash, url: `https://gateway.pinata.cloud/ipfs/${data.IpfsHash}`, size: data.PinSize });
+  const data = (await res.json()) as { IpfsHash: string; PinSize: number };
+  return c.json({
+    success: true,
+    cid: data.IpfsHash,
+    url: `https://gateway.pinata.cloud/ipfs/${data.IpfsHash}`,
+    size: data.PinSize,
+  });
 });
 
 // ─── Start ───────────────────────────────────────────────
 const port = Number(process.env.PORT) || 3001;
 console.log(`🤝 AgentHands Backend running on http://localhost:${port}`);
-console.log(`💰 x402 enabled — agents pay USDC to create tasks`);
+console.log(`🌿 Chain: ${celoSepolia.name} (${celoSepolia.id}) — native CELO`);
+console.log(`💰 x402 enabled — agents pay CELO to create tasks`);
 
 export default { port, fetch: app.fetch };
