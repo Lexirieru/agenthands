@@ -24,12 +24,16 @@ export default function SelfVerify({ onVerified }: SelfVerifyProps) {
   const { address } = useAccount();
   const [showQR, setShowQR] = useState(false);
   const [selfApp, setSelfApp] = useState<SelfApp | null>(null);
+  const [verified, setVerified] = useState<boolean | null>(null);
 
-  const initialVerified = typeof window !== 'undefined' && address
-    ? !!localStorage.getItem(`self_verified_${address}`)
-    : false;
-
-  const [verified, setVerified] = useState(initialVerified);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !address) {
+      setVerified(false);
+      return;
+    }
+    const stored = !!localStorage.getItem(`self_verified_${address}`);
+    setVerified(stored);
+  }, [address]);
 
   useEffect(() => {
     try {

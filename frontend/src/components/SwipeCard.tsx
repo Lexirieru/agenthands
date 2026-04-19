@@ -28,7 +28,7 @@ export default function SwipeCard({ task, index, total }: Props) {
   };
 
   return (
-    <div className="h-full w-full flex flex-col px-4 pt-3 pb-20 bg-[#F5E6D3]">
+    <div className="h-full w-full flex flex-col px-3 pt-2 pb-2 bg-[#F5E6D3]">
 
       {/* Card */}
       <div className="flex-1 flex flex-col bg-[var(--card-solid)] rounded-2xl overflow-hidden shadow-sm border border-[var(--border)]">
@@ -36,8 +36,9 @@ export default function SwipeCard({ task, index, total }: Props) {
         {/* Top: reward + status */}
         <div className="p-5 pb-4">
           <div className="flex items-start justify-between mb-4">
-            <div className="flex items-baseline gap-2">
+            <div className="flex items-center gap-2">
               <span className="text-3xl font-semibold text-[#2C1810] tracking-tight">${rewardFormatted}</span>
+              <img src="https://cdn.morpho.org/assets/logos/usdc.svg" alt="USDC" className="h-7 w-7" />
               <span className="text-sm text-[#9B8574]">USDC</span>
             </div>
             <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
@@ -80,7 +81,7 @@ export default function SwipeCard({ task, index, total }: Props) {
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2.5 mt-3">
+      <div className="flex gap-2.5 mt-2">
         {status === 0 && !isExpired ? (
           <Link
             href={`/tasks/${task.id?.toString() || "0"}`}

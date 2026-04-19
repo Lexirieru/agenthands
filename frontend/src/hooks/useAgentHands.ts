@@ -77,7 +77,12 @@ export function useUSDCBalance(address: `0x${string}` | undefined) {
     abi: ERC20_ABI,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
-    query: { enabled: !!address },
+    query: {
+      enabled: !!address,
+      refetchInterval: 8000,
+      refetchOnWindowFocus: true,
+      staleTime: 4000,
+    },
   });
 }
 

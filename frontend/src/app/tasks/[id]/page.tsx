@@ -1,24 +1,16 @@
 'use client';
 
 import { use, useState, useEffect, useRef, useCallback } from 'react';
-import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
-import { createPublicClient, http } from 'viem';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useSwitchChain } from 'wagmi';
 import { ArrowLeft, Clock, DollarSign, MapPin, User, Loader2, CheckCircle, AlertTriangle, Lock, Hand, Camera, Star, HardHat } from 'lucide-react';
 import Link from 'next/link';
-import { AGENTHANDS_ADDRESS, CHAIN, USDC_ADDRESS } from '@/config';
+import { AGENTHANDS_ADDRESS, CHAIN, USDC_FEE_ADAPTER } from '@/config';
 import AgentHandsABI from '@/abi/AgentHands.json';
 import ProofUpload from '@/components/ProofUpload';
 import SelfVerify from '@/components/SelfVerify';
-import AgentBadge from '@/components/AgentBadge';
 import { getStatusDisplay, truncateAddress } from '@/lib/utils/format';
 import { toast } from '@/components/Toast';
-import type { TaskData } from '@/types/task';
-
-const celoClient = createPublicClient({
-  chain: CHAIN,
-  transport: http(CHAIN.rpcUrls.default.http[0]),
-});
+import { useTaskDetail, useInvalidateTasks } from '@/hooks/useTasks';
 
 const STATUS_COLORS: Record<number, string> = {
   0: 'bg-green-900/10 text-green-800',
@@ -29,20 +21,6 @@ const STATUS_COLORS: Record<number, string> = {
   5: 'bg-gray-900/10 text-gray-600',
   6: 'bg-gray-900/10 text-gray-600',
 };
-
-async function fetchTask(taskId: bigint): Promise<TaskData | null> {
-  try {
-    const result = await celoClient.readContract({
-      address: AGENTHANDS_ADDRESS,
-      abi: AgentHandsABI,
-      functionName: 'getTask',
-      args: [taskId],
-    });
-    return result as unknown as TaskData;
-  } catch {
-    return null;
-  }
-}
 
 function TxOverlay({ message }: { message: string }) {
   return (
@@ -59,30 +37,35 @@ function TxOverlay({ message }: { message: string }) {
 export default function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const taskId = BigInt(id);
-  const queryClient = useQueryClient();
-  const { address } = useAccount();
+  const { address, chainId: currentChainId } = useAccount();
+  const { switchChain } = useSwitchChain();
   const [proofCID, setProofCID] = useState('');
   const [rating, setRating] = useState(5);
   const [txMessage, setTxMessage] = useState<string | null>(null);
-  const [selfVerified, setSelfVerified] = useState(
-    typeof window !== 'undefined' && address
-      ? !!localStorage.getItem(`self_verified_${address}`)
-      : false
-  );
+  const [selfVerified, setSelfVerified] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const queryKey = ['task', id];
-  const { data: taskData, isLoading } = useQuery({
-    queryKey,
-    queryFn: () => fetchTask(taskId),
-    refetchInterval: 8000,
-    staleTime: 4000,
-  });
+  useEffect(() => {
+    if (typeof window === 'undefined' || !address) return;
+    setSelfVerified(!!localStorage.getItem(`self_verified_${address}`));
+  }, [address]);
+
+  const { data: taskData, isLoading } = useTaskDetail(taskId);
+  const { invalidateDetail, invalidateList } = useInvalidateTasks();
+
+  const ensureChain = useCallback(() => {
+    if (currentChainId !== CHAIN.id) {
+      switchChain({ chainId: CHAIN.id });
+      toast('info', 'Switching to Celo Sepolia...');
+      return false;
+    }
+    return true;
+  }, [currentChainId, switchChain]);
 
   const invalidateTask = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey });
-    queryClient.invalidateQueries();
-  }, [queryClient, queryKey]);
+    invalidateDetail(taskId);
+    invalidateList();
+  }, [invalidateDetail, invalidateList, taskId]);
 
   // Write hooks
   const { writeContract: acceptWrite, data: acceptTx, isPending: accepting } = useWriteContract();
@@ -252,7 +235,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               <SelfVerify onVerified={() => setSelfVerified(true)} />
               <button
                 onClick={() => {
-                  acceptWrite({ ...contractCall, functionName: 'acceptTask', args: [taskId], feeCurrency: USDC_ADDRESS } as any);
+                  if (!ensureChain()) return;
+                  acceptWrite({ ...contractCall, functionName: 'acceptTask', args: [taskId], feeCurrency: USDC_FEE_ADAPTER, type: 'cip64' } as any);
                   toast('info', 'Confirm transaction in wallet...');
                 }}
                 disabled={accepting || acceptConfirming || !selfVerified}
@@ -288,7 +272,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               )}
               <button
                 onClick={() => {
-                  submitWrite({ ...contractCall, functionName: 'submitProof', args: [taskId, proofCID], feeCurrency: USDC_ADDRESS } as any);
+                  if (!ensureChain()) return;
+                  submitWrite({ ...contractCall, functionName: 'submitProof', args: [taskId, proofCID], feeCurrency: USDC_FEE_ADAPTER, type: 'cip64' } as any);
                   toast('info', 'Submitting proof on-chain...');
                 }}
                 disabled={submitting || submitConfirming || !proofCID}
@@ -310,7 +295,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => {
-                    approveWrite({ ...contractCall, functionName: 'approveTask', args: [taskId], feeCurrency: USDC_ADDRESS } as any);
+                    if (!ensureChain()) return;
+                    approveWrite({ ...contractCall, functionName: 'approveTask', args: [taskId], feeCurrency: USDC_FEE_ADAPTER, type: 'cip64' } as any);
                     toast('info', 'Approving task...');
                   }}
                   disabled={approvingTask || approveConfirming}
@@ -324,7 +310,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 </button>
                 <button
                   onClick={() => {
-                    disputeWrite({ ...contractCall, functionName: 'disputeTask', args: [taskId], feeCurrency: USDC_ADDRESS } as any);
+                    if (!ensureChain()) return;
+                    disputeWrite({ ...contractCall, functionName: 'disputeTask', args: [taskId], feeCurrency: USDC_FEE_ADAPTER, type: 'cip64' } as any);
                     toast('info', 'Disputing task...');
                   }}
                   disabled={disputing || disputeConfirming}
@@ -345,7 +332,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
             <div className="bg-[var(--card-solid)] border border-[var(--border)] rounded-2xl p-5">
               <button
                 onClick={() => {
-                  cancelWrite({ ...contractCall, functionName: 'cancelTask', args: [taskId], feeCurrency: USDC_ADDRESS } as any);
+                  if (!ensureChain()) return;
+                  cancelWrite({ ...contractCall, functionName: 'cancelTask', args: [taskId], feeCurrency: USDC_FEE_ADAPTER, type: 'cip64' } as any);
                   toast('info', 'Cancelling task...');
                 }}
                 disabled={cancelling || cancelConfirming}
@@ -378,7 +366,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               {isAgent && (
                 <button
                   onClick={() => {
-                    rateWorkerWrite({ ...contractCall, functionName: 'rateWorker', args: [taskId, rating], feeCurrency: USDC_ADDRESS } as any);
+                    if (!ensureChain()) return;
+                    rateWorkerWrite({ ...contractCall, functionName: 'rateWorker', args: [taskId, rating], feeCurrency: USDC_FEE_ADAPTER, type: 'cip64' } as any);
                     toast('info', 'Rating worker...');
                   }}
                   disabled={ratingWorker || rateWorkerConfirming}
@@ -390,7 +379,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               {isWorker && (
                 <button
                   onClick={() => {
-                    rateAgentWrite({ ...contractCall, functionName: 'rateAgent', args: [taskId, rating], feeCurrency: USDC_ADDRESS } as any);
+                    if (!ensureChain()) return;
+                    rateAgentWrite({ ...contractCall, functionName: 'rateAgent', args: [taskId, rating], feeCurrency: USDC_FEE_ADAPTER, type: 'cip64' } as any);
                     toast('info', 'Rating agent...');
                   }}
                   disabled={ratingAgent || rateAgentConfirming}

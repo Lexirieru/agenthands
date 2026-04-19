@@ -1,21 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createPublicClient, http, fallback } from "viem";
-import { AGENTHANDS_ADDRESS, CHAIN } from "@/config";
-import AgentHandsABI from "@/abi/AgentHands.json";
+import { useState, useMemo } from "react";
 import { formatUSDC, getStatusDisplay, truncateAddress } from "@/lib/utils/format";
 import { MapPin, Clock } from "lucide-react";
 import Link from "next/link";
-import type { TaskData } from "@/types/task";
-
-const client = createPublicClient({
-  chain: CHAIN,
-  transport: fallback([
-    http("https://alfajores-forno.celo-testnet.org"),
-    http("https://forno.celo-sepolia.celo-testnet.org"),
-  ]),
-});
+import { useAllTasks } from "@/hooks/useTasks";
 
 const statusFilters = [
   { label: "All", value: "all" as const },
@@ -28,50 +17,13 @@ const statusFilters = [
 export default function SearchPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<number | "all">("all");
-  const [tasks, setTasks] = useState<TaskData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadTasks() {
-      setIsLoading(true);
-      try {
-        const count = (await client.readContract({
-          address: AGENTHANDS_ADDRESS as `0x${string}`,
-          abi: AgentHandsABI,
-          functionName: "taskCount",
-        })) as bigint;
+  const { data: rawTasks = [], isLoading } = useAllTasks();
 
-        const total = Number(count);
-        if (total === 0) { setTasks([]); setIsLoading(false); return; }
-
-        const contracts = Array.from({ length: total }, (_, i) => ({
-          address: AGENTHANDS_ADDRESS as `0x${string}`,
-          abi: AgentHandsABI,
-          functionName: "getTask",
-          args: [BigInt(i + 1)],
-        }));
-
-        // @ts-ignore
-        const results = await client.multicall({ contracts, allowFailure: true });
-
-        const parsed = results
-          .map((res: any, i: number) => {
-            if (res.status === "success") {
-              return { ...res.result, id: BigInt(i + 1), status: Number(res.result.status) } as TaskData;
-            }
-            return null;
-          })
-          .filter((t: TaskData | null): t is TaskData => t !== null);
-
-        setTasks(parsed.sort((a: TaskData, b: TaskData) => Number(b.createdAt) - Number(a.createdAt)));
-      } catch (err) {
-        console.error("Search fetch error:", err);
-        setTasks([]);
-      }
-      setIsLoading(false);
-    }
-    loadTasks();
-  }, []);
+  const tasks = useMemo(
+    () => [...rawTasks].sort((a, b) => Number(b.createdAt) - Number(a.createdAt)),
+    [rawTasks]
+  );
 
   const filtered = tasks
     .filter((t) => filter === "all" || Number(t.status) === filter)

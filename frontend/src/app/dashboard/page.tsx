@@ -1,15 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
-import { useReadContracts, useAccount, useConnect } from 'wagmi';
-import { Briefcase, CheckCircle, Clock, Zap, Bot, HardHat, Loader2, Wallet } from 'lucide-react';
+import { useAccount, useConnect } from 'wagmi';
+import { Briefcase, CheckCircle, Clock, Zap, Bot, HardHat, Wallet } from 'lucide-react';
 import gsap from 'gsap';
-import { useTaskCount } from '@/hooks/useAgentHands';
-import { AGENTHANDS_ADDRESS } from '@/config';
-import AgentHandsABI from '@/abi/AgentHands.json';
 import TaskCard from '@/components/TaskCard';
-import type { TaskData, ContractResult } from '@/types/task';
+import { useAllTasks } from '@/hooks/useTasks';
 
 type Tab = 'agent' | 'worker';
 
@@ -20,32 +17,15 @@ export default function DashboardPage() {
   const statsRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
-  const { data: taskCount } = useTaskCount();
-  const count = taskCount ? Number(taskCount) : 0;
+  const { data: allTasks = [], isLoading } = useAllTasks();
 
-  const taskCalls = Array.from({ length: count }, (_, i) => ({
-    address: AGENTHANDS_ADDRESS,
-    abi: AgentHandsABI,
-    functionName: 'getTask',
-    args: [BigInt(i + 1)],
-  })) as never[];
-
-  const { data: tasksData, isLoading } = useReadContracts({
-    contracts: taskCalls,
-    query: { enabled: count > 0 },
-  });
-
-  const allTasks: TaskData[] =
-    (tasksData as ContractResult[] | undefined)
-      ?.filter((r) => r.status === 'success')
-      .map((r) => r.result) || [];
-
-  const myAgentTasks = allTasks.filter(
-    (t) => t.agent?.toLowerCase() === address?.toLowerCase()
-  );
-  const myWorkerTasks = allTasks.filter(
-    (t) => t.worker?.toLowerCase() === address?.toLowerCase()
-  );
+  const { myAgentTasks, myWorkerTasks } = useMemo(() => {
+    const addr = address?.toLowerCase();
+    return {
+      myAgentTasks: allTasks.filter((t) => t.agent?.toLowerCase() === addr),
+      myWorkerTasks: allTasks.filter((t) => t.worker?.toLowerCase() === addr),
+    };
+  }, [allTasks, address]);
 
   const activeTasks = tab === 'agent' ? myAgentTasks : myWorkerTasks;
 

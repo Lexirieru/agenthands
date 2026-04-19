@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useWriteContract, useWaitForTransactionReceipt, useAccount, useConnect } from 'wagmi';
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useConnect, useSwitchChain } from 'wagmi';
 import { parseUnits } from 'viem';
 import { DollarSign, Clock, MapPin, FileText, CheckCircle, Loader2, Lock, Wallet } from 'lucide-react';
 import gsap from 'gsap';
-import { AGENTHANDS_ADDRESS, USDC_ADDRESS } from '@/config';
+import { AGENTHANDS_ADDRESS, USDC_ADDRESS, USDC_FEE_ADAPTER, CHAIN } from '@/config';
 import AgentHandsABI from '@/abi/AgentHands.json';
 import { toast } from '@/components/Toast';
+import { useInvalidateTasks } from '@/hooks/useTasks';
 
 const ERC20_ABI = [
   {
@@ -25,8 +26,9 @@ const ERC20_ABI = [
 
 export default function NewTaskPage() {
   const router = useRouter();
-  const { isConnected } = useAccount();
+  const { isConnected, chainId: currentChainId } = useAccount();
   const { connect, connectors } = useConnect();
+  const { switchChain } = useSwitchChain();
   const formRef = useRef<HTMLDivElement>(null);
 
   const [title, setTitle] = useState('');
@@ -46,6 +48,12 @@ export default function NewTaskPage() {
   const { isLoading: waitingCreate, isSuccess: createSuccess } =
     useWaitForTransactionReceipt({ hash: createTx });
 
+  const { invalidateList } = useInvalidateTasks();
+
+  useEffect(() => {
+    if (createSuccess) invalidateList();
+  }, [createSuccess, invalidateList]);
+
   useEffect(() => {
     if (formRef.current) {
       const ctx = gsap.context(() => {
@@ -60,20 +68,31 @@ export default function NewTaskPage() {
     }
   }, [step]);
 
+  const ensureChain = () => {
+    if (currentChainId !== CHAIN.id) {
+      switchChain({ chainId: CHAIN.id });
+      toast('info', 'Switching to Celo Sepolia...');
+      return false;
+    }
+    return true;
+  };
+
   const handleApprove = () => {
+    if (!ensureChain()) return;
     const amount = parseUnits(reward, 6);
     approveWrite({
       address: USDC_ADDRESS,
       abi: ERC20_ABI,
       functionName: 'approve',
       args: [AGENTHANDS_ADDRESS, amount],
-      feeCurrency: USDC_ADDRESS,
+      feeCurrency: USDC_FEE_ADAPTER, type: 'cip64',
     } as any);
     setStep('approve');
     toast('info', 'Approve USDC in your wallet...');
   };
 
   const handleCreate = () => {
+    if (!ensureChain()) return;
     const amount = parseUnits(reward, 6);
     const deadline = BigInt(Math.floor(Date.now() / 1000) + Number(deadlineHours) * 3600);
     const completionDeadline = BigInt(Math.floor(Date.now() / 1000) + Number(completionHours) * 3600);
@@ -83,7 +102,7 @@ export default function NewTaskPage() {
       abi: AgentHandsABI as typeof AgentHandsABI,
       functionName: 'createTask',
       args: [USDC_ADDRESS, amount, deadline, completionDeadline, title, description, location],
-      feeCurrency: USDC_ADDRESS,
+      feeCurrency: USDC_FEE_ADAPTER, type: 'cip64',
     } as any);
     setStep('create');
     toast('info', 'Creating task on-chain...');

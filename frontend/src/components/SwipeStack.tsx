@@ -17,9 +17,12 @@ export default function SwipeStack({
   const containerRef = useRef<HTMLDivElement>(null);
   const canTransition = useRef(true);
 
+  const safeIndex = tasks.length === 0 ? 0 : Math.min(currentIndex, tasks.length - 1);
+
   const goTo = useCallback(
     (dir: number) => {
       if (!canTransition.current) return;
+      if (tasks.length === 0) return;
       canTransition.current = false;
       setDirection(dir);
       setCurrentIndex((prev) =>
@@ -100,22 +103,24 @@ export default function SwipeStack({
           canTransition.current = true;
         }}
       >
-        <motion.div
-          key={currentIndex}
-          custom={direction}
-          variants={variants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          drag="y"
-          dragConstraints={{ top: 0, bottom: 0 }}
-          dragElastic={0.6}
-          onDragEnd={handleDragEnd}
-          className="absolute inset-0 touch-pan-x"
-        >
-          <SwipeCard task={tasks[currentIndex]} index={currentIndex} total={tasks.length} />
-        </motion.div>
+        {tasks[safeIndex] && (
+          <motion.div
+            key={safeIndex}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={0.6}
+            onDragEnd={handleDragEnd}
+            className="absolute inset-0 touch-pan-x"
+          >
+            <SwipeCard task={tasks[safeIndex]} index={safeIndex} total={tasks.length} />
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

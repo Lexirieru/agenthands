@@ -13,7 +13,14 @@ export const AGENTHANDS_ADDRESS =
 export const USDC_ADDRESS =
   "0x01C5C0122039549AD1493B8220cABEdD739BC44E" as `0x${string}`;
 
+// USDC Fee Adapter (for feeCurrency — 6 decimal tokens need adapter for gas pricing)
+// Celo Sepolia: https://docs.celo.org/build/fee-abstraction
+export const USDC_FEE_ADAPTER =
+  "0x4822e58de6f5e485eF90df51C41CE01721331dC0" as `0x${string}`;
+
+// ── Mainnet addresses (uncomment after deploy) ──
 // USDC Mainnet: 0xcebA9300f2b948710d2653dD7B07f33A8B32118C
+// USDC Adapter Mainnet: 0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B
 
 
 // Active chain setup - Default to Sepolia for dev, easily switchable to celo

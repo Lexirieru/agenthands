@@ -1,25 +1,20 @@
 'use client';
-import { useState, useEffect, useRef } from "react";
-import { createPublicClient, http, fallback } from "viem";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { Search, X } from "lucide-react";
 import gsap from "gsap";
-import { AGENTHANDS_ADDRESS, CHAIN } from "@/config";
-import AgentHandsABI from "@/abi/AgentHands.json";
 import TaskCard from "@/components/TaskCard";
 import SwipeStack from "@/components/SwipeStack";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import type { TaskData } from "@/types/task";
+import { useAllTasks } from "@/hooks/useTasks";
 
-// KONSISTEN nembak ke RPC Sepolia buat fetch data
-// Menggunakan beberapa RPC alternatif untuk menghindari "0x" data return
-const publicClient = createPublicClient({
-  chain: CHAIN,
-  transport: fallback([
-    http("https://alfajores-forno.celo-testnet.org"), // Primary Alfajores RPC
-    http("https://forno.celo-sepolia.celo-testnet.org"),
-    http("https://rpc.ankr.com/celo_alfajores"), // Ankr fallback
-  ]),
-});
+function useNowSeconds(intervalMs = 30000) {
+  const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
+  useEffect(() => {
+    const id = setInterval(() => setNow(Math.floor(Date.now() / 1000)), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return now;
+}
 
 const statusFilters: { label: string; value: number | "all" }[] = [
   { label: "All", value: "all" },
@@ -29,57 +24,7 @@ const statusFilters: { label: string; value: number | "all" }[] = [
   { label: "Completed", value: 3 },
 ];
 
-async function fetchAllTasks(): Promise<TaskData[]> {
-  try {
-    // 1. Ambil taskCount
-    const count = (await publicClient.readContract({
-      address: AGENTHANDS_ADDRESS as `0x${string}`,
-      abi: AgentHandsABI,
-      functionName: "taskCount",
-    })) as bigint;
-
-    const totalTasksCount = Number(count);
-    if (totalTasksCount === 0) return [];
-
-    // 2. Multicall untuk ambil SEMUA data task sekaligus
-    const contracts = [];
-    for (let i = 1; i <= totalTasksCount; i++) {
-      contracts.push({
-        address: AGENTHANDS_ADDRESS as `0x${string}`,
-        abi: AgentHandsABI,
-        functionName: "getTask",
-        args: [BigInt(i)],
-      });
-    }
-
-    const results = await publicClient.multicall({
-      // @ts-ignore
-      contracts,
-      allowFailure: true,
-    });
-
-    return results
-      .map((res, i) => {
-        if (res.status === "success") {
-          const task = res.result as any;
-          return {
-            ...task,
-            id: BigInt(i + 1),
-            status: Number(task.status)
-          } as TaskData;
-        }
-        return null;
-      })
-      .filter((t): t is TaskData => t !== null);
-  } catch (error) {
-    console.error("Fetch tasks error:", error);
-    return [];
-  }
-}
-
 export default function TasksPage() {
-  const [tasks, setTasks] = useState<TaskData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<number | "all">("all");
   const [search, setSearch] = useState("");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -87,22 +32,17 @@ export default function TasksPage() {
 
   const gridRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const nowSec = useNowSeconds();
+
+  const { data: rawTasks = [], isLoading } = useAllTasks();
+
+  const tasks = useMemo(
+    () => [...rawTasks].sort((a, b) => Number(b.createdAt) - Number(a.createdAt)),
+    [rawTasks]
+  );
 
   useEffect(() => {
     setIsMounted(true);
-    async function loadTasks() {
-      setIsLoading(true);
-      try {
-        const results = await fetchAllTasks();
-        const sorted = results.sort((a, b) => Number(b.createdAt) - Number(a.createdAt));
-        setTasks(sorted);
-      } catch (err) {
-        console.error("Load tasks failed:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadTasks();
   }, []);
 
   // Desktop GSAP animation
@@ -135,8 +75,7 @@ export default function TasksPage() {
 
   // ── Mobile View: Swipe + Integrated Search/Filter ──
   if (isMobile) {
-    const now = Date.now() / 1000;
-    const displayTasks = filteredTasks.filter(t => Number(t.status) === 0 && Number(t.deadline) > now);
+    const displayTasks = filteredTasks.filter(t => Number(t.status) === 0 && Number(t.deadline) > nowSec);
 
     return (
       <div className="flex flex-col flex-1 min-h-0 relative">
