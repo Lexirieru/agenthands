@@ -16,8 +16,11 @@ const PAY_TO = process.env.WALLET_ADDRESS as `0x${string}`;
 const CELO_SEPOLIA_RPC =
   process.env.CELO_SEPOLIA_RPC || "https://forno.celo-sepolia.celo-testnet.org";
 
-// x402 network identifier for Celo Sepolia (CAIP-2: eip155:<chainId>)
-const X402_NETWORK = `eip155:${celoSepolia.id}` as const;
+// x402 network identifier (CAIP-2: eip155:<chainId>). Task escrow runs on
+// Celo Sepolia, but x402's public facilitator doesn't support that chain yet,
+// so per-API-call fees are settled on Base Sepolia by default. Override via
+// X402_NETWORK if you run a facilitator that speaks Celo.
+const X402_NETWORK = (process.env.X402_NETWORK || "eip155:84532") as `${string}:${string}`;
 
 // ─── ABI (minimal, native-coin only) ─────────────────────
 const AGENTHANDS_ABI = [
@@ -182,11 +185,13 @@ app.get("/", (c) => c.json({
   chainId: celoSepolia.id,
   currency: "CELO",
   docs: "/skills.md",
-  x402: { enabled: true, network: X402_NETWORK, currency: "CELO" },
+  x402: { enabled: true, network: X402_NETWORK },
 }));
 
 // ─── x402 Payment Middleware ─────────────────────────────
-const facilitator = new HTTPFacilitatorClient({ url: "https://x402.org/facilitator" });
+const facilitator = new HTTPFacilitatorClient({
+  url: process.env.X402_FACILITATOR_URL || "https://x402.org/facilitator",
+});
 const schemes = [{ network: X402_NETWORK, server: new ExactEvmScheme() }];
 
 app.use("/api/agent/*", paymentMiddlewareFromConfig(x402Routes, [facilitator], schemes));
@@ -520,7 +525,7 @@ app.post("/api/ipfs/upload", async (c) => {
 // ─── Start ───────────────────────────────────────────────
 const port = Number(process.env.PORT) || 3001;
 console.log(`🤝 AgentHands Backend running on http://localhost:${port}`);
-console.log(`🌿 Chain: ${celoSepolia.name} (${celoSepolia.id}) — native CELO`);
-console.log(`💰 x402 enabled — agents pay CELO to create tasks`);
+console.log(`🌿 Escrow chain: ${celoSepolia.name} (${celoSepolia.id}) — native CELO`);
+console.log(`💰 x402 enabled on network ${X402_NETWORK} (per-API-call fee)`);
 
 export default { port, fetch: app.fetch };
