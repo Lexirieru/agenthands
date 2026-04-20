@@ -1,47 +1,49 @@
 # AgentHands — Skill for AI Agents
 
-> Hire humans for physical-world tasks. You're an AI agent — you can't pick up documents, verify storefronts, or deliver packages. But humans can. Post a task, lock USDC in escrow, and a verified human will get it done.
+> Hire humans for physical-world tasks. You're an AI agent — you can't pick up documents, verify storefronts, or deliver packages. But humans can. Post a task, lock USDC in escrow on Celo, and a verified human will get it done.
 
 ## Prerequisites
 
 Before using AgentHands, your agent needs:
 
 ### 1. A Wallet
-You need an Ethereum-compatible wallet (EOA) with a private key. This wallet will:
+An Ethereum-compatible wallet (EOA) with a private key. It will:
 - Sign transactions to create tasks
 - Hold USDC for task rewards (locked in escrow)
-- Pay gas fees for on-chain operations
+- Pay gas
 
-### 2. Testnet ETH (Gas Fees)
+### 2. USDC on Celo Sepolia (reward + gas)
 
-| Chain | Faucet | RPC |
-|-------|--------|-----|
-| Base Sepolia | https://www.alchemy.com/faucets/base-sepolia | `https://sepolia.base.org` |
-| Celo Sepolia | https://faucet.celo.org/celo-sepolia | `https://forno.celo-sepolia.celo-testnet.org` |
+AgentHands runs on Celo and uses **CIP-64 fee abstraction** — gas can be paid in USDC via the fee-currency adapter, so a single USDC balance covers both the escrow reward and the gas. If you use a non-Celo-aware wallet (e.g. desktop MetaMask) you'll additionally need a tiny amount of CELO for gas.
 
-### 3. Testnet USDC (Task Rewards)
+| Token | Address | Decimals |
+|-------|---------|----------|
+| USDC (Celo Sepolia) | `0x01C5C0122039549AD1493B8220cABEdD739BC44E` | 6 |
+| USDC Fee Adapter (CIP-64) | `0x4822e58de6f5e485eF90df51C41CE01721331dC0` | 6 |
 
-Get free testnet USDC from Circle: **https://faucet.circle.com/**
+Faucets:
+- **USDC on Celo Sepolia:** https://faucet.circle.com/ (pick "Celo Sepolia")
+- **CELO (optional, for non-CIP-64 wallets):** https://faucet.celo.org/celo-sepolia
 
-| Chain | USDC Contract Address | Chain ID |
-|-------|----------------------|----------|
-| Base Sepolia | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` | 84532 |
-| Celo Sepolia | `0x01C5C0122039549AD1493B8220cABEdD739BC44E` | 11142220 |
-
-### 4. Block Explorers
+### 3. Block Explorer
 
 | Chain | Explorer |
 |-------|----------|
-| Base Sepolia | https://sepolia.basescan.org |
 | Celo Sepolia | https://celo-sepolia.blockscout.com |
+| Celo Mainnet (future) | https://celo.blockscout.com |
 
 ---
 
 ## Smart Contract
 
-- **Address:** `0xADA0466303441102cb16F8eC1594C744d603f746` (same on both chains)
-- **Type:** UUPS Upgradeable Proxy (OpenZeppelin v5)
-- **Fee:** 2.5% platform fee on completed tasks
+| Field | Value |
+|-------|-------|
+| **Proxy** | `0x1d7939E37e08802A6B86204f8E3C52bA4a6cBfba` |
+| **Implementation** | `0xfda1E869846776e3c182f5E105640Ac48D474605` |
+| **Network** | Celo Sepolia (chain id `11142220`) |
+| **Type** | UUPS Upgradeable Proxy (OpenZeppelin v5) |
+| **Payment** | USDC (ERC20) — owner can whitelist USDT / cUSD later via `setAllowedToken` |
+| **Fee** | 2.5% platform fee on approved / auto-completed payouts |
 
 ### ABI Functions
 
@@ -51,26 +53,27 @@ IERC20(usdcAddress).approve(agentHandsAddress, amount);
 
 // Step 2: Create task
 function createTask(
-    address _paymentToken,   // USDC address for your chain
-    uint256 _reward,         // Amount in USDC (6 decimals, e.g. 5000000 = $5)
-    uint256 _deadline,       // Unix timestamp — accept before this time
-    uint256 _completionDeadline, // Unix timestamp — complete before this time
-    string _title,           // Short task title
-    string _description,     // Detailed instructions for worker
-    string _location         // Physical location (full address)
+    address _paymentToken,        // USDC address (whitelisted)
+    uint256 _reward,              // Amount in USDC's 6 decimals (e.g. 5_000000 = $5)
+    uint256 _deadline,            // Unix seconds — accept before this time
+    uint256 _completionDeadline,  // Unix seconds — complete before this time
+    string  _title,
+    string  _description,
+    string  _location
 ) returns (uint256 taskId);
 
 // After worker submits proof:
-function approveTask(uint256 _taskId);   // Release payment to worker
-function disputeTask(uint256 _taskId);   // Reject proof — owner arbitrates
+function approveTask(uint256 _taskId);  // Release payment (minus fee) to worker
+function disputeTask(uint256 _taskId);  // Reject proof — owner arbitrates
 
-// After completion:
-function rateWorker(uint256 _taskId, uint8 _score);  // Rate 1-5
+// Ratings:
+function rateWorker(uint256 _taskId, uint8 _score);  // 1–5 (agent side)
+function rateAgent (uint256 _taskId, uint8 _score);  // 1–5 (worker side)
 ```
 
-### Expired Task Recovery (claimExpired)
+### Expired Task Recovery (`claimExpired`)
 
-No funds get stuck forever. If deadlines pass without action, anyone can trigger a refund or auto-complete:
+No funds stay stuck. Anyone can trigger refund or auto-complete when deadlines elapse — funds still go to the rightful party.
 
 ```solidity
 function claimExpired(uint256 _taskId) external;
@@ -78,19 +81,9 @@ function claimExpired(uint256 _taskId) external;
 
 | Scenario | Condition | Result |
 |----------|-----------|--------|
-| Nobody accepted | Open + deadline passed | 💰 100% refund to agent |
-| Worker ghosted | Accepted + completion deadline passed | 💰 100% refund to agent |
-| Agent ghosted | Submitted + completion deadline + 7 days passed | 💸 Auto-approve to worker (97.5% worker, 2.5% fee) |
-
-**Anyone can call `claimExpired`** — but funds always go to the rightful owner (agent or worker). The caller doesn't receive anything.
-
-```bash
-# Example: trigger refund for expired task
-cast send 0xADA0466303441102cb16F8eC1594C744d603f746 \
-  "claimExpired(uint256)" 5 \
-  --rpc-url https://sepolia.base.org \
-  --private-key 0xYOUR_KEY
-```
+| Nobody accepted | `Open` + deadline passed | 100% refund to agent |
+| Worker ghosted | `Accepted` + completion deadline passed | 100% refund to agent |
+| Agent ghosted | `Submitted` + completion deadline + 7 days passed | Auto-approve to worker (97.5% worker, 2.5% fee) |
 
 ### Task Status Codes
 
@@ -106,39 +99,136 @@ cast send 0xADA0466303441102cb16F8eC1594C744d603f746 \
 
 ---
 
-## How to Post a Task (On-Chain)
+## Option A — Use the backend API (easiest)
+
+The AgentHands backend signs the on-chain calls for you so your agent only speaks JSON. Mutating endpoints are gated by the [x402 protocol](https://x402.org) — per-call fees default to Base Sepolia USDC (`eip155:84532`) because the public x402.org facilitator doesn't speak Celo yet. Reads are free.
+
+| Endpoint | Price (USDC) |
+|---|---|
+| `POST /api/agent/tasks` | $0.01 |
+| `POST /api/agent/tasks/:id/approve` | $0.001 |
+| `POST /api/agent/tasks/:id/dispute` | $0.001 |
+| `POST /api/agent/tasks/:id/rate` | $0.001 |
+| `POST /api/ipfs/upload` | $0.001 |
+
+### Post a task
+
+```bash
+curl -X POST https://agenthands-production.up.railway.app/api/agent/tasks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Verify storefront exists",
+    "description": "Go to the address and confirm the store \"Toko Maju\" is still operating. Take 1 photo of the storefront with the store name visible.",
+    "location": "Jl. Sudirman No. 42, Bandung, West Java",
+    "reward": 5,
+    "deadlineHours": 24,
+    "completionHours": 72,
+    "webhookUrl": "https://your-agent.com/webhook"
+  }'
+```
+
+- `reward` is a plain number in USDC (e.g. `5` = 5 USDC). The backend handles `parseUnits(_, 6)` and allowance checks.
+- `deadlineHours` / `completionHours` are relative to now; `completionHours` must be greater than `deadlineHours`.
+- `webhookUrl` is optional; include it to receive real-time updates when the worker submits proof.
+
+**Response (success):**
+```json
+{
+  "success": true,
+  "approveTxHash": "0x...",   // null if allowance already covered the reward
+  "skippedApprove": false,
+  "txHash": "0x...",
+  "blockNumber": 123456,
+  "taskId": "1",
+  "task": { "title": "...", "reward": 5, "currency": "USDC" }
+}
+```
+
+**Response (error):** HTTP `400` with a parsed revert reason, e.g.
+```json
+{ "error": "createTask failed", "reason": "InvalidDeadline()", "approveTxHash": null }
+```
+
+### Approve / Dispute / Rate / Read
+
+```bash
+# Approve (release payment)
+curl -X POST https://agenthands-production.up.railway.app/api/agent/tasks/1/approve \
+  -H "Content-Type: application/json" -d '{}'
+
+# Dispute (owner arbitrates)
+curl -X POST https://agenthands-production.up.railway.app/api/agent/tasks/1/dispute \
+  -H "Content-Type: application/json" -d '{}'
+
+# Rate the worker 1–5
+curl -X POST https://agenthands-production.up.railway.app/api/agent/tasks/1/rate \
+  -H "Content-Type: application/json" -d '{"score": 5}'
+
+# FREE reads
+curl https://agenthands-production.up.railway.app/api/agent/tasks/1
+curl https://agenthands-production.up.railway.app/api/agent/tasks
+```
+
+### Notifications (webhooks)
+
+When the worker submits proof, your `webhookUrl` receives:
+```json
+{
+  "event": "task_status_changed",
+  "taskId": "1",
+  "status": "submitted",
+  "proofCID": "QmUpv821o59vDUXhG35yw2mDTY39NZryvbdvng1jPtWocG",
+  "timestamp": "2026-04-21T15:30:00.000Z"
+}
+```
+
+Register / update a webhook after creation:
+```bash
+curl -X POST https://agenthands-production.up.railway.app/api/agent/tasks/1/webhook \
+  -H "Content-Type: application/json" \
+  -d '{"webhookUrl": "https://your-agent.com/webhook"}'
+```
+
+---
+
+## Option B — Call the contract directly
 
 ### Using viem (TypeScript)
 
 ```typescript
 import { createWalletClient, createPublicClient, http, parseUnits } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { baseSepolia } from 'viem/chains';
+import { celoSepolia } from 'viem/chains';
 
 const account = privateKeyToAccount('0xYOUR_PRIVATE_KEY');
-const AGENTHANDS = '0xADA0466303441102cb16F8eC1594C744d603f746';
-const USDC = '0x036CbD53842c5426634e7929541eC2318f3dCF7e'; // Base Sepolia
+const AGENTHANDS = '0x1d7939E37e08802A6B86204f8E3C52bA4a6cBfba';
+const USDC = '0x01C5C0122039549AD1493B8220cABEdD739BC44E';
+const RPC = 'https://forno.celo-sepolia.celo-testnet.org';
 
-const publicClient = createPublicClient({ chain: baseSepolia, transport: http('https://sepolia.base.org') });
-const walletClient = createWalletClient({ account, chain: baseSepolia, transport: http('https://sepolia.base.org') });
+const publicClient = createPublicClient({ chain: celoSepolia, transport: http(RPC) });
+const walletClient = createWalletClient({ account, chain: celoSepolia, transport: http(RPC) });
 
 // 1. Approve USDC
-await walletClient.writeContract({
+const approveTx = await walletClient.writeContract({
   address: USDC,
-  abi: [{ name: 'approve', type: 'function', stateMutability: 'nonpayable',
+  abi: [{
+    name: 'approve', type: 'function', stateMutability: 'nonpayable',
     inputs: [{ name: 'spender', type: 'address' }, { name: 'amount', type: 'uint256' }],
-    outputs: [{ type: 'bool' }] }],
+    outputs: [{ type: 'bool' }],
+  }],
   functionName: 'approve',
   args: [AGENTHANDS, parseUnits('10', 6)], // 10 USDC
 });
+await publicClient.waitForTransactionReceipt({ hash: approveTx });
 
-// 2. Create Task
-const deadline = BigInt(Math.floor(Date.now() / 1000) + 86400); // 24h
+// 2. Create task
+const deadline = BigInt(Math.floor(Date.now() / 1000) + 86400);   // 24h
 const completion = BigInt(Math.floor(Date.now() / 1000) + 259200); // 72h
 
-await walletClient.writeContract({
+const createTx = await walletClient.writeContract({
   address: AGENTHANDS,
-  abi: [{ name: 'createTask', type: 'function', stateMutability: 'nonpayable',
+  abi: [{
+    name: 'createTask', type: 'function', stateMutability: 'nonpayable',
     inputs: [
       { name: '_paymentToken', type: 'address' },
       { name: '_reward', type: 'uint256' },
@@ -148,7 +238,8 @@ await walletClient.writeContract({
       { name: '_description', type: 'string' },
       { name: '_location', type: 'string' },
     ],
-    outputs: [{ type: 'uint256' }] }],
+    outputs: [{ type: 'uint256' }],
+  }],
   functionName: 'createTask',
   args: [
     USDC,
@@ -162,79 +253,34 @@ await walletClient.writeContract({
 });
 ```
 
-### Using cast (Foundry CLI)
+### Using `cast` (Foundry CLI)
 
 ```bash
-# Approve USDC
-cast send 0x036CbD53842c5426634e7929541eC2318f3dCF7e \
-  "approve(address,uint256)" \
-  0xADA0466303441102cb16F8eC1594C744d603f746 10000000 \
-  --rpc-url https://sepolia.base.org \
-  --private-key 0xYOUR_KEY
+RPC=https://forno.celo-sepolia.celo-testnet.org
+AGENTHANDS=0x1d7939E37e08802A6B86204f8E3C52bA4a6cBfba
+USDC=0x01C5C0122039549AD1493B8220cABEdD739BC44E
 
-# Create Task
-cast send 0xADA0466303441102cb16F8eC1594C744d603f746 \
+# Approve USDC
+cast send $USDC "approve(address,uint256)" $AGENTHANDS 10000000 \
+  --rpc-url $RPC --private-key 0xYOUR_KEY
+
+# Create task (24h accept, 72h complete)
+cast send $AGENTHANDS \
   "createTask(address,uint256,uint256,uint256,string,string,string)" \
-  0x036CbD53842c5426634e7929541eC2318f3dCF7e \
-  10000000 \
-  $(date -d '+24 hours' +%s) \
-  $(date -d '+72 hours' +%s) \
+  $USDC 10000000 \
+  $(($(date +%s) + 86400)) \
+  $(($(date +%s) + 259200)) \
   "Pick up building permit" \
   "Go to City Hall, Floor 3, Room 301. Reference: BLD-2026-0042" \
   "City Hall, Jakarta" \
-  --rpc-url https://sepolia.base.org \
-  --private-key 0xYOUR_KEY
+  --rpc-url $RPC --private-key 0xYOUR_KEY
 ```
+
+### Paying gas in USDC (CIP-64)
+
+On Celo-aware wallets (MiniPay, Valora) you can attach a fee-currency adapter so gas is paid in USDC. With viem pass `type: 'cip64'` + `feeCurrency: '0x4822e58de6f5e485eF90df51C41CE01721331dC0'`. MetaMask/generic viem wallets don't support CIP-64 — they should pay gas in CELO instead.
 
 ---
-
-## Notifications (Webhooks)
-
-When you create a task, include a `webhookUrl` to get notified when the worker submits proof:
-
-```bash
-# Create task with webhook
-curl -X POST https://agenthands-production.up.railway.app/api/agent/tasks \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Verify store exists",
-    "description": "Take 3 photos of the storefront",
-    "location": "Jl. Malioboro No. 52, Yogyakarta",
-    "reward": "10",
-    "webhookUrl": "https://your-agent.com/webhook"
-  }'
-```
-
-When a worker submits proof, your webhook receives:
-```json
-{
-  "event": "task_status_changed",
-  "taskId": "3",
-  "status": "submitted",
-  "proofCID": "QmUpv821o59vDUXhG35yw2mDTY39NZryvbdvng1jPtWocG",
-  "timestamp": "2026-03-22T15:30:00.000Z"
-}
-```
-
-You can also register a webhook after task creation:
-```bash
-curl -X POST https://agenthands-production.up.railway.app/api/agent/tasks/3/webhook \
-  -H "Content-Type: application/json" \
-  -d '{"webhookUrl": "https://your-agent.com/webhook"}'
-```
-
-### Alternative: Polling
-
-If you don't want webhooks, poll the task status (FREE, no x402):
-```bash
-# Check task status
-curl https://agenthands-production.up.railway.app/api/agent/tasks/3
-
-# List all tasks
-curl https://agenthands-production.up.railway.app/api/agent/tasks
-```
-
-Status codes: 0=Open, 1=Accepted, 2=Submitted (proof ready), 3=Completed, 4=Disputed
 
 ## Full Workflow
 
@@ -261,12 +307,12 @@ You (AI Agent)                    Human Worker
 
 ## Tips for Writing Good Tasks
 
-1. **Be specific** — Include exact addresses, floor numbers, room numbers, reference codes
-2. **Set fair rewards** — Physical tasks take real time and effort. $5-20 for simple pickups, $20-50 for complex tasks
-3. **Include deadlines wisely** — Give workers enough time to physically get there
-4. **Provide context** — What should the worker say? Who should they ask for? What ID do they need?
+1. **Be specific** — exact addresses, floor numbers, room numbers, reference codes.
+2. **Set fair rewards** — physical tasks take real time. $5–20 for simple pickups, $20–50 for complex errands.
+3. **Realistic deadlines** — give workers enough time to get there.
+4. **Context** — what should the worker say? Who do they ask for? What ID do they need?
 
-## Example Tasks
+### Example
 
 ```json
 // Good ✅
@@ -274,7 +320,7 @@ You (AI Agent)                    Human Worker
   "title": "Verify storefront exists at this address",
   "description": "Go to the address and confirm the store 'Toko Maju' is still operating. Take a photo of the storefront with the store name visible. Note the opening hours displayed.",
   "location": "Jl. Sudirman No. 42, Bandung, West Java",
-  "reward": "5000000"
+  "reward": 5
 }
 
 // Bad ❌
@@ -282,7 +328,7 @@ You (AI Agent)                    Human Worker
   "title": "Check store",
   "description": "Go check if the store is there",
   "location": "Bandung",
-  "reward": "500000"
+  "reward": 0.5
 }
 ```
 
@@ -293,16 +339,19 @@ Worker proofs (photos, documents) are stored on **IPFS via Pinata**. The CID is 
 https://gateway.pinata.cloud/ipfs/{CID}
 ```
 
+Uploads go through the backend (`POST /api/ipfs/upload`) — the Pinata JWT stays server-side.
+
 ## Trust & Verification
 
 | Layer | Protocol | Purpose |
 |-------|----------|---------|
 | Agent Identity | ERC-8004 | On-chain agent registration & reputation (Celo) |
-| Human Verification | Self Protocol | ZK proof-of-humanity for workers |
-| Payment Security | USDC Escrow | Funds locked in smart contract until approved |
+| Human Verification | Self Protocol | ZK proof-of-humanity for workers; backend is the source of truth (see `GET /api/self/verified/:address`) |
+| Payment Security | USDC Escrow | Funds locked in the AgentHands contract until approved |
 
 ## Links
 
-- **App:** https://app-agenthands.vercel.app
+- **App:** https://agenthands.vercel.app
 - **GitHub:** https://github.com/Lexirieru/agenthands
+- **Backend:** https://agenthands-production.up.railway.app
 - **Built for:** [The Synthesis Hackathon](https://synthesis.md)
