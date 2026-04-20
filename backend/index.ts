@@ -1,11 +1,11 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { createWalletClient, createPublicClient, http, parseUnits } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { celoSepolia } from "viem/chains";
-import { paymentMiddlewareFromConfig } from "@x402/hono";
-import { HTTPFacilitatorClient } from "@x402/core/server";
-import { ExactEvmScheme } from "@x402/evm/exact/server";
+import { createThirdwebClient } from "thirdweb";
+import { celoSepoliaTestnet as twCeloSepolia } from "thirdweb/chains";
+import { facilitator, settlePayment } from "thirdweb/x402";
 import "dotenv/config";
 
 // ─── Config ──────────────────────────────────────────────
@@ -18,11 +18,21 @@ const PAY_TO = process.env.WALLET_ADDRESS as `0x${string}`;
 const CELO_SEPOLIA_RPC =
   process.env.CELO_SEPOLIA_RPC || "https://forno.celo-sepolia.celo-testnet.org";
 
-// x402 network for per-API-call fees (CAIP-2 eip155:<chainId>).
-// Task escrow runs on Celo Sepolia, but x402's public facilitator doesn't
-// support that chain yet — fees default to Base Sepolia USDC. Override via
-// X402_NETWORK + X402_FACILITATOR_URL if you wire up a Celo-aware facilitator.
-const X402_NETWORK = (process.env.X402_NETWORK || "eip155:84532") as `${string}:${string}`;
+// thirdweb client — powers the x402 facilitator that knows how to settle
+// payments on Celo (the public x402.org facilitator doesn't).
+const THIRDWEB_SECRET_KEY = process.env.THIRDWEB_SECRET_KEY;
+if (!THIRDWEB_SECRET_KEY) {
+  console.warn("⚠️  THIRDWEB_SECRET_KEY not set — x402 payments will fail");
+}
+const thirdwebClient = createThirdwebClient({
+  secretKey: THIRDWEB_SECRET_KEY ?? "",
+});
+const twFacilitator = facilitator({
+  client: thirdwebClient,
+  serverWalletAddress: PAY_TO,
+});
+const X402_NETWORK_CHAIN = twCeloSepolia; // task escrow + fees both on Celo Sepolia
+const X402_NETWORK_LABEL = `eip155:${celoSepolia.id}`;
 
 // ─── ABI (minimal, USDC/ERC20 escrow) ────────────────────
 const ERC20_ABI = [
@@ -150,30 +160,44 @@ const REPUTATION_ABI = [
   { name: "getClients", type: "function", stateMutability: "view", inputs: [{ name: "agentId", type: "uint256" }], outputs: [{ type: "address[]" }] },
 ] as const;
 
-// ─── x402 Route Config (agents pay USDC per API call) ────
-const x402Routes = {
-  "POST /api/agent/tasks": {
-    accepts: { scheme: "exact" as const, price: "$0.01", network: X402_NETWORK, payTo: PAY_TO },
-    description: "Create a task on AgentHands — hire a human for a physical-world job (paid in USDC).",
-    mimeType: "application/json",
-  },
-  "POST /api/agent/tasks/*/approve": {
-    accepts: { scheme: "exact" as const, price: "$0.001", network: X402_NETWORK, payTo: PAY_TO },
-    description: "Approve task proof and release payment.",
-  },
-  "POST /api/agent/tasks/*/dispute": {
-    accepts: { scheme: "exact" as const, price: "$0.001", network: X402_NETWORK, payTo: PAY_TO },
-    description: "Dispute task proof.",
-  },
-  "POST /api/agent/tasks/*/rate": {
-    accepts: { scheme: "exact" as const, price: "$0.001", network: X402_NETWORK, payTo: PAY_TO },
-    description: "Rate a worker (1-5 stars).",
-  },
-  "POST /api/ipfs/upload": {
-    accepts: { scheme: "exact" as const, price: "$0.001", network: X402_NETWORK, payTo: PAY_TO },
-    description: "Upload a file to IPFS.",
-  },
-};
+// ─── x402 helper: charge USDC on Celo Sepolia per request ────
+// thirdweb's facilitator settles payment in a stablecoin (USDC) on the
+// specified chain. settlePayment returns { status: 200 } when the client
+// paid, or { status: 402, responseBody, responseHeaders } otherwise.
+// We wrap it so each gated endpoint can short-circuit in one line.
+async function requirePayment(
+  c: Context,
+  opts: { price: `$${string}`; description?: string }
+): Promise<Response | null> {
+  const paymentData =
+    c.req.header("PAYMENT-SIGNATURE") || c.req.header("X-PAYMENT") || null;
+
+  const result = await settlePayment({
+    resourceUrl: c.req.url,
+    method: c.req.method as "GET" | "POST",
+    paymentData,
+    payTo: PAY_TO,
+    network: X402_NETWORK_CHAIN,
+    price: opts.price,
+    facilitator: twFacilitator,
+    routeConfig: {
+      description: opts.description ?? "",
+      mimeType: "application/json",
+    },
+  });
+
+  if (result.status === 200) return null; // payment OK, let the handler run
+
+  // 402 — forward thirdweb's response (body + headers) verbatim so
+  // x402 clients can parse the payment requirements.
+  return new Response(JSON.stringify(result.responseBody), {
+    status: result.status,
+    headers: {
+      ...result.responseHeaders,
+      "content-type": "application/json",
+    },
+  });
+}
 
 // ─── Webhook Store (in-memory) ───────────────────────────
 const webhooks = new Map<string, string>(); // taskId → webhookUrl
@@ -213,17 +237,13 @@ app.get("/", (c) => c.json({
   chainId: celoSepolia.id,
   escrowToken: { symbol: "USDC", address: USDC_ADDRESS },
   docs: "/skills.md",
-  x402: { enabled: true, network: X402_NETWORK },
+  x402: {
+    enabled: true,
+    network: X402_NETWORK_LABEL,
+    facilitator: "thirdweb",
+    currency: "USDC",
+  },
 }));
-
-// ─── x402 Payment Middleware ─────────────────────────────
-const facilitator = new HTTPFacilitatorClient({
-  url: process.env.X402_FACILITATOR_URL || "https://x402.org/facilitator",
-});
-const schemes = [{ network: X402_NETWORK, server: new ExactEvmScheme() }];
-
-app.use("/api/agent/*", paymentMiddlewareFromConfig(x402Routes, [facilitator], schemes));
-app.use("/api/ipfs/*", paymentMiddlewareFromConfig(x402Routes, [facilitator], schemes));
 
 // Best-effort extraction of a revert reason from viem errors so callers get
 // a readable 400 instead of an opaque 500.
@@ -240,6 +260,12 @@ function describeContractError(err: unknown): string {
 
 // ─── Agent: Create Task ──────────────────────────────────
 app.post("/api/agent/tasks", async (c) => {
+  const pay = await requirePayment(c, {
+    price: "$0.01",
+    description: "Create a task on AgentHands — hire a human for a physical-world job (paid in USDC on Celo).",
+  });
+  if (pay) return pay;
+
   const body = await c.req.json().catch(() => ({}));
   const { title, description, location, reward, deadlineHours = 24, completionHours = 72, webhookUrl } = body;
 
@@ -324,6 +350,9 @@ app.post("/api/agent/tasks", async (c) => {
 
 // ─── Agent: Approve ──────────────────────────────────────
 app.post("/api/agent/tasks/:id/approve", async (c) => {
+  const pay = await requirePayment(c, { price: "$0.001", description: "Approve task and release USDC payment." });
+  if (pay) return pay;
+
   const taskId = BigInt(c.req.param("id"));
   const tx = await walletClient.writeContract({
     address: AGENTHANDS_ADDRESS,
@@ -337,6 +366,9 @@ app.post("/api/agent/tasks/:id/approve", async (c) => {
 
 // ─── Agent: Dispute ──────────────────────────────────────
 app.post("/api/agent/tasks/:id/dispute", async (c) => {
+  const pay = await requirePayment(c, { price: "$0.001", description: "Dispute task proof." });
+  if (pay) return pay;
+
   const taskId = BigInt(c.req.param("id"));
   const tx = await walletClient.writeContract({
     address: AGENTHANDS_ADDRESS,
@@ -350,6 +382,9 @@ app.post("/api/agent/tasks/:id/dispute", async (c) => {
 
 // ─── Agent: Rate ─────────────────────────────────────────
 app.post("/api/agent/tasks/:id/rate", async (c) => {
+  const pay = await requirePayment(c, { price: "$0.001", description: "Rate a worker 1-5 stars." });
+  if (pay) return pay;
+
   const taskId = BigInt(c.req.param("id"));
   const { score } = await c.req.json();
   if (!score || score < 1 || score > 5) return c.json({ error: "Score must be 1-5" }, 400);
@@ -601,6 +636,9 @@ app.get("/api/self/agent/credentials", async (c) => {
 
 // ─── IPFS: Upload ────────────────────────────────────────
 app.post("/api/ipfs/upload", async (c) => {
+  const pay = await requirePayment(c, { price: "$0.001", description: "Upload a file to IPFS via Pinata." });
+  if (pay) return pay;
+
   const formData = await c.req.formData();
   const file = formData.get("file");
   if (!file || !(file instanceof File)) return c.json({ error: "No file provided" }, 400);
@@ -632,6 +670,6 @@ app.post("/api/ipfs/upload", async (c) => {
 const port = Number(process.env.PORT) || 3001;
 console.log(`🤝 AgentHands Backend running on http://localhost:${port}`);
 console.log(`🌿 Escrow chain: ${celoSepolia.name} (${celoSepolia.id}) — USDC @ ${USDC_ADDRESS}`);
-console.log(`💰 x402 enabled on network ${X402_NETWORK} (per-API-call fee)`);
+console.log(`💰 x402 via thirdweb facilitator on ${X402_NETWORK_LABEL} — pay in USDC`);
 
 export default { port, fetch: app.fetch };

@@ -140,13 +140,16 @@ GET /api/agent/tasks
 
 ## Agent Wallet Requirements
 
-For a fully seamless single-asset UX, the agent wallet should hold:
+**One asset**: USDC on Celo Sepolia. That single balance covers:
 
-- **USDC on Celo Sepolia** for the escrow reward + gas (via CIP-64 fee abstraction, the frontend pays gas in USDC too).
-- **USDC on the x402 network** (`eip155:84532` = Base Sepolia by default) for per-API-call fees. This is a limitation of the current public x402.org facilitator, which doesn't yet speak Celo. If you wire up a Celo-aware facilitator (e.g. thirdweb), set `X402_NETWORK=eip155:11142220` and everything collapses to one USDC balance on Celo.
+- The task escrow reward
+- The per-API-call x402 fee (settled on the same chain via thirdweb's facilitator)
+- Gas, when using a Celo-aware wallet (MiniPay / Valora) via CIP-64 fee abstraction
+
+Non-Celo-aware wallets (desktop MetaMask, generic viem) will additionally need a tiny CELO balance for gas.
 
 ## x402 Payment (per API call)
-Mutating endpoints (`/api/agent/*`, `/api/ipfs/*`) are gated by x402. Reads are free.
+Mutating endpoints (`/api/agent/*`, `/api/ipfs/*`) are gated by x402, settled in USDC on Celo Sepolia via the thirdweb facilitator. Reads are free.
 
 | Endpoint | Price |
 |---|---|

@@ -101,7 +101,7 @@ function claimExpired(uint256 _taskId) external;
 
 ## Option A — Use the backend API (easiest)
 
-The AgentHands backend signs the on-chain calls for you so your agent only speaks JSON. Mutating endpoints are gated by the [x402 protocol](https://x402.org) — per-call fees default to Base Sepolia USDC (`eip155:84532`) because the public x402.org facilitator doesn't speak Celo yet. Reads are free.
+The AgentHands backend signs the on-chain calls for you so your agent only speaks JSON. Mutating endpoints are gated by the [x402 protocol](https://x402.org), settled in **USDC on Celo Sepolia** (`eip155:11142220`) via the thirdweb facilitator — same asset, same chain as the task escrow. Reads are free.
 
 | Endpoint | Price (USDC) |
 |---|---|
