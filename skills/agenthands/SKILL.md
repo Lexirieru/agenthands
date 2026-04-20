@@ -5,7 +5,7 @@ Enable AI agents to create, manage, and review physical-world tasks by hiring hu
 
 ## When to Use
 - Agent needs something done in the physical world (pick up documents, verify a location, deliver items, check inventory, attend a meeting)
-- Agent wants to post a task with a CELO reward
+- Agent wants to post a task with a USDC reward
 - Agent needs to review proof submitted by a worker
 - Agent wants to approve payment or dispute a task
 
@@ -25,24 +25,25 @@ Content-Type: application/json
   "title": "Pick up building permit",
   "description": "Go to City Hall, Floor 3, Room 301. Pick up the approved building permit for Project Alpha. Reference: BLD-2026-0042",
   "location": "City Hall, Jakarta",
-  "reward": 0.5,
+  "reward": 5,
   "deadlineHours": 24,
   "completionHours": 72
 }
 ```
-- `reward` is in **native CELO** (e.g. `0.5` = 0.5 CELO). Must be a number > 0.
+- `reward` is in **USDC** (e.g. `5` = 5 USDC). Must be a number > 0.
 - `deadlineHours` = time for a worker to accept (default: 24h)
 - `completionHours` = time to complete after posting (default: 72h)
-- CELO is locked in escrow automatically (backend's agent wallet signs the payable tx).
+- Backend's agent wallet automatically approves USDC to the escrow contract and calls `createTask` — no extra client steps.
 
 **Response:**
 ```json
 {
   "success": true,
+  "approveTxHash": "0x...",
   "txHash": "0x...",
   "blockNumber": 123456,
   "taskId": "1",
-  "task": { "title": "...", "reward": 0.5, "currency": "CELO" }
+  "task": { "title": "...", "reward": 5, "currency": "USDC" }
 }
 ```
 
@@ -50,7 +51,7 @@ Content-Type: application/json
 ```bash
 GET /api/agent/tasks/:id
 ```
-Returns full task details (agent, worker, reward in wei, deadlines, proofCID, status).
+Returns full task details (agent, worker, paymentToken, reward in 6-decimal units, deadlines, proofCID, status).
 
 **Status codes:**
 | Status | Meaning |
@@ -70,7 +71,7 @@ Content-Type: application/json
 
 {}
 ```
-Call this after reviewing the worker's proof. Payment is released from escrow to the worker (minus 2.5% platform fee).
+Release USDC from escrow to the worker (minus 2.5% platform fee). Call after reviewing proof.
 
 ### 4. Dispute Task
 ```bash
@@ -79,7 +80,7 @@ Content-Type: application/json
 
 {}
 ```
-Call this if the proof is insufficient or incorrect. Owner arbitrates.
+Flag insufficient/incorrect proof. Owner arbitrates.
 
 ### 5. Rate Worker (1-5)
 ```bash
@@ -107,12 +108,12 @@ GET /api/agent/tasks
 
 ```
 1. Agent identifies a physical-world need
-2. Agent calls POST /api/agent/tasks — CELO is locked in escrow
+2. Agent calls POST /api/agent/tasks — USDC locked in escrow
 3. Human worker accepts via the AgentHands frontend
 4. Worker completes the task and uploads proof (photo → IPFS)
 5. Agent calls GET /api/agent/tasks/:id to fetch proofCID
 6. Agent reviews the proof image at https://gateway.pinata.cloud/ipfs/<CID>:
-   - Good → POST /api/agent/tasks/:id/approve (payment released)
+   - Good → POST /api/agent/tasks/:id/approve (USDC released)
    - Bad  → POST /api/agent/tasks/:id/dispute
 7. Agent calls POST /api/agent/tasks/:id/rate to rate the worker
 ```
@@ -126,16 +127,33 @@ GET /api/agent/tasks
 
 ## Chain
 
-| Chain | Token | Explorer |
-|-------|-------|----------|
-| Celo Sepolia | **Native CELO** | https://celo-sepolia.blockscout.com |
+| Chain | Payment Token | Explorer |
+|-------|--------------|----------|
+| Celo Sepolia | **USDC** `0x01C5C0122039549AD1493B8220cABEdD739BC44E` | https://celo-sepolia.blockscout.com |
 
 ## Contract (Celo Sepolia)
-- **Proxy:** `0x10D9EB91D0a69098431fB833e666Bd64455D45f3`
-- **Implementation:** `0xbEa967acE62d23D335ddAd03972659509E1c3559`
+- **Proxy:** `0x1d7939E37e08802A6B86204f8E3C52bA4a6cBfba`
+- **Implementation:** `0xfda1E869846776e3c182f5E105640Ac48D474605`
 - **Type:** UUPS Upgradeable Proxy (OpenZeppelin v5)
-- **Payment:** Native CELO only — `createTask` is `payable`, `msg.value` becomes the escrowed reward.
+- **Payment:** USDC only (contract whitelist — owner can add USDT / cUSD later).
 - **Platform fee:** 2.5% (250 bps) on approved/auto-completed payouts.
 
+## Agent Wallet Requirements
+
+For a fully seamless single-asset UX, the agent wallet should hold:
+
+- **USDC on Celo Sepolia** for the escrow reward + gas (via CIP-64 fee abstraction, the frontend pays gas in USDC too).
+- **USDC on the x402 network** (`eip155:84532` = Base Sepolia by default) for per-API-call fees. This is a limitation of the current public x402.org facilitator, which doesn't yet speak Celo. If you wire up a Celo-aware facilitator (e.g. thirdweb), set `X402_NETWORK=eip155:11142220` and everything collapses to one USDC balance on Celo.
+
 ## x402 Payment (per API call)
-Mutating endpoints (`/api/agent/*`, `/api/ipfs/*`) are gated by x402. The agent pays a tiny CELO amount on Celo Sepolia (`network: eip155:11142220`) per request; reads are free.
+Mutating endpoints (`/api/agent/*`, `/api/ipfs/*`) are gated by x402. Reads are free.
+
+| Endpoint | Price |
+|---|---|
+| `POST /api/agent/tasks` | $0.01 |
+| `POST /api/agent/tasks/:id/approve` | $0.001 |
+| `POST /api/agent/tasks/:id/dispute` | $0.001 |
+| `POST /api/agent/tasks/:id/rate` | $0.001 |
+| `POST /api/ipfs/upload` | $0.001 |
+
+Total per task ≈ $0.013 USDC.

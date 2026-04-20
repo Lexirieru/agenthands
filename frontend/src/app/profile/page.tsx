@@ -2,16 +2,17 @@
 
 import { useAccount, useConnect } from "wagmi";
 import { User, Wallet, ExternalLink } from "lucide-react";
-import { useCeloBalance } from "@/hooks/useAgentHands";
-import { formatCELO } from "@/lib/utils/format";
+import { useUSDCBalance } from "@/hooks/useAgentHands";
+import { CHAIN, EXPLORER_URL } from "@/config";
+import { formatUSDC } from "@/lib/utils/format";
 import SelfVerify from "@/components/SelfVerify";
 
 export default function ProfilePage() {
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
-  const { data: celoBalance } = useCeloBalance(address as `0x${string}` | undefined);
+  const { data: usdcBalance } = useUSDCBalance(address as `0x${string}` | undefined);
 
-  const celoFormatted = celoBalance !== undefined ? formatCELO(celoBalance.value) : "0";
+  const usdcFormatted = usdcBalance !== undefined ? formatUSDC(usdcBalance as bigint) : "0.00";
 
   const handleConnect = () => {
     const connector = connectors.find(c => c.id === 'injected') || connectors[0];
@@ -55,16 +56,16 @@ export default function ProfilePage() {
 
         <div className="p-4 bg-[#D4700A]/10 rounded-xl border border-[#D4700A]/20 mb-4">
           <div className="flex items-center gap-2">
-            <img src="/celologo.jpg" alt="CELO" className="h-8 w-8 rounded-full" />
+            <img src="/usdclogo.png" alt="USDC" className="h-8 w-8" />
             <div>
-              <div className="text-2xl font-bold text-[#D4700A]">{celoFormatted} CELO</div>
-              <div className="text-xs text-[#8B4513] font-label">Native on Celo Sepolia</div>
+              <div className="text-2xl font-bold text-[#D4700A]">${usdcFormatted}</div>
+              <div className="text-xs text-[#8B4513] font-label">USDC on {CHAIN.name}</div>
             </div>
           </div>
         </div>
 
         <a
-          href={`https://celo-sepolia.blockscout.com/address/${address}`}
+          href={`${EXPLORER_URL}/address/${address}`}
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 w-full py-3 bg-[var(--card)] rounded-xl text-sm text-[#5C2D0A] font-label min-h-[44px]"
         >

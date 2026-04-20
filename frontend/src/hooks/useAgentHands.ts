@@ -1,8 +1,38 @@
 "use client";
 
-import { useBalance, useReadContract, useWriteContract } from "wagmi";
-import { AGENTHANDS_ADDRESS, CHAIN } from "@/config";
+import { useReadContract, useWriteContract } from "wagmi";
+import { AGENTHANDS_ADDRESS, USDC_ADDRESS } from "@/config";
 import AgentHandsABI from "@/abi/AgentHands.json";
+
+const ERC20_ABI = [
+  {
+    name: "approve",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ type: "bool" }],
+  },
+  {
+    name: "allowance",
+    type: "function",
+    stateMutability: "view",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+    ],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    name: "balanceOf",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ type: "uint256" }],
+  },
+] as const;
 
 // ─── Read Hooks ──────────────────────────────────────────
 
@@ -41,11 +71,12 @@ export function useAgentRating(agent: `0x${string}`) {
   });
 }
 
-/// Native CELO balance (replaces old useUSDCBalance).
-export function useCeloBalance(address: `0x${string}` | undefined) {
-  return useBalance({
-    address,
-    chainId: CHAIN.id,
+export function useUSDCBalance(address: `0x${string}` | undefined) {
+  return useReadContract({
+    address: USDC_ADDRESS,
+    abi: ERC20_ABI,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
     query: {
       enabled: !!address,
       refetchInterval: 8000,
@@ -56,6 +87,10 @@ export function useCeloBalance(address: `0x${string}` | undefined) {
 }
 
 // ─── Write Hooks ─────────────────────────────────────────
+
+export function useApproveUSDC() {
+  return useWriteContract();
+}
 
 export function useCreateTask() {
   return useWriteContract();

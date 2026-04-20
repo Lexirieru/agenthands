@@ -6,6 +6,7 @@ import { Shield, CheckCircle, Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { SelfAppBuilder } from '@selfxyz/qrcode';
 import type { SelfApp } from '@selfxyz/qrcode';
+import { fetchSelfVerified } from '@/lib/utils/verification';
 
 const SelfQR = dynamic(() => import('./SelfQR'), {
   ssr: false,
@@ -26,14 +27,28 @@ export default function SelfVerify({ onVerified }: SelfVerifyProps) {
   const [selfApp, setSelfApp] = useState<SelfApp | null>(null);
   const [verified, setVerified] = useState<boolean | null>(null);
 
+  // Source of truth is the backend — query on mount and whenever the wallet
+  // address changes, with a light poll while the QR dialog is open so we
+  // pick up the "verified" flip the moment the Self relayer hits our backend.
   useEffect(() => {
-    if (typeof window === 'undefined' || !address) {
+    let cancelled = false;
+    if (!address) {
       setVerified(false);
       return;
     }
-    const stored = !!localStorage.getItem(`self_verified_${address}`);
-    setVerified(stored);
-  }, [address]);
+
+    const check = async () => {
+      const ok = await fetchSelfVerified(address);
+      if (!cancelled) setVerified(ok);
+    };
+
+    check();
+    const id = showQR ? setInterval(check, 3000) : null;
+    return () => {
+      cancelled = true;
+      if (id) clearInterval(id);
+    };
+  }, [address, showQR]);
 
   useEffect(() => {
     try {
@@ -57,12 +72,13 @@ export default function SelfVerify({ onVerified }: SelfVerifyProps) {
     }
   }, [address]);
 
-  const handleSuccess = useCallback(() => {
-    setVerified(true);
+  const handleSuccess = useCallback(async () => {
     setShowQR(false);
-    const userId = `self-verified-${Date.now()}`;
-    localStorage.setItem(`self_verified_${address}`, userId);
-    onVerified(userId);
+    // Trust the backend over optimism — re-check rather than flipping state
+    // locally (prevents faking by stopping the relayer mid-flow).
+    const ok = await fetchSelfVerified(address);
+    setVerified(ok);
+    if (ok) onVerified(address ?? '');
   }, [address, onVerified]);
 
   if (verified) {

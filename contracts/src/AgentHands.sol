@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /// @title AgentHands — Marketplace where AI agents hire humans for physical-world tasks
-/// @notice UUPS Upgradeable. Escrow and payouts are paid in the chain's native coin (CELO).
+/// @notice UUPS Upgradeable. Escrow and payouts are paid in an allowed ERC20 stablecoin
+///         (USDC on Celo). Owner whitelists tokens via setAllowedToken.
 /// @dev Tasks flow: Open → Accepted → Submitted → Completed/Disputed → Resolved
 contract AgentHands is
     Initializable,
@@ -15,6 +18,8 @@ contract AgentHands is
     OwnableUpgradeable,
     ReentrancyGuard
 {
+    using SafeERC20 for IERC20;
+
     // ─── Enums ───────────────────────────────────────────────
     enum TaskStatus {
         Open,       // Agent posted, waiting for worker
@@ -31,7 +36,8 @@ contract AgentHands is
         uint256 id;
         address agent;                  // AI agent's wallet (task poster)
         address worker;                 // Human worker (task acceptor)
-        uint256 reward;                 // Payment amount in wei (native coin)
+        address paymentToken;           // ERC20 token address used for this task
+        uint256 reward;                 // Payment amount in token's native decimals
         uint256 deadline;               // Unix timestamp — accept before this
         uint256 completionDeadline;     // Unix timestamp — complete before this
         string title;
@@ -45,6 +51,9 @@ contract AgentHands is
     // ─── State ───────────────────────────────────────────────
     uint256 public taskCount;
     mapping(uint256 => Task) public tasks;
+
+    // Allowed payment tokens (USDC, USDT, cUSD, etc.)
+    mapping(address => bool) public allowedTokens;
 
     // Platform fee (basis points, e.g. 250 = 2.5%)
     uint256 public platformFeeBps;
@@ -63,7 +72,7 @@ contract AgentHands is
     mapping(uint256 => bool) public agentRatedForTask;
 
     // ─── Events ──────────────────────────────────────────────
-    event TaskCreated(uint256 indexed taskId, address indexed agent, uint256 reward);
+    event TaskCreated(uint256 indexed taskId, address indexed agent, uint256 reward, address paymentToken);
     event TaskAccepted(uint256 indexed taskId, address indexed worker);
     event ProofSubmitted(uint256 indexed taskId, string proofCID);
     event TaskCompleted(uint256 indexed taskId, address indexed worker, uint256 payout);
@@ -72,13 +81,14 @@ contract AgentHands is
     event DisputeResolved(uint256 indexed taskId, bool workerWins);
     event WorkerRated(uint256 indexed taskId, address indexed worker, uint8 score);
     event AgentRated(uint256 indexed taskId, address indexed agent, uint8 score);
+    event TokenAllowed(address token, bool allowed);
     event TaskExpired(uint256 indexed taskId, address indexed agent, uint256 refund);
     event TaskAutoCompleted(uint256 indexed taskId, address indexed worker, uint256 payout);
 
     // ─── Errors ──────────────────────────────────────────────
+    error InvalidToken();
     error InvalidReward();
     error InvalidDeadline();
-    error InvalidValue();            // msg.value does not match reward
     error TaskNotOpen();
     error TaskNotAccepted();
     error TaskNotSubmitted();
@@ -91,7 +101,6 @@ contract AgentHands is
     error AlreadyRated();
     error TaskNotCompleted();
     error NotExpired();
-    error NativeTransferFailed();
 
     // ─── Modifiers ───────────────────────────────────────────
     modifier onlyAgent(uint256 _taskId) {
@@ -121,30 +130,42 @@ contract AgentHands is
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // ─── Admin ───────────────────────────────────────────────
+    function setAllowedToken(address _token, bool _allowed) external onlyOwner {
+        allowedTokens[_token] = _allowed;
+        emit TokenAllowed(_token, _allowed);
+    }
+
     function setFee(uint256 _feeBps, address _recipient) external onlyOwner {
         platformFeeBps = _feeBps;
         feeRecipient = _recipient;
     }
 
     // ─── Core: Create Task ───────────────────────────────────
-    /// @notice Agent creates a task and locks `msg.value` in escrow as the reward.
+    /// @notice Agent creates a task and locks `_reward` of `_paymentToken` in escrow.
+    ///         Caller must `approve(AgentHands, _reward)` on the token beforehand.
     function createTask(
+        address _paymentToken,
+        uint256 _reward,
         uint256 _deadline,
         uint256 _completionDeadline,
         string calldata _title,
         string calldata _description,
         string calldata _location
-    ) external payable nonReentrant returns (uint256) {
-        if (msg.value == 0) revert InvalidReward();
+    ) external nonReentrant returns (uint256) {
+        if (!allowedTokens[_paymentToken]) revert InvalidToken();
+        if (_reward == 0) revert InvalidReward();
         if (_deadline <= block.timestamp) revert InvalidDeadline();
         if (_completionDeadline <= _deadline) revert InvalidDeadline();
+
+        IERC20(_paymentToken).safeTransferFrom(msg.sender, address(this), _reward);
 
         uint256 taskId = ++taskCount;
         tasks[taskId] = Task({
             id: taskId,
             agent: msg.sender,
             worker: address(0),
-            reward: msg.value,
+            paymentToken: _paymentToken,
+            reward: _reward,
             deadline: _deadline,
             completionDeadline: _completionDeadline,
             title: _title,
@@ -155,7 +176,7 @@ contract AgentHands is
             createdAt: block.timestamp
         });
 
-        emit TaskCreated(taskId, msg.sender, msg.value);
+        emit TaskCreated(taskId, msg.sender, _reward, _paymentToken);
         return taskId;
     }
 
@@ -218,7 +239,7 @@ contract AgentHands is
             _releaseFunds(task);
         } else {
             task.status = TaskStatus.Cancelled;
-            _sendNative(task.agent, task.reward);
+            IERC20(task.paymentToken).safeTransfer(task.agent, task.reward);
         }
 
         emit DisputeResolved(_taskId, _workerWins);
@@ -231,7 +252,7 @@ contract AgentHands is
         if (task.status != TaskStatus.Open) revert TaskNotOpen();
 
         task.status = TaskStatus.Cancelled;
-        _sendNative(task.agent, task.reward);
+        IERC20(task.paymentToken).safeTransfer(task.agent, task.reward);
 
         emit TaskCancelled(_taskId);
     }
@@ -244,23 +265,20 @@ contract AgentHands is
     function claimExpired(uint256 _taskId) external nonReentrant {
         Task storage task = tasks[_taskId];
 
-        // Case 1: Nobody accepted before deadline
         if (task.status == TaskStatus.Open && block.timestamp > task.deadline) {
             task.status = TaskStatus.Expired;
-            _sendNative(task.agent, task.reward);
+            IERC20(task.paymentToken).safeTransfer(task.agent, task.reward);
             emit TaskExpired(_taskId, task.agent, task.reward);
             return;
         }
 
-        // Case 2: Worker accepted but never submitted before completion deadline
         if (task.status == TaskStatus.Accepted && block.timestamp > task.completionDeadline) {
             task.status = TaskStatus.Expired;
-            _sendNative(task.agent, task.reward);
+            IERC20(task.paymentToken).safeTransfer(task.agent, task.reward);
             emit TaskExpired(_taskId, task.agent, task.reward);
             return;
         }
 
-        // Case 3: Worker submitted but agent never approved/disputed within 7 days after completion deadline
         if (task.status == TaskStatus.Submitted && block.timestamp > task.completionDeadline + 7 days) {
             task.status = TaskStatus.Completed;
             _releaseFunds(task);
@@ -272,7 +290,6 @@ contract AgentHands is
     }
 
     // ─── Ratings ─────────────────────────────────────────────
-    /// @notice Agent rates a worker after task completion (1-5)
     function rateWorker(uint256 _taskId, uint8 _score) external onlyAgent(_taskId) {
         if (_score < 1 || _score > 5) revert InvalidRating();
         if (tasks[_taskId].status != TaskStatus.Completed) revert TaskNotCompleted();
@@ -286,7 +303,6 @@ contract AgentHands is
         emit WorkerRated(_taskId, worker, _score);
     }
 
-    /// @notice Worker rates an agent after task completion (1-5)
     function rateAgent(uint256 _taskId, uint8 _score) external onlyWorker(_taskId) {
         if (_score < 1 || _score > 5) revert InvalidRating();
         if (tasks[_taskId].status != TaskStatus.Completed) revert TaskNotCompleted();
@@ -321,14 +337,8 @@ contract AgentHands is
         uint256 payout = task.reward - fee;
 
         if (fee > 0) {
-            _sendNative(feeRecipient, fee);
+            IERC20(task.paymentToken).safeTransfer(feeRecipient, fee);
         }
-        _sendNative(task.worker, payout);
-    }
-
-    function _sendNative(address to, uint256 amount) internal {
-        if (amount == 0) return;
-        (bool ok, ) = payable(to).call{value: amount}("");
-        if (!ok) revert NativeTransferFailed();
+        IERC20(task.paymentToken).safeTransfer(task.worker, payout);
     }
 }

@@ -5,8 +5,8 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { Wallet, LogOut } from "lucide-react";
-import { useCeloBalance } from "@/hooks/useAgentHands";
-import { formatCELO, truncateAddress } from "@/lib/utils/format";
+import { useUSDCBalance } from "@/hooks/useAgentHands";
+import { formatUSDC, truncateAddress } from "@/lib/utils/format";
 import { useState, useEffect } from "react";
 
 const navLinks = [
@@ -19,13 +19,13 @@ export default function Header() {
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
-  const { data: celoBalance } = useCeloBalance(address as `0x${string}` | undefined);
+  const { data: usdcBalance } = useUSDCBalance(address as `0x${string}` | undefined);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
-  const celoFormatted =
-    celoBalance !== undefined ? formatCELO(celoBalance.value) : null;
+  const usdcFormatted =
+    usdcBalance !== undefined ? formatUSDC(usdcBalance as bigint) : null;
 
   const isActive = (href: string) => pathname === href;
 
@@ -50,10 +50,10 @@ export default function Header() {
             <span className="text-base font-bold text-[#5C2D0A]">AgentHands</span>
           </Link>
           <div className="flex items-center gap-2">
-            {isConnected && celoFormatted && (
+            {isConnected && usdcFormatted && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[var(--card)] border border-[var(--border)] text-xs font-medium text-[#D4700A]">
-                <img src="/celologo.jpg" alt="" className="h-3.5 w-3.5 rounded-full" />
-                {celoFormatted} CELO
+                <img src="/usdclogo.png" alt="" className="h-3.5 w-3.5" />
+                ${usdcFormatted}
               </span>
             )}
             {isConnected && address ? (
@@ -107,11 +107,11 @@ export default function Header() {
                   ))}
                 </div>
 
-                {/* CELO Balance */}
-                {isConnected && celoFormatted && (
+                {/* USDC Balance */}
+                {isConnected && usdcFormatted && (
                   <span className="text-xs bg-[var(--card)] text-[#D4700A] px-3 py-1.5 rounded-full border border-[var(--border)] font-label mr-1 inline-flex items-center gap-1.5">
-                    <img src="/celologo.jpg" alt="CELO" className="h-4 w-4 rounded-full" />
-                    {celoFormatted} CELO
+                    <img src="/usdclogo.png" alt="USDC" className="h-4 w-4" />
+                    ${usdcFormatted}
                   </span>
                 )}
 

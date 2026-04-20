@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { createWalletClient, createPublicClient, http, parseEther } from "viem";
+import { createWalletClient, createPublicClient, http, parseUnits } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { celoSepolia } from "viem/chains";
 import { paymentMiddlewareFromConfig } from "@x402/hono";
@@ -11,24 +11,51 @@ import "dotenv/config";
 // ─── Config ──────────────────────────────────────────────
 const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}`;
 const AGENTHANDS_ADDRESS = process.env.AGENTHANDS_ADDRESS as `0x${string}`;
+const USDC_ADDRESS = (process.env.USDC_ADDRESS ||
+  "0x01C5C0122039549AD1493B8220cABEdD739BC44E") as `0x${string}`;
 const PINATA_JWT = process.env.PINATA_JWT;
 const PAY_TO = process.env.WALLET_ADDRESS as `0x${string}`;
 const CELO_SEPOLIA_RPC =
   process.env.CELO_SEPOLIA_RPC || "https://forno.celo-sepolia.celo-testnet.org";
 
-// x402 network identifier (CAIP-2: eip155:<chainId>). Task escrow runs on
-// Celo Sepolia, but x402's public facilitator doesn't support that chain yet,
-// so per-API-call fees are settled on Base Sepolia by default. Override via
-// X402_NETWORK if you run a facilitator that speaks Celo.
+// x402 network for per-API-call fees (CAIP-2 eip155:<chainId>).
+// Task escrow runs on Celo Sepolia, but x402's public facilitator doesn't
+// support that chain yet — fees default to Base Sepolia USDC. Override via
+// X402_NETWORK + X402_FACILITATOR_URL if you wire up a Celo-aware facilitator.
 const X402_NETWORK = (process.env.X402_NETWORK || "eip155:84532") as `${string}:${string}`;
 
-// ─── ABI (minimal, native-coin only) ─────────────────────
+// ─── ABI (minimal, USDC/ERC20 escrow) ────────────────────
+const ERC20_ABI = [
+  {
+    name: "approve",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ type: "bool" }],
+  },
+  {
+    name: "allowance",
+    type: "function",
+    stateMutability: "view",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+    ],
+    outputs: [{ type: "uint256" }],
+  },
+] as const;
+
 const AGENTHANDS_ABI = [
   {
     name: "createTask",
     type: "function",
-    stateMutability: "payable",
+    stateMutability: "nonpayable",
     inputs: [
+      { name: "_paymentToken", type: "address" },
+      { name: "_reward", type: "uint256" },
       { name: "_deadline", type: "uint256" },
       { name: "_completionDeadline", type: "uint256" },
       { name: "_title", type: "string" },
@@ -63,6 +90,7 @@ const AGENTHANDS_ABI = [
           { name: "id", type: "uint256" },
           { name: "agent", type: "address" },
           { name: "worker", type: "address" },
+          { name: "paymentToken", type: "address" },
           { name: "reward", type: "uint256" },
           { name: "deadline", type: "uint256" },
           { name: "completionDeadline", type: "uint256" },
@@ -95,7 +123,7 @@ const AGENTHANDS_ABI = [
   },
 ] as const;
 
-// ─── Clients (Celo Sepolia, native CELO) ─────────────────
+// ─── Clients (Celo Sepolia, USDC escrow) ─────────────────
 const account = privateKeyToAccount(PRIVATE_KEY);
 const publicClient = createPublicClient({
   chain: celoSepolia,
@@ -122,11 +150,11 @@ const REPUTATION_ABI = [
   { name: "getClients", type: "function", stateMutability: "view", inputs: [{ name: "agentId", type: "uint256" }], outputs: [{ type: "address[]" }] },
 ] as const;
 
-// ─── x402 Route Config (agents pay CELO per API call) ────
+// ─── x402 Route Config (agents pay USDC per API call) ────
 const x402Routes = {
   "POST /api/agent/tasks": {
     accepts: { scheme: "exact" as const, price: "$0.01", network: X402_NETWORK, payTo: PAY_TO },
-    description: "Create a task on AgentHands — hire a human for a physical-world job (paid in native CELO).",
+    description: "Create a task on AgentHands — hire a human for a physical-world job (paid in USDC).",
     mimeType: "application/json",
   },
   "POST /api/agent/tasks/*/approve": {
@@ -183,7 +211,7 @@ app.get("/", (c) => c.json({
   agent: account.address,
   chain: celoSepolia.name,
   chainId: celoSepolia.id,
-  currency: "CELO",
+  escrowToken: { symbol: "USDC", address: USDC_ADDRESS },
   docs: "/skills.md",
   x402: { enabled: true, network: X402_NETWORK },
 }));
@@ -197,48 +225,101 @@ const schemes = [{ network: X402_NETWORK, server: new ExactEvmScheme() }];
 app.use("/api/agent/*", paymentMiddlewareFromConfig(x402Routes, [facilitator], schemes));
 app.use("/api/ipfs/*", paymentMiddlewareFromConfig(x402Routes, [facilitator], schemes));
 
+// Best-effort extraction of a revert reason from viem errors so callers get
+// a readable 400 instead of an opaque 500.
+function describeContractError(err: unknown): string {
+  if (err instanceof Error) {
+    const msg = err.message ?? "";
+    // viem wraps custom-error selectors and reasons in the message string
+    const match = msg.match(/reverted(?: with reason| with custom error \(.*?\))?:?\s*([\s\S]*?)(?:\n|$)/i);
+    if (match?.[1]) return match[1].trim().slice(0, 240);
+    return msg.slice(0, 240);
+  }
+  return String(err).slice(0, 240);
+}
+
 // ─── Agent: Create Task ──────────────────────────────────
 app.post("/api/agent/tasks", async (c) => {
-  const body = await c.req.json();
+  const body = await c.req.json().catch(() => ({}));
   const { title, description, location, reward, deadlineHours = 24, completionHours = 72, webhookUrl } = body;
 
-  if (!title || !description || !location || !reward) {
+  if (!title || !description || !location || reward === undefined) {
     return c.json({ error: "Missing required fields: title, description, location, reward" }, 400);
   }
+  if (Number(reward) <= 0 || Number.isNaN(Number(reward))) {
+    return c.json({ error: "reward must be a positive number" }, 400);
+  }
+  if (Number(deadlineHours) <= 0 || Number(completionHours) <= Number(deadlineHours)) {
+    return c.json({ error: "completionHours must be greater than deadlineHours, both positive" }, 400);
+  }
 
-  const amount = parseEther(String(reward)); // reward is in CELO, converted to wei
+  let amount: bigint;
+  try {
+    amount = parseUnits(String(reward), 6); // USDC has 6 decimals
+  } catch {
+    return c.json({ error: `invalid reward "${reward}" — not a decimal number` }, 400);
+  }
+
   const deadline = BigInt(Math.floor(Date.now() / 1000) + Number(deadlineHours) * 3600);
   const completionDeadline = BigInt(Math.floor(Date.now() / 1000) + Number(completionHours) * 3600);
 
-  const createTx = await walletClient.writeContract({
-    address: AGENTHANDS_ADDRESS,
-    abi: AGENTHANDS_ABI,
-    functionName: "createTask",
-    args: [deadline, completionDeadline, title, description, location],
-    value: amount,
-  });
-  const receipt = await publicClient.waitForTransactionReceipt({ hash: createTx });
+  let approveTx: `0x${string}` | null = null;
 
-  const taskCount = await publicClient.readContract({
-    address: AGENTHANDS_ADDRESS,
-    abi: AGENTHANDS_ABI,
-    functionName: "taskCount",
-  });
-  const taskId = taskCount.toString();
+  try {
+    // 1. Skip approve if existing allowance already covers the reward
+    const allowance = (await publicClient.readContract({
+      address: USDC_ADDRESS,
+      abi: ERC20_ABI,
+      functionName: "allowance",
+      args: [account.address, AGENTHANDS_ADDRESS],
+    })) as bigint;
 
-  if (webhookUrl) {
-    webhooks.set(taskId, webhookUrl);
-    console.log(`🔔 Webhook registered for task #${taskId} → ${webhookUrl}`);
+    if (allowance < amount) {
+      approveTx = await walletClient.writeContract({
+        address: USDC_ADDRESS,
+        abi: ERC20_ABI,
+        functionName: "approve",
+        args: [AGENTHANDS_ADDRESS, amount],
+      });
+      await publicClient.waitForTransactionReceipt({ hash: approveTx });
+    }
+
+    // 2. Create the task (USDC moved into escrow)
+    const createTx = await walletClient.writeContract({
+      address: AGENTHANDS_ADDRESS,
+      abi: AGENTHANDS_ABI,
+      functionName: "createTask",
+      args: [USDC_ADDRESS, amount, deadline, completionDeadline, title, description, location],
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash: createTx });
+
+    const taskCount = await publicClient.readContract({
+      address: AGENTHANDS_ADDRESS,
+      abi: AGENTHANDS_ABI,
+      functionName: "taskCount",
+    });
+    const taskId = taskCount.toString();
+
+    if (webhookUrl) {
+      webhooks.set(taskId, webhookUrl);
+      console.log(`🔔 Webhook registered for task #${taskId} → ${webhookUrl}`);
+    }
+
+    return c.json({
+      success: true,
+      approveTxHash: approveTx,
+      skippedApprove: approveTx === null,
+      txHash: createTx,
+      blockNumber: Number(receipt.blockNumber),
+      taskId,
+      webhookRegistered: !!webhookUrl,
+      task: { title, description, location, reward, currency: "USDC" },
+    });
+  } catch (err) {
+    const reason = describeContractError(err);
+    console.error("❌ createTask failed:", reason);
+    return c.json({ error: "createTask failed", reason, approveTxHash: approveTx }, 400);
   }
-
-  return c.json({
-    success: true,
-    txHash: createTx,
-    blockNumber: Number(receipt.blockNumber),
-    taskId,
-    webhookRegistered: !!webhookUrl,
-    task: { title, description, location, reward, currency: "CELO" },
-  });
 });
 
 // ─── Agent: Approve ──────────────────────────────────────
@@ -418,6 +499,23 @@ const selfBackendVerifier = new SelfBackendVerifier(
   "hex"
 );
 
+// In-memory registry of wallet addresses that completed Self verification.
+// Survives process lifetime; on restart workers re-verify. For production
+// you'd back this with Redis or a small DB.
+const verifiedAddresses = new Map<string, number>(); // address (lowercase) → unix ms
+
+function markAddressVerified(address: string) {
+  if (!address) return;
+  verifiedAddresses.set(address.toLowerCase(), Date.now());
+}
+
+app.get("/api/self/verified/:address", (c) => {
+  const address = c.req.param("address")?.toLowerCase();
+  if (!address) return c.json({ verified: false }, 400);
+  const at = verifiedAddresses.get(address);
+  return c.json({ verified: !!at, at: at ?? null, address });
+});
+
 app.get("/api/self/agent/status", async (c) => {
   try {
     const isRegistered = await selfAgent.isRegistered();
@@ -471,10 +569,18 @@ app.post("/api/self/verify", async (c) => {
       userContextData || ""
     );
 
-    console.log("✅ Self verification success:", JSON.stringify(result.isValidDetails));
+    const userAddr = result.userData?.userIdentifier;
+    if (userAddr) markAddressVerified(userAddr);
+
+    console.log(
+      "✅ Self verification success:",
+      userAddr,
+      JSON.stringify(result.isValidDetails)
+    );
     return c.json({
       status: "success",
       result: true,
+      userIdentifier: userAddr,
       credentialSubject: result.discloseOutput,
     });
   } catch (error) {
@@ -525,7 +631,7 @@ app.post("/api/ipfs/upload", async (c) => {
 // ─── Start ───────────────────────────────────────────────
 const port = Number(process.env.PORT) || 3001;
 console.log(`🤝 AgentHands Backend running on http://localhost:${port}`);
-console.log(`🌿 Escrow chain: ${celoSepolia.name} (${celoSepolia.id}) — native CELO`);
+console.log(`🌿 Escrow chain: ${celoSepolia.name} (${celoSepolia.id}) — USDC @ ${USDC_ADDRESS}`);
 console.log(`💰 x402 enabled on network ${X402_NETWORK} (per-API-call fee)`);
 
 export default { port, fetch: app.fetch };

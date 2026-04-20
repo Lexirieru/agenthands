@@ -1,28 +1,25 @@
-const CELO_DECIMALS = 18;
+const USDC_DECIMALS = 6;
 
 /**
- * Format a native CELO amount (18 decimals, in wei) to a short human string.
- * Caps at 4 fractional digits so UI stays tidy.
- * e.g. 1_000000000000000000n -> "1", 500000000000000000n -> "0.5"
+ * Format raw USDC amount (6 decimals) to a short human-readable string.
+ * e.g. 1_000_000n -> "1.00", 5_000n -> "0.005"
  */
-export function formatCELO(raw: string | number | bigint): string {
+export function formatUSDC(raw: string | number | bigint): string {
   try {
     const value = BigInt(raw);
-    const divisor = BigInt(10) ** BigInt(CELO_DECIMALS);
+    const divisor = BigInt(10) ** BigInt(USDC_DECIMALS);
     const whole = value / divisor;
     const fraction = value % divisor;
 
     if (fraction === BigInt(0)) {
-      return `${whole}`;
+      return `${whole}.00`;
     }
 
     const fractionStr = fraction
       .toString()
-      .padStart(CELO_DECIMALS, '0')
-      .slice(0, 4)
+      .padStart(USDC_DECIMALS, '0')
       .replace(/0+$/, '');
-
-    return fractionStr ? `${whole}.${fractionStr}` : `${whole}`;
+    return `${whole}.${fractionStr}`;
   } catch {
     return raw.toString();
   }

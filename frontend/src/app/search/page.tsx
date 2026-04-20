@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { formatCELO, getStatusDisplay, truncateAddress } from "@/lib/utils/format";
+import { formatUSDC, getStatusDisplay, truncateAddress } from "@/lib/utils/format";
 import { MapPin, Clock } from "lucide-react";
 import Link from "next/link";
 import { useAllTasks } from "@/hooks/useTasks";
@@ -96,8 +96,8 @@ export default function SearchPage() {
                       <span className="text-xs text-[#8B4513] line-clamp-1">{task.location}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <img src="/celologo.jpg" alt="CELO" className="h-4 w-4 rounded-full" />
-                      <span className="text-sm font-bold text-[#D4700A]">{formatCELO(task.reward)} CELO</span>
+                      <img src="/usdclogo.png" alt="USDC" className="h-4 w-4" />
+                      <span className="text-sm font-bold text-[#D4700A]">${formatUSDC(task.reward)}</span>
                     </div>
                   </div>
                   <p className="text-[#8B4513] text-[10px] mt-2 font-mono">{truncateAddress(task.agent)}</p>

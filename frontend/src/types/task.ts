@@ -2,7 +2,8 @@ export interface TaskData {
   id: bigint;
   agent: string;
   worker: string;
-  reward: bigint;       // in wei (18 decimals, native CELO)
+  paymentToken: string; // ERC20 token address (USDC on Celo Sepolia)
+  reward: bigint;       // in token's native decimals (USDC: 6 decimals)
   deadline: bigint;
   completionDeadline: bigint;
   title: string;

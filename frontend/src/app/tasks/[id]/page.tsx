@@ -8,7 +8,9 @@ import { AGENTHANDS_ADDRESS, CHAIN } from '@/config';
 import AgentHandsABI from '@/abi/AgentHands.json';
 import ProofUpload from '@/components/ProofUpload';
 import SelfVerify from '@/components/SelfVerify';
-import { formatCELO, getStatusDisplay, truncateAddress } from '@/lib/utils/format';
+import { formatUSDC, getStatusDisplay, truncateAddress } from '@/lib/utils/format';
+import { fetchSelfVerified } from '@/lib/utils/verification';
+import { useCip64 } from '@/hooks/useCip64';
 import { toast } from '@/components/Toast';
 import { useTaskDetail, useInvalidateTasks } from '@/hooks/useTasks';
 
@@ -46,17 +48,27 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !address) return;
-    setSelfVerified(!!localStorage.getItem(`self_verified_${address}`));
+    let cancelled = false;
+    if (!address) {
+      setSelfVerified(false);
+      return;
+    }
+    fetchSelfVerified(address).then((ok) => {
+      if (!cancelled) setSelfVerified(ok);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [address]);
 
   const { data: taskData, isLoading } = useTaskDetail(taskId);
   const { invalidateDetail, invalidateList } = useInvalidateTasks();
+  const cip64 = useCip64();
 
   const ensureChain = useCallback(() => {
     if (currentChainId !== CHAIN.id) {
       switchChain({ chainId: CHAIN.id });
-      toast('info', 'Switching to Celo Sepolia...');
+      toast('info', `Switching to ${CHAIN.name}...`);
       return false;
     }
     return true;
@@ -127,7 +139,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const status = Number(t.status);
   const statusInfo = getStatusDisplay(status);
   const statusColor = STATUS_COLORS[status] || STATUS_COLORS[0];
-  const rewardFormatted = formatCELO(t.reward);
+  const rewardFormatted = formatUSDC(t.reward);
   const isAgent = address?.toLowerCase() === t.agent?.toLowerCase();
   const isWorker = address?.toLowerCase() === t.worker?.toLowerCase();
   const deadline = new Date(Number(t.deadline) * 1000);
@@ -165,10 +177,10 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
           {/* Reward */}
           <div className="flex items-center gap-2 p-3 bg-[#D4700A]/10 rounded-xl border border-[#D4700A]/20 mb-4">
-            <img src="/celologo.jpg" alt="CELO" className="h-8 w-8 rounded-full" />
+            <img src="/usdclogo.png" alt="USDC" className="h-8 w-8" />
             <div>
-              <span className="text-2xl font-bold text-[#D4700A]">{rewardFormatted}</span>
-              <div className="text-xs text-[#8B4513] font-label">CELO</div>
+              <span className="text-2xl font-bold text-[#D4700A]">${rewardFormatted}</span>
+              <div className="text-xs text-[#8B4513] font-label">USDC</div>
             </div>
           </div>
 
@@ -236,7 +248,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               <button
                 onClick={() => {
                   if (!ensureChain()) return;
-                  acceptWrite({ ...contractCall, functionName: 'acceptTask', args: [taskId] });
+                  acceptWrite({ ...contractCall, functionName: 'acceptTask', args: [taskId], ...cip64 } as never);
                   toast('info', 'Confirm transaction in wallet...');
                 }}
                 disabled={accepting || acceptConfirming || !selfVerified}
@@ -273,7 +285,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               <button
                 onClick={() => {
                   if (!ensureChain()) return;
-                  submitWrite({ ...contractCall, functionName: 'submitProof', args: [taskId, proofCID] });
+                  submitWrite({ ...contractCall, functionName: 'submitProof', args: [taskId, proofCID], ...cip64 } as never);
                   toast('info', 'Submitting proof on-chain...');
                 }}
                 disabled={submitting || submitConfirming || !proofCID}
@@ -296,7 +308,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 <button
                   onClick={() => {
                     if (!ensureChain()) return;
-                    approveWrite({ ...contractCall, functionName: 'approveTask', args: [taskId] });
+                    approveWrite({ ...contractCall, functionName: 'approveTask', args: [taskId], ...cip64 } as never);
                     toast('info', 'Approving task...');
                   }}
                   disabled={approvingTask || approveConfirming}
@@ -311,7 +323,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 <button
                   onClick={() => {
                     if (!ensureChain()) return;
-                    disputeWrite({ ...contractCall, functionName: 'disputeTask', args: [taskId] });
+                    disputeWrite({ ...contractCall, functionName: 'disputeTask', args: [taskId], ...cip64 } as never);
                     toast('info', 'Disputing task...');
                   }}
                   disabled={disputing || disputeConfirming}
@@ -333,7 +345,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               <button
                 onClick={() => {
                   if (!ensureChain()) return;
-                  cancelWrite({ ...contractCall, functionName: 'cancelTask', args: [taskId] });
+                  cancelWrite({ ...contractCall, functionName: 'cancelTask', args: [taskId], ...cip64 } as never);
                   toast('info', 'Cancelling task...');
                 }}
                 disabled={cancelling || cancelConfirming}
@@ -367,7 +379,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 <button
                   onClick={() => {
                     if (!ensureChain()) return;
-                    rateWorkerWrite({ ...contractCall, functionName: 'rateWorker', args: [taskId, rating] });
+                    rateWorkerWrite({ ...contractCall, functionName: 'rateWorker', args: [taskId, rating], ...cip64 } as never);
                     toast('info', 'Rating worker...');
                   }}
                   disabled={ratingWorker || rateWorkerConfirming}
@@ -380,7 +392,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 <button
                   onClick={() => {
                     if (!ensureChain()) return;
-                    rateAgentWrite({ ...contractCall, functionName: 'rateAgent', args: [taskId, rating] });
+                    rateAgentWrite({ ...contractCall, functionName: 'rateAgent', args: [taskId, rating], ...cip64 } as never);
                     toast('info', 'Rating agent...');
                   }}
                   disabled={ratingAgent || rateAgentConfirming}

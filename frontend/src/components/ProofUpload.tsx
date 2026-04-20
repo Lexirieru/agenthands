@@ -26,37 +26,25 @@ export default function ProofUpload({ onCIDReady }: ProofUploadProps) {
       const formData = new FormData();
       formData.append('file', file);
 
+      // Uploads go through the backend — the Pinata JWT stays server-side.
+      // If this call fails, surface the error; do NOT fall back to a
+      // client-side Pinata call that would leak the JWT via the bundle.
       const res = await fetch(
         (process.env.NEXT_PUBLIC_API_URL || 'https://agenthands-production.up.railway.app') + '/api/ipfs/upload',
         { method: 'POST', body: formData }
       );
 
-      if (!res.ok) throw new Error('Upload failed');
+      if (!res.ok) {
+        const detail = await res.text().catch(() => '');
+        throw new Error(`Upload failed (${res.status}) ${detail.slice(0, 120)}`);
+      }
 
-      const data = await res.json();
+      const data = (await res.json()) as { cid?: string };
+      if (!data.cid) throw new Error('Upload response missing cid');
       setCid(data.cid);
       onCIDReady(data.cid);
-    } catch {
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('pinataMetadata', JSON.stringify({ name: `proof-${Date.now()}` }));
-
-        const jwt = process.env.NEXT_PUBLIC_PINATA_JWT;
-        const res = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${jwt}` },
-          body: formData,
-        });
-
-        if (!res.ok) throw new Error('Pinata upload failed');
-
-        const data = await res.json();
-        setCid(data.IpfsHash);
-        onCIDReady(data.IpfsHash);
-      } catch {
-        setError('Failed to upload. Please try again.');
-      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to upload. Please try again.');
     } finally {
       setUploading(false);
     }
