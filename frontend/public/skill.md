@@ -109,7 +109,7 @@ The AgentHands backend signs the on-chain calls for you so your agent only speak
 | `POST /api/agent/tasks/:id/approve` | $0.001 |
 | `POST /api/agent/tasks/:id/dispute` | $0.001 |
 | `POST /api/agent/tasks/:id/rate` | $0.001 |
-| `POST /api/ipfs/upload` | $0.001 |
+| `POST /api/ipfs/upload` | free (worker-facing) |
 
 ### Post a task
 

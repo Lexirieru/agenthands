@@ -634,11 +634,8 @@ app.get("/api/self/agent/credentials", async (c) => {
   }
 });
 
-// ─── IPFS: Upload ────────────────────────────────────────
+// ─── IPFS: Upload (free — workers submit proof from the frontend) ───
 app.post("/api/ipfs/upload", async (c) => {
-  const pay = await requirePayment(c, { price: "$0.001", description: "Upload a file to IPFS via Pinata." });
-  if (pay) return pay;
-
   const formData = await c.req.formData();
   const file = formData.get("file");
   if (!file || !(file instanceof File)) return c.json({ error: "No file provided" }, 400);

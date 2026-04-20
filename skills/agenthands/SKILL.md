@@ -157,6 +157,6 @@ Mutating endpoints (`/api/agent/*`, `/api/ipfs/*`) are gated by x402, settled in
 | `POST /api/agent/tasks/:id/approve` | $0.001 |
 | `POST /api/agent/tasks/:id/dispute` | $0.001 |
 | `POST /api/agent/tasks/:id/rate` | $0.001 |
-| `POST /api/ipfs/upload` | $0.001 |
+| `POST /api/ipfs/upload` | free (worker-facing, not gated) |
 
-Total per task ≈ $0.013 USDC.
+Total per task ≈ $0.012 USDC for the agent.
