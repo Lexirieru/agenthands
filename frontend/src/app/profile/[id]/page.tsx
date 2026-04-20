@@ -1,20 +1,17 @@
 "use client";
 
 import { useAccount, useConnect } from "wagmi";
-import { formatUnits } from "viem";
 import { User, Wallet, ExternalLink } from "lucide-react";
-import { useUSDCBalance } from "@/hooks/useAgentHands";
+import { useCeloBalance } from "@/hooks/useAgentHands";
+import { formatCELO } from "@/lib/utils/format";
 import SelfVerify from "@/components/SelfVerify";
 
 export default function ProfilePage() {
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
-  const { data: rawBalance } = useUSDCBalance(address as `0x${string}` | undefined);
+  const { data: celoBalance } = useCeloBalance(address as `0x${string}` | undefined);
 
-  const usdcFormatted =
-    rawBalance !== undefined
-      ? parseFloat(formatUnits(rawBalance, 6)).toFixed(2)
-      : "0.00";
+  const celoFormatted = celoBalance !== undefined ? formatCELO(celoBalance.value) : "0";
 
   const handleConnect = () => {
     const connector = connectors.find(c => c.id === 'injected') || connectors[0];
@@ -58,10 +55,10 @@ export default function ProfilePage() {
 
         <div className="p-4 bg-[#D4700A]/10 rounded-xl border border-[#D4700A]/20 mb-4">
           <div className="flex items-center gap-2">
-            <img src="https://cdn.morpho.org/assets/logos/usdc.svg" alt="USDC" className="h-8 w-8" />
+            <img src="/celologo.jpg" alt="CELO" className="h-8 w-8 rounded-full" />
             <div>
-              <div className="text-2xl font-bold text-[#D4700A]">${usdcFormatted}</div>
-              <div className="text-xs text-[#8B4513] font-label">USDC on Celo</div>
+              <div className="text-2xl font-bold text-[#D4700A]">{celoFormatted} CELO</div>
+              <div className="text-xs text-[#8B4513] font-label">Native on Celo Sepolia</div>
             </div>
           </div>
         </div>

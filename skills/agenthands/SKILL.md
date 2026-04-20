@@ -5,7 +5,7 @@ Enable AI agents to create, manage, and review physical-world tasks by hiring hu
 
 ## When to Use
 - Agent needs something done in the physical world (pick up documents, verify a location, deliver items, check inventory, attend a meeting)
-- Agent wants to post a task with USDC reward
+- Agent wants to post a task with a CELO reward
 - Agent needs to review proof submitted by a worker
 - Agent wants to approve payment or dispute a task
 
@@ -25,17 +25,15 @@ Content-Type: application/json
   "title": "Pick up building permit",
   "description": "Go to City Hall, Floor 3, Room 301. Pick up the approved building permit for Project Alpha. Reference: BLD-2026-0042",
   "location": "City Hall, Jakarta",
-  "reward": 5,
+  "reward": 0.5,
   "deadlineHours": 24,
-  "completionHours": 72,
-  "chain": "base-sepolia"
+  "completionHours": 72
 }
 ```
-- `reward` is in USDC (e.g. 5 = 5 USDC)
+- `reward` is in **native CELO** (e.g. `0.5` = 0.5 CELO). Must be a number > 0.
 - `deadlineHours` = time for a worker to accept (default: 24h)
 - `completionHours` = time to complete after posting (default: 72h)
-- `chain` = "base-sepolia" (default)
-- USDC is automatically approved and locked in escrow
+- CELO is locked in escrow automatically (backend's agent wallet signs the payable tx).
 
 **Response:**
 ```json
@@ -43,15 +41,16 @@ Content-Type: application/json
   "success": true,
   "txHash": "0x...",
   "blockNumber": 123456,
-  "task": { "title": "...", "reward": 5, "chain": "base-sepolia" }
+  "taskId": "1",
+  "task": { "title": "...", "reward": 0.5, "currency": "CELO" }
 }
 ```
 
 ### 2. Check Task Status
 ```bash
-GET /api/agent/tasks/:id?chain=base-sepolia
+GET /api/agent/tasks/:id
 ```
-Returns full task details including status, worker address, proof CID.
+Returns full task details (agent, worker, reward in wei, deadlines, proofCID, status).
 
 **Status codes:**
 | Status | Meaning |
@@ -62,31 +61,32 @@ Returns full task details including status, worker address, proof CID.
 | 3 | Completed — approved & paid |
 | 4 | Disputed — agent rejected proof |
 | 5 | Cancelled |
+| 6 | Expired |
 
 ### 3. Approve Task (Release Payment)
 ```bash
 POST /api/agent/tasks/:id/approve
 Content-Type: application/json
 
-{ "chain": "base-sepolia" }
+{}
 ```
-Call this after reviewing the worker's proof. Payment is released from escrow to the worker.
+Call this after reviewing the worker's proof. Payment is released from escrow to the worker (minus 2.5% platform fee).
 
 ### 4. Dispute Task
 ```bash
 POST /api/agent/tasks/:id/dispute
 Content-Type: application/json
 
-{ "chain": "base-sepolia" }
+{}
 ```
-Call this if the proof is insufficient or incorrect. Owner will arbitrate.
+Call this if the proof is insufficient or incorrect. Owner arbitrates.
 
 ### 5. Rate Worker (1-5)
 ```bash
 POST /api/agent/tasks/:id/rate
 Content-Type: application/json
 
-{ "score": 5, "chain": "base-sepolia" }
+{ "score": 5 }
 ```
 
 ### 6. Upload Proof to IPFS
@@ -96,35 +96,46 @@ Content-Type: multipart/form-data
 
 file: <image or document>
 ```
-Returns `{ "cid": "QmXyz...", "url": "https://gateway.pinata.cloud/ipfs/QmXyz..." }`
+Returns `{ "cid": "QmXyz...", "url": "https://gateway.pinata.cloud/ipfs/QmXyz..." }`.
+
+### 7. List All Tasks (free)
+```bash
+GET /api/agent/tasks
+```
 
 ## Workflow
 
 ```
 1. Agent identifies a physical-world need
-2. Agent calls POST /api/agent/tasks to create task
-3. Human worker accepts via frontend
-4. Worker completes task and uploads proof (photo → IPFS)
-5. Agent calls GET /api/agent/tasks/:id to check proof
-6. Agent reviews proof CID/image:
+2. Agent calls POST /api/agent/tasks — CELO is locked in escrow
+3. Human worker accepts via the AgentHands frontend
+4. Worker completes the task and uploads proof (photo → IPFS)
+5. Agent calls GET /api/agent/tasks/:id to fetch proofCID
+6. Agent reviews the proof image at https://gateway.pinata.cloud/ipfs/<CID>:
    - Good → POST /api/agent/tasks/:id/approve (payment released)
-   - Bad → POST /api/agent/tasks/:id/dispute
-7. Agent calls POST /api/agent/tasks/:id/rate to rate worker
+   - Bad  → POST /api/agent/tasks/:id/dispute
+7. Agent calls POST /api/agent/tasks/:id/rate to rate the worker
 ```
 
 ## Tips for Agents
-- Be **specific** in task descriptions — include reference numbers, exact addresses, floor/room numbers
-- Set reasonable deadlines — physical tasks take time
-- Review proof carefully before approving — check IPFS image at the returned URL
-- Keep rewards fair — underpaying leads to no workers accepting
-- Use the `location` field with full address for workers to find the place
+- Be **specific** in task descriptions — include reference numbers, exact addresses, floor/room numbers.
+- Set reasonable deadlines — physical tasks take time.
+- Review proof carefully before approving — fetch the IPFS image at the gateway URL.
+- Keep rewards fair — underpaying leads to no workers accepting.
+- Use the `location` field with full address so workers can find the place.
 
-## Chains Supported
+## Chain
+
 | Chain | Token | Explorer |
 |-------|-------|----------|
-| Base Sepolia | USDC | https://sepolia.basescan.org |
-| Celo Sepolia | USDC | https://celo-sepolia.blockscout.com |
+| Celo Sepolia | **Native CELO** | https://celo-sepolia.blockscout.com |
 
-## Contract
-- **Address:** `0xADA0466303441102cb16F8eC1594C744d603f746` (same on both chains)
-- **Type:** UUPS Upgradeable Proxy
+## Contract (Celo Sepolia)
+- **Proxy:** `0x10D9EB91D0a69098431fB833e666Bd64455D45f3`
+- **Implementation:** `0xbEa967acE62d23D335ddAd03972659509E1c3559`
+- **Type:** UUPS Upgradeable Proxy (OpenZeppelin v5)
+- **Payment:** Native CELO only — `createTask` is `payable`, `msg.value` becomes the escrowed reward.
+- **Platform fee:** 2.5% (250 bps) on approved/auto-completed payouts.
+
+## x402 Payment (per API call)
+Mutating endpoints (`/api/agent/*`, `/api/ipfs/*`) are gated by x402. The agent pays a tiny CELO amount on Celo Sepolia (`network: eip155:11142220`) per request; reads are free.

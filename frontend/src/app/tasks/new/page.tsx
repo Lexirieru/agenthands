@@ -3,26 +3,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useWriteContract, useWaitForTransactionReceipt, useAccount, useConnect, useSwitchChain } from 'wagmi';
-import { parseUnits } from 'viem';
-import { DollarSign, Clock, MapPin, FileText, CheckCircle, Loader2, Lock, Wallet } from 'lucide-react';
+import { parseEther } from 'viem';
+import { DollarSign, Clock, MapPin, FileText, Loader2, Lock, Wallet } from 'lucide-react';
 import gsap from 'gsap';
-import { AGENTHANDS_ADDRESS, USDC_ADDRESS, USDC_FEE_ADAPTER, CHAIN } from '@/config';
+import { AGENTHANDS_ADDRESS, CHAIN } from '@/config';
 import AgentHandsABI from '@/abi/AgentHands.json';
 import { toast } from '@/components/Toast';
 import { useInvalidateTasks } from '@/hooks/useTasks';
-
-const ERC20_ABI = [
-  {
-    name: 'approve',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'spender', type: 'address' },
-      { name: 'amount', type: 'uint256' },
-    ],
-    outputs: [{ type: 'bool' }],
-  },
-] as const;
 
 export default function NewTaskPage() {
   const router = useRouter();
@@ -37,14 +24,8 @@ export default function NewTaskPage() {
   const [reward, setReward] = useState('');
   const [deadlineHours, setDeadlineHours] = useState('24');
   const [completionHours, setCompletionHours] = useState('72');
-  const [step, setStep] = useState<'form' | 'approve' | 'create' | 'done'>('form');
 
-  const { writeContract: approveWrite, data: approveTx, isPending: approving } = useWriteContract();
   const { writeContract: createWrite, data: createTx, isPending: creating } = useWriteContract();
-
-  const { isLoading: waitingApprove, isSuccess: approveSuccess } =
-    useWaitForTransactionReceipt({ hash: approveTx });
-
   const { isLoading: waitingCreate, isSuccess: createSuccess } =
     useWaitForTransactionReceipt({ hash: createTx });
 
@@ -66,7 +47,7 @@ export default function NewTaskPage() {
       }, formRef);
       return () => ctx.revert();
     }
-  }, [step]);
+  }, []);
 
   const ensureChain = () => {
     if (currentChainId !== CHAIN.id) {
@@ -77,23 +58,9 @@ export default function NewTaskPage() {
     return true;
   };
 
-  const handleApprove = () => {
-    if (!ensureChain()) return;
-    const amount = parseUnits(reward, 6);
-    approveWrite({
-      address: USDC_ADDRESS,
-      abi: ERC20_ABI,
-      functionName: 'approve',
-      args: [AGENTHANDS_ADDRESS, amount],
-      feeCurrency: USDC_FEE_ADAPTER, type: 'cip64',
-    } as any);
-    setStep('approve');
-    toast('info', 'Approve USDC in your wallet...');
-  };
-
   const handleCreate = () => {
     if (!ensureChain()) return;
-    const amount = parseUnits(reward, 6);
+    const amount = parseEther(reward);
     const deadline = BigInt(Math.floor(Date.now() / 1000) + Number(deadlineHours) * 3600);
     const completionDeadline = BigInt(Math.floor(Date.now() / 1000) + Number(completionHours) * 3600);
 
@@ -101,10 +68,9 @@ export default function NewTaskPage() {
       address: AGENTHANDS_ADDRESS,
       abi: AgentHandsABI as typeof AgentHandsABI,
       functionName: 'createTask',
-      args: [USDC_ADDRESS, amount, deadline, completionDeadline, title, description, location],
-      feeCurrency: USDC_FEE_ADAPTER, type: 'cip64',
-    } as any);
-    setStep('create');
+      args: [deadline, completionDeadline, title, description, location],
+      value: amount,
+    });
     toast('info', 'Creating task on-chain...');
   };
 
@@ -116,7 +82,7 @@ export default function NewTaskPage() {
             <FileText size={32} className="text-green-600" />
           </div>
           <h2 className="text-xl font-semibold text-[#5C2D0A] mb-2">Task Created!</h2>
-          <p className="text-sm text-[#5C2D0A] mb-6">USDC is locked in escrow. Workers can now accept your task.</p>
+          <p className="text-sm text-[#5C2D0A] mb-6">CELO is locked in escrow. Workers can now accept your task.</p>
           <button
             onClick={() => router.push('/tasks')}
             className="w-full py-3.5 bg-[#5C2D0A] text-white font-semibold rounded-xl transition text-sm min-h-[48px]"
@@ -201,15 +167,15 @@ export default function NewTaskPage() {
           <div>
             <label className="block text-sm font-medium font-label text-[#5C2D0A] mb-1.5">
               <DollarSign size={14} className="inline mr-1" />
-              Reward (USDC) *
+              Reward (CELO) *
             </label>
             <input
               type="number"
               value={reward}
               onChange={(e) => setReward(e.target.value)}
-              placeholder="e.g. 10"
-              min="0.01"
-              step="0.01"
+              placeholder="e.g. 0.5"
+              min="0.0001"
+              step="0.0001"
               className="w-full bg-[var(--card)] border border-[var(--border)] rounded-xl px-4 py-3 text-base text-[#5C2D0A] placeholder-[#8B4513] focus:outline-none focus:border-[#D4700A]"
             />
           </div>
@@ -245,11 +211,11 @@ export default function NewTaskPage() {
           <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-2 text-sm font-label">
             <div className="flex justify-between">
               <span className="text-[#8B4513]">Chain</span>
-              <span className="text-[#5C2D0A] font-medium">Celo</span>
+              <span className="text-[#5C2D0A] font-medium">Celo Sepolia</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[#8B4513]">Payment</span>
-              <span className="text-[#D4700A] font-semibold">{reward || '0'} USDC</span>
+              <span className="text-[#D4700A] font-semibold">{reward || '0'} CELO</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[#8B4513]">Platform fee</span>
@@ -257,50 +223,23 @@ export default function NewTaskPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-[#8B4513]">Worker receives</span>
-              <span className="text-[#D4700A]">{reward ? (Number(reward) * 0.975).toFixed(2) : '0'} USDC</span>
+              <span className="text-[#D4700A]">{reward ? (Number(reward) * 0.975).toFixed(4) : '0'} CELO</span>
             </div>
           </div>
 
-          {step === 'form' && (
-            <button
-              onClick={handleApprove}
-              disabled={!title || !description || !location || !reward}
-              className="w-full bg-[#5C2D0A] disabled:bg-[#8B4513] text-white py-3.5 rounded-xl font-medium font-label transition text-sm min-h-[48px]"
-            >
-              Step 1: Approve USDC
-            </button>
-          )}
-
-          {step === 'approve' && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm font-label">
-                {waitingApprove ? (
-                  <span className="text-[#D4700A] inline-flex items-center gap-1"><Loader2 size={14} className="animate-spin" /> Approving USDC...</span>
-                ) : approveSuccess ? (
-                  <span className="text-green-600 inline-flex items-center gap-1"><CheckCircle size={14} /> USDC Approved!</span>
-                ) : approving ? (
-                  <span className="text-[#D4700A] inline-flex items-center gap-1"><Lock size={14} /> Confirm in wallet...</span>
-                ) : null}
-              </div>
-              <button
-                onClick={handleCreate}
-                disabled={!approveSuccess}
-                className="w-full bg-[#5C2D0A] disabled:bg-[#8B4513] text-white py-3.5 rounded-xl font-medium font-label transition text-sm min-h-[48px]"
-              >
-                Step 2: Create Task
-              </button>
-            </div>
-          )}
-
-          {step === 'create' && (
-            <div className="flex items-center gap-2 text-sm font-label">
-              {waitingCreate ? (
-                <span className="text-[#D4700A] inline-flex items-center gap-1"><Loader2 size={14} className="animate-spin" /> Creating task...</span>
-              ) : creating ? (
-                <span className="text-[#D4700A] inline-flex items-center gap-1"><Lock size={14} /> Confirm in wallet...</span>
-              ) : null}
-            </div>
-          )}
+          <button
+            onClick={handleCreate}
+            disabled={!title || !description || !location || !reward || creating || waitingCreate}
+            className="w-full bg-[#5C2D0A] disabled:bg-[#8B4513] text-white py-3.5 rounded-xl font-medium font-label transition text-sm min-h-[48px] flex items-center justify-center gap-2"
+          >
+            {creating ? (
+              <><Lock size={14} /> Confirm in wallet...</>
+            ) : waitingCreate ? (
+              <><Loader2 size={14} className="animate-spin" /> Creating task...</>
+            ) : (
+              'Create Task & Lock CELO'
+            )}
+          </button>
         </div>
       )}
     </div>

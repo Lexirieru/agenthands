@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Clock, MapPin } from "lucide-react";
-import { formatUSDC, getStatusDisplay, truncateAddress } from "@/lib/utils/format";
+import { formatCELO, getStatusDisplay, truncateAddress } from "@/lib/utils/format";
 
 interface TaskCardProps {
   id: bigint;
@@ -50,8 +50,8 @@ export default function TaskCard({
         {/* Footer */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[#8B4513] font-label">
           <div className="flex items-center gap-1">
-            <img src="https://cdn.morpho.org/assets/logos/usdc.svg" alt="USDC" className="h-4 w-4" />
-            <span className="text-[#5C2D0A] font-medium">${formatUSDC(reward)}</span>
+            <img src="/celologo.jpg" alt="CELO" className="h-4 w-4 rounded-full" />
+            <span className="text-[#5C2D0A] font-medium">{formatCELO(reward)} CELO</span>
           </div>
           <div className="flex items-center gap-1">
             <MapPin size={12} />

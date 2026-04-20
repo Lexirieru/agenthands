@@ -4,11 +4,11 @@ import { use, useState, useEffect, useRef, useCallback } from 'react';
 import { useWriteContract, useWaitForTransactionReceipt, useAccount, useSwitchChain } from 'wagmi';
 import { ArrowLeft, Clock, DollarSign, MapPin, User, Loader2, CheckCircle, AlertTriangle, Lock, Hand, Camera, Star, HardHat } from 'lucide-react';
 import Link from 'next/link';
-import { AGENTHANDS_ADDRESS, CHAIN, USDC_FEE_ADAPTER } from '@/config';
+import { AGENTHANDS_ADDRESS, CHAIN } from '@/config';
 import AgentHandsABI from '@/abi/AgentHands.json';
 import ProofUpload from '@/components/ProofUpload';
 import SelfVerify from '@/components/SelfVerify';
-import { getStatusDisplay, truncateAddress } from '@/lib/utils/format';
+import { formatCELO, getStatusDisplay, truncateAddress } from '@/lib/utils/format';
 import { toast } from '@/components/Toast';
 import { useTaskDetail, useInvalidateTasks } from '@/hooks/useTasks';
 
@@ -127,7 +127,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const status = Number(t.status);
   const statusInfo = getStatusDisplay(status);
   const statusColor = STATUS_COLORS[status] || STATUS_COLORS[0];
-  const rewardFormatted = (Number(t.reward) / 1e6).toFixed(2);
+  const rewardFormatted = formatCELO(t.reward);
   const isAgent = address?.toLowerCase() === t.agent?.toLowerCase();
   const isWorker = address?.toLowerCase() === t.worker?.toLowerCase();
   const deadline = new Date(Number(t.deadline) * 1000);
@@ -165,10 +165,10 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
           {/* Reward */}
           <div className="flex items-center gap-2 p-3 bg-[#D4700A]/10 rounded-xl border border-[#D4700A]/20 mb-4">
-            <img src="https://cdn.morpho.org/assets/logos/usdc.svg" alt="USDC" className="h-8 w-8" />
+            <img src="/celologo.jpg" alt="CELO" className="h-8 w-8 rounded-full" />
             <div>
-              <span className="text-2xl font-bold text-[#D4700A]">${rewardFormatted}</span>
-              <div className="text-xs text-[#8B4513] font-label">USDC</div>
+              <span className="text-2xl font-bold text-[#D4700A]">{rewardFormatted}</span>
+              <div className="text-xs text-[#8B4513] font-label">CELO</div>
             </div>
           </div>
 
@@ -236,7 +236,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               <button
                 onClick={() => {
                   if (!ensureChain()) return;
-                  acceptWrite({ ...contractCall, functionName: 'acceptTask', args: [taskId], feeCurrency: USDC_FEE_ADAPTER, type: 'cip64' } as any);
+                  acceptWrite({ ...contractCall, functionName: 'acceptTask', args: [taskId] });
                   toast('info', 'Confirm transaction in wallet...');
                 }}
                 disabled={accepting || acceptConfirming || !selfVerified}
@@ -273,7 +273,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               <button
                 onClick={() => {
                   if (!ensureChain()) return;
-                  submitWrite({ ...contractCall, functionName: 'submitProof', args: [taskId, proofCID], feeCurrency: USDC_FEE_ADAPTER, type: 'cip64' } as any);
+                  submitWrite({ ...contractCall, functionName: 'submitProof', args: [taskId, proofCID] });
                   toast('info', 'Submitting proof on-chain...');
                 }}
                 disabled={submitting || submitConfirming || !proofCID}
@@ -296,7 +296,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 <button
                   onClick={() => {
                     if (!ensureChain()) return;
-                    approveWrite({ ...contractCall, functionName: 'approveTask', args: [taskId], feeCurrency: USDC_FEE_ADAPTER, type: 'cip64' } as any);
+                    approveWrite({ ...contractCall, functionName: 'approveTask', args: [taskId] });
                     toast('info', 'Approving task...');
                   }}
                   disabled={approvingTask || approveConfirming}
@@ -311,7 +311,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 <button
                   onClick={() => {
                     if (!ensureChain()) return;
-                    disputeWrite({ ...contractCall, functionName: 'disputeTask', args: [taskId], feeCurrency: USDC_FEE_ADAPTER, type: 'cip64' } as any);
+                    disputeWrite({ ...contractCall, functionName: 'disputeTask', args: [taskId] });
                     toast('info', 'Disputing task...');
                   }}
                   disabled={disputing || disputeConfirming}
@@ -333,7 +333,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
               <button
                 onClick={() => {
                   if (!ensureChain()) return;
-                  cancelWrite({ ...contractCall, functionName: 'cancelTask', args: [taskId], feeCurrency: USDC_FEE_ADAPTER, type: 'cip64' } as any);
+                  cancelWrite({ ...contractCall, functionName: 'cancelTask', args: [taskId] });
                   toast('info', 'Cancelling task...');
                 }}
                 disabled={cancelling || cancelConfirming}
@@ -367,7 +367,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 <button
                   onClick={() => {
                     if (!ensureChain()) return;
-                    rateWorkerWrite({ ...contractCall, functionName: 'rateWorker', args: [taskId, rating], feeCurrency: USDC_FEE_ADAPTER, type: 'cip64' } as any);
+                    rateWorkerWrite({ ...contractCall, functionName: 'rateWorker', args: [taskId, rating] });
                     toast('info', 'Rating worker...');
                   }}
                   disabled={ratingWorker || rateWorkerConfirming}
@@ -380,7 +380,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 <button
                   onClick={() => {
                     if (!ensureChain()) return;
-                    rateAgentWrite({ ...contractCall, functionName: 'rateAgent', args: [taskId, rating], feeCurrency: USDC_FEE_ADAPTER, type: 'cip64' } as any);
+                    rateAgentWrite({ ...contractCall, functionName: 'rateAgent', args: [taskId, rating] });
                     toast('info', 'Rating agent...');
                   }}
                   disabled={ratingAgent || rateAgentConfirming}

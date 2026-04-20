@@ -4,10 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
-import { formatUnits } from "viem";
 import { Wallet, LogOut } from "lucide-react";
-import { useUSDCBalance } from "@/hooks/useAgentHands";
-import { truncateAddress } from "@/lib/utils/format";
+import { useCeloBalance } from "@/hooks/useAgentHands";
+import { formatCELO, truncateAddress } from "@/lib/utils/format";
 import { useState, useEffect } from "react";
 
 const navLinks = [
@@ -20,15 +19,13 @@ export default function Header() {
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
-  const { data: rawBalance } = useUSDCBalance(address as `0x${string}` | undefined);
+  const { data: celoBalance } = useCeloBalance(address as `0x${string}` | undefined);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
-  const usdcFormatted =
-    rawBalance !== undefined
-      ? parseFloat(formatUnits(rawBalance, 6)).toFixed(2)
-      : null;
+  const celoFormatted =
+    celoBalance !== undefined ? formatCELO(celoBalance.value) : null;
 
   const isActive = (href: string) => pathname === href;
 
@@ -53,10 +50,10 @@ export default function Header() {
             <span className="text-base font-bold text-[#5C2D0A]">AgentHands</span>
           </Link>
           <div className="flex items-center gap-2">
-            {isConnected && usdcFormatted && (
+            {isConnected && celoFormatted && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[var(--card)] border border-[var(--border)] text-xs font-medium text-[#D4700A]">
-                <img src="https://cdn.morpho.org/assets/logos/usdc.svg" alt="" className="h-3.5 w-3.5" />
-                ${usdcFormatted}
+                <img src="/celologo.jpg" alt="" className="h-3.5 w-3.5 rounded-full" />
+                {celoFormatted} CELO
               </span>
             )}
             {isConnected && address ? (
@@ -110,11 +107,11 @@ export default function Header() {
                   ))}
                 </div>
 
-                {/* USDC Balance */}
-                {isConnected && usdcFormatted && (
+                {/* CELO Balance */}
+                {isConnected && celoFormatted && (
                   <span className="text-xs bg-[var(--card)] text-[#D4700A] px-3 py-1.5 rounded-full border border-[var(--border)] font-label mr-1 inline-flex items-center gap-1.5">
-                    <img src="https://cdn.morpho.org/assets/logos/usdc.svg" alt="USDC" className="h-4 w-4" />
-                    ${usdcFormatted}
+                    <img src="/celologo.jpg" alt="CELO" className="h-4 w-4 rounded-full" />
+                    {celoFormatted} CELO
                   </span>
                 )}
 

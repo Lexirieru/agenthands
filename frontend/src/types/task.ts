@@ -2,8 +2,7 @@ export interface TaskData {
   id: bigint;
   agent: string;
   worker: string;
-  paymentToken: string;
-  reward: bigint;
+  reward: bigint;       // in wei (18 decimals, native CELO)
   deadline: bigint;
   completionDeadline: bigint;
   title: string;
