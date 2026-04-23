@@ -229,21 +229,42 @@ async function requirePayment(
   // Railway terminates TLS at the edge — inside the container, Hono sees
   // http://. Rebuild the URL with https:// so x402 payment signatures
   // match what the agent actually signed against.
+  //
+  // Proxies sometimes pass *multi-value* forwarded headers like
+  // "https, http" or "example.com, internal-host" — feeding those into
+  // a URL string produces "Invalid character" downstream. Take only the
+  // first hop and trim anything around it.
   let resourceUrl = c.req.url;
   try {
-    const forwardedProto = c.req.header("x-forwarded-proto");
-    const host = c.req.header("host");
+    const firstHop = (h: string | undefined) => h?.split(",")[0]?.trim();
+    const forwardedProto = firstHop(c.req.header("x-forwarded-proto"));
+    const host = firstHop(c.req.header("host"));
     const path = c.req.path;
     if (host) {
       const isLocal = host.includes("localhost") || host.startsWith("127.");
       const proto = forwardedProto || (isLocal ? "http" : "https");
-      resourceUrl = `${proto}://${host}${path}`;
+      // new URL() validates the result; if anything slips through as an
+      // invalid character the try/catch below falls back to c.req.url.
+      resourceUrl = new URL(path, `${proto}://${host}`).toString();
     }
   } catch {
     // fall through with c.req.url — thirdweb still accepts http:// urls
   }
 
   try {
+    // Debug: log everything we're about to hand the facilitator, so the
+    // next "Invalid character" breakage tells us *which* field carried
+    // the bad byte. JSON.stringify would explode on BigInt inside the
+    // chain object, so spell out the shape.
+    console.log("💳 settlePayment args:", {
+      resourceUrl,
+      method: c.req.method,
+      payTo: PAY_TO,
+      network: { id: X402_NETWORK_CHAIN.id, name: X402_NETWORK_CHAIN.name },
+      price: { amount: opts.priceUsdcAtomic, asset: USDC_ADDRESS, decimals: 6 },
+      paymentDataBytes: paymentData?.length ?? 0,
+    });
+
     const result = await settlePayment({
       resourceUrl,
       method: c.req.method as "GET" | "POST",
@@ -383,7 +404,7 @@ app.post("/api/agent/tasks", async (c) => {
   // 2. Charge the x402 fee only after validation passes.
   const pay = await requirePayment(c, {
     priceUsdcAtomic: "10000", // $0.01 USDC
-    description: "Create a task on AgentHands — hire a human for a physical-world job (paid in USDC on Celo).",
+    description: "Create a task on AgentHands: hire a human for a physical-world job (paid in USDC on Celo).",
   });
   if (pay) return pay;
 
