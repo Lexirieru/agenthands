@@ -185,8 +185,8 @@ const REPUTATION_ABI = [
 // ─── x402 helper: charge USDC on Celo Sepolia per request ────
 // thirdweb's facilitator settles payment in a stablecoin on the specified
 // chain. We pass the USDC asset explicitly (not a "$0.01" dollar string) so
-// the facilitator never has to resolve the token via its registry — this
-// avoids an empty `accepts: []` array on networks it hasn't indexed.
+// the facilitator never has to resolve the token via its registry — that
+// was causing accepts: [] on networks it hasn't indexed.
 async function requirePayment(
   c: Context,
   opts: { priceUsdcAtomic: string; description?: string }
@@ -195,57 +195,74 @@ async function requirePayment(
     c.req.header("PAYMENT-SIGNATURE") || c.req.header("X-PAYMENT") || null;
 
   // Railway terminates TLS at the edge — inside the container, Hono sees
-  // http://. But x402 signatures are scoped to the exact resource URL,
-  // so advertise https:// to match what agents actually hit.
-  const forwardedProto = c.req.header("x-forwarded-proto");
-  const host = c.req.header("host") ?? new URL(c.req.url).host;
-  const proto = forwardedProto || (host.includes("localhost") ? "http" : "https");
-  const resourceUrl = `${proto}://${host}${new URL(c.req.url).pathname}`;
+  // http://. Rebuild the URL with https:// so x402 payment signatures
+  // match what the agent actually signed against.
+  let resourceUrl = c.req.url;
+  try {
+    const forwardedProto = c.req.header("x-forwarded-proto");
+    const host = c.req.header("host");
+    const path = c.req.path;
+    if (host) {
+      const isLocal = host.includes("localhost") || host.startsWith("127.");
+      const proto = forwardedProto || (isLocal ? "http" : "https");
+      resourceUrl = `${proto}://${host}${path}`;
+    }
+  } catch {
+    // fall through with c.req.url — thirdweb still accepts http:// urls
+  }
 
-  const result = await settlePayment({
-    resourceUrl,
-    method: c.req.method as "GET" | "POST",
-    paymentData,
-    payTo: PAY_TO,
-    network: X402_NETWORK_CHAIN,
-    price: {
-      amount: opts.priceUsdcAtomic,
-      asset: {
-        address: USDC_ADDRESS,
-        decimals: 6,
-        // eip712 helps thirdweb sign EIP-3009 TransferWithAuthorization
-        // permits against the right token.
-        eip712: {
-          name: "USDC",
-          version: "2",
-          primaryType: "TransferWithAuthorization" as const,
+  try {
+    const result = await settlePayment({
+      resourceUrl,
+      method: c.req.method as "GET" | "POST",
+      paymentData,
+      payTo: PAY_TO,
+      network: X402_NETWORK_CHAIN,
+      price: {
+        amount: opts.priceUsdcAtomic,
+        asset: {
+          address: USDC_ADDRESS,
+          decimals: 6,
         },
       },
-    },
-    facilitator: twFacilitator,
-    routeConfig: {
-      description: opts.description ?? "",
-      mimeType: "application/json",
-    },
-  });
+      facilitator: twFacilitator,
+      routeConfig: {
+        description: opts.description ?? "",
+        mimeType: "application/json",
+      },
+    });
 
-  if (result.status === 200) return null; // payment OK, let the handler run
+    if (result.status === 200) return null; // payment OK, let the handler run
 
-  // Log the 402 body so we can spot empty-accepts in Railway logs.
-  console.warn(
-    `💳 x402 gate returned ${result.status} for ${c.req.method} ${resourceUrl}`,
-    JSON.stringify(result.responseBody)
-  );
+    // Log the 402 body so we can spot empty-accepts in Railway logs.
+    console.warn(
+      `💳 x402 gate returned ${result.status} for ${c.req.method} ${resourceUrl}`,
+      JSON.stringify(result.responseBody)
+    );
 
-  // Forward thirdweb's response (body + headers) verbatim so x402 clients
-  // can parse the payment requirements.
-  return new Response(JSON.stringify(result.responseBody), {
-    status: result.status,
-    headers: {
-      ...result.responseHeaders,
-      "content-type": "application/json",
-    },
-  });
+    // Forward thirdweb's response (body + headers) verbatim so x402 clients
+    // can parse the payment requirements.
+    return new Response(JSON.stringify(result.responseBody), {
+      status: result.status,
+      headers: {
+        ...result.responseHeaders,
+        "content-type": "application/json",
+      },
+    });
+  } catch (err) {
+    // Without this, a throw inside settlePayment (facilitator error,
+    // network issue, schema mismatch, etc) turns into a bare Hono 500.
+    const reason = err instanceof Error ? err.message : String(err);
+    console.error(`💳 x402 settlePayment threw on ${c.req.method} ${resourceUrl}:`, err);
+    return c.json(
+      {
+        error: "x402 gate failed",
+        reason: reason.slice(0, 500),
+        resource: resourceUrl,
+      },
+      500
+    );
+  }
 }
 
 // ─── Webhook Store (in-memory) ───────────────────────────
