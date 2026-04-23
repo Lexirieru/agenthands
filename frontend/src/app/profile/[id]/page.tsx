@@ -1,39 +1,23 @@
 "use client";
 
-import { useAccount, useConnect } from "wagmi";
-import { User, Wallet, ExternalLink } from "lucide-react";
+import { useAccount } from "wagmi";
+import { User, ExternalLink } from "lucide-react";
 import { useUSDCBalance } from "@/hooks/useAgentHands";
 import { CHAIN, EXPLORER_URL } from "@/config";
 import { formatUSDC } from "@/lib/utils/format";
 import SelfVerify from "@/components/SelfVerify";
+import ConnectPrompt from "@/components/ConnectPrompt";
 
 export default function ProfilePage() {
   const { address, isConnected } = useAccount();
-  const { connect, connectors } = useConnect();
   const { data: usdcBalance } = useUSDCBalance(address as `0x${string}` | undefined);
 
   const usdcFormatted = usdcBalance !== undefined ? formatUSDC(usdcBalance as bigint) : "0.00";
 
-  const handleConnect = () => {
-    const connector = connectors.find(c => c.id === 'injected') || connectors[0];
-    if (connector) connect({ connector });
-  };
-
   if (!isConnected) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100dvh-7.5rem)] px-4 text-center">
-        <div className="w-20 h-20 rounded-full bg-[var(--card-solid)] border border-[var(--border)] flex items-center justify-center mb-4">
-          <Wallet size={32} className="text-[#8B4513]" />
-        </div>
-        <p className="text-lg font-semibold text-[#5C2D0A] mb-2">Connect Your Wallet</p>
-        <p className="text-sm text-[#8B4513] mb-6">Connect to view your profile</p>
-        <button
-          onClick={handleConnect}
-          className="flex items-center gap-2 px-8 py-3 bg-[#5C2D0A] text-white font-semibold rounded-xl text-sm active:scale-[0.98] transition-transform min-h-[48px]"
-        >
-          <Wallet size={16} />
-          Connect Wallet
-        </button>
+      <div className="min-h-[calc(100dvh-7.5rem)] px-4 py-12 mx-auto w-full max-w-md">
+        <ConnectPrompt title="Connect Your Wallet" subtitle="Connect to view your profile" />
       </div>
     );
   }
