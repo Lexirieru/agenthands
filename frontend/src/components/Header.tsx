@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { Wallet, LogOut } from "lucide-react";
 import { useUSDCBalance } from "@/hooks/useAgentHands";
+import { useIsMiniPay } from "@/hooks/useIsMiniPay";
 import { formatUSDC, truncateAddress } from "@/lib/utils/format";
 import { useState, useEffect } from "react";
 
@@ -20,6 +21,7 @@ export default function Header() {
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
   const { data: usdcBalance } = useUSDCBalance(address as `0x${string}` | undefined);
+  const isMiniPay = useIsMiniPay();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -63,6 +65,11 @@ export default function Header() {
               >
                 {address.slice(0, 4)}...{address.slice(-3)}
               </button>
+            ) : isMiniPay ? (
+              // MiniPay auto-connects — showing a Connect button is discouraged.
+              <span className="h-8 px-2.5 rounded-full bg-[var(--card)] text-[#8B4513] text-[10px] font-medium inline-flex items-center">
+                Connecting…
+              </span>
             ) : (
               <button
                 onClick={handleConnect}
@@ -117,7 +124,7 @@ export default function Header() {
 
                 {/* Wallet */}
                 {isConnected && address ? (
-                  <button 
+                  <button
                     onClick={() => disconnect()}
                     className="group flex items-center gap-1.5 px-3 py-1.5 bg-[#5C2D0A] text-white border border-[#5C2D0A] rounded-full text-xs font-label hover:bg-red-900 transition-colors"
                   >
@@ -126,8 +133,12 @@ export default function Header() {
                     <span className="group-hover:hidden">{truncateAddress(address)}</span>
                     <span className="hidden group-hover:block">Disconnect</span>
                   </button>
+                ) : isMiniPay ? (
+                  <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[var(--card)] text-[#8B4513] border border-[var(--border)] rounded-full text-xs font-label">
+                    <Wallet size={14} /> Connecting…
+                  </span>
                 ) : (
-                  <button 
+                  <button
                     onClick={handleConnect}
                     className="flex items-center gap-1.5 px-6 py-1.5 bg-[#D4700A] text-white rounded-full text-xs font-bold font-label hover:bg-[#B35D08] transition-all shadow-lg shadow-[#D4700A]/20"
                   >
