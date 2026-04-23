@@ -9,30 +9,52 @@ import { facilitator, settlePayment } from "thirdweb/x402";
 import "dotenv/config";
 
 // ─── Config ──────────────────────────────────────────────
-const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}`;
-const AGENTHANDS_ADDRESS = process.env.AGENTHANDS_ADDRESS as `0x${string}`;
+function requireEnv(name: string): string {
+  const v = process.env[name];
+  if (!v) {
+    console.error(`❌ Missing required env var: ${name}`);
+    process.exit(1);
+  }
+  return v;
+}
+
+const PRIVATE_KEY = requireEnv("PRIVATE_KEY") as `0x${string}`;
+const AGENTHANDS_ADDRESS = requireEnv("AGENTHANDS_ADDRESS") as `0x${string}`;
+const PAY_TO = requireEnv("WALLET_ADDRESS") as `0x${string}`;
+const THIRDWEB_SECRET_KEY = requireEnv("THIRDWEB_SECRET_KEY");
+const PINATA_JWT = process.env.PINATA_JWT; // optional — only /api/ipfs/upload needs it
 const USDC_ADDRESS = (process.env.USDC_ADDRESS ||
   "0x01C5C0122039549AD1493B8220cABEdD739BC44E") as `0x${string}`;
-const PINATA_JWT = process.env.PINATA_JWT;
-const PAY_TO = process.env.WALLET_ADDRESS as `0x${string}`;
 const CELO_SEPOLIA_RPC =
   process.env.CELO_SEPOLIA_RPC || "https://forno.celo-sepolia.celo-testnet.org";
 
 // thirdweb client — powers the x402 facilitator that knows how to settle
 // payments on Celo (the public x402.org facilitator doesn't).
-const THIRDWEB_SECRET_KEY = process.env.THIRDWEB_SECRET_KEY;
-if (!THIRDWEB_SECRET_KEY) {
-  console.warn("⚠️  THIRDWEB_SECRET_KEY not set — x402 payments will fail");
-}
-const thirdwebClient = createThirdwebClient({
-  secretKey: THIRDWEB_SECRET_KEY ?? "",
-});
+const thirdwebClient = createThirdwebClient({ secretKey: THIRDWEB_SECRET_KEY });
 const twFacilitator = facilitator({
   client: thirdwebClient,
   serverWalletAddress: PAY_TO,
 });
 const X402_NETWORK_CHAIN = twCeloSepolia; // task escrow + fees both on Celo Sepolia
 const X402_NETWORK_LABEL = `eip155:${celoSepolia.id}`;
+
+// Simple write-queue: the backend agent wallet is singleton, so concurrent
+// writeContract calls would race on the nonce. Serialize all writes through
+// this lock so they go out one after another.
+let writeLock: Promise<unknown> = Promise.resolve();
+async function withWriteLock<T>(fn: () => Promise<T>): Promise<T> {
+  const prev = writeLock.catch(() => undefined);
+  let release: () => void = () => {};
+  writeLock = new Promise<void>((r) => {
+    release = r;
+  });
+  try {
+    await prev;
+    return await fn();
+  } finally {
+    release();
+  }
+}
 
 // ─── ABI (minimal, USDC/ERC20 escrow) ────────────────────
 const ERC20_ABI = [
@@ -260,12 +282,8 @@ function describeContractError(err: unknown): string {
 
 // ─── Agent: Create Task ──────────────────────────────────
 app.post("/api/agent/tasks", async (c) => {
-  const pay = await requirePayment(c, {
-    price: "$0.01",
-    description: "Create a task on AgentHands — hire a human for a physical-world job (paid in USDC on Celo).",
-  });
-  if (pay) return pay;
-
+  // 1. Validate the request BEFORE charging the x402 fee — bad requests
+  //    shouldn't burn the agent's micropayment.
   const body = await c.req.json().catch(() => ({}));
   const { title, description, location, reward, deadlineHours = 24, completionHours = 72, webhookUrl } = body;
 
@@ -286,45 +304,56 @@ app.post("/api/agent/tasks", async (c) => {
     return c.json({ error: `invalid reward "${reward}" — not a decimal number` }, 400);
   }
 
+  // 2. Charge the x402 fee only after validation passes.
+  const pay = await requirePayment(c, {
+    price: "$0.01",
+    description: "Create a task on AgentHands — hire a human for a physical-world job (paid in USDC on Celo).",
+  });
+  if (pay) return pay;
+
   const deadline = BigInt(Math.floor(Date.now() / 1000) + Number(deadlineHours) * 3600);
   const completionDeadline = BigInt(Math.floor(Date.now() / 1000) + Number(completionHours) * 3600);
 
   let approveTx: `0x${string}` | null = null;
 
   try {
-    // 1. Skip approve if existing allowance already covers the reward
-    const allowance = (await publicClient.readContract({
-      address: USDC_ADDRESS,
-      abi: ERC20_ABI,
-      functionName: "allowance",
-      args: [account.address, AGENTHANDS_ADDRESS],
-    })) as bigint;
-
-    if (allowance < amount) {
-      approveTx = await walletClient.writeContract({
+    // Serialize writes so concurrent requests don't race on the shared wallet's nonce.
+    const { approveTx: at, createTx, receipt, taskId } = await withWriteLock(async () => {
+      const allowance = (await publicClient.readContract({
         address: USDC_ADDRESS,
         abi: ERC20_ABI,
-        functionName: "approve",
-        args: [AGENTHANDS_ADDRESS, amount],
+        functionName: "allowance",
+        args: [account.address, AGENTHANDS_ADDRESS],
+      })) as bigint;
+
+      let approveTx: `0x${string}` | null = null;
+      if (allowance < amount) {
+        approveTx = await walletClient.writeContract({
+          address: USDC_ADDRESS,
+          abi: ERC20_ABI,
+          functionName: "approve",
+          args: [AGENTHANDS_ADDRESS, amount],
+        });
+        await publicClient.waitForTransactionReceipt({ hash: approveTx });
+      }
+
+      const createTx = await walletClient.writeContract({
+        address: AGENTHANDS_ADDRESS,
+        abi: AGENTHANDS_ABI,
+        functionName: "createTask",
+        args: [USDC_ADDRESS, amount, deadline, completionDeadline, title, description, location],
       });
-      await publicClient.waitForTransactionReceipt({ hash: approveTx });
-    }
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: createTx });
 
-    // 2. Create the task (USDC moved into escrow)
-    const createTx = await walletClient.writeContract({
-      address: AGENTHANDS_ADDRESS,
-      abi: AGENTHANDS_ABI,
-      functionName: "createTask",
-      args: [USDC_ADDRESS, amount, deadline, completionDeadline, title, description, location],
-    });
-    const receipt = await publicClient.waitForTransactionReceipt({ hash: createTx });
+      const taskCount = (await publicClient.readContract({
+        address: AGENTHANDS_ADDRESS,
+        abi: AGENTHANDS_ABI,
+        functionName: "taskCount",
+      })) as bigint;
 
-    const taskCount = await publicClient.readContract({
-      address: AGENTHANDS_ADDRESS,
-      abi: AGENTHANDS_ABI,
-      functionName: "taskCount",
+      return { approveTx, createTx, receipt, taskId: taskCount.toString() };
     });
-    const taskId = taskCount.toString();
+    approveTx = at;
 
     if (webhookUrl) {
       webhooks.set(taskId, webhookUrl);
@@ -350,52 +379,75 @@ app.post("/api/agent/tasks", async (c) => {
 
 // ─── Agent: Approve ──────────────────────────────────────
 app.post("/api/agent/tasks/:id/approve", async (c) => {
+  const taskId = BigInt(c.req.param("id"));
+
   const pay = await requirePayment(c, { price: "$0.001", description: "Approve task and release USDC payment." });
   if (pay) return pay;
 
-  const taskId = BigInt(c.req.param("id"));
-  const tx = await walletClient.writeContract({
-    address: AGENTHANDS_ADDRESS,
-    abi: AGENTHANDS_ABI,
-    functionName: "approveTask",
-    args: [taskId],
-  });
-  await publicClient.waitForTransactionReceipt({ hash: tx });
-  return c.json({ success: true, txHash: tx });
+  try {
+    const tx = await withWriteLock(() =>
+      walletClient.writeContract({
+        address: AGENTHANDS_ADDRESS,
+        abi: AGENTHANDS_ABI,
+        functionName: "approveTask",
+        args: [taskId],
+      })
+    );
+    await publicClient.waitForTransactionReceipt({ hash: tx });
+    return c.json({ success: true, txHash: tx });
+  } catch (err) {
+    return c.json({ error: "approveTask failed", reason: describeContractError(err) }, 400);
+  }
 });
 
 // ─── Agent: Dispute ──────────────────────────────────────
 app.post("/api/agent/tasks/:id/dispute", async (c) => {
+  const taskId = BigInt(c.req.param("id"));
+
   const pay = await requirePayment(c, { price: "$0.001", description: "Dispute task proof." });
   if (pay) return pay;
 
-  const taskId = BigInt(c.req.param("id"));
-  const tx = await walletClient.writeContract({
-    address: AGENTHANDS_ADDRESS,
-    abi: AGENTHANDS_ABI,
-    functionName: "disputeTask",
-    args: [taskId],
-  });
-  await publicClient.waitForTransactionReceipt({ hash: tx });
-  return c.json({ success: true, txHash: tx });
+  try {
+    const tx = await withWriteLock(() =>
+      walletClient.writeContract({
+        address: AGENTHANDS_ADDRESS,
+        abi: AGENTHANDS_ABI,
+        functionName: "disputeTask",
+        args: [taskId],
+      })
+    );
+    await publicClient.waitForTransactionReceipt({ hash: tx });
+    return c.json({ success: true, txHash: tx });
+  } catch (err) {
+    return c.json({ error: "disputeTask failed", reason: describeContractError(err) }, 400);
+  }
 });
 
 // ─── Agent: Rate ─────────────────────────────────────────
 app.post("/api/agent/tasks/:id/rate", async (c) => {
+  // Validate the score BEFORE charging the x402 fee.
+  const taskId = BigInt(c.req.param("id"));
+  const body = await c.req.json().catch(() => ({}));
+  const { score } = body;
+  if (!score || score < 1 || score > 5) return c.json({ error: "Score must be 1-5" }, 400);
+
   const pay = await requirePayment(c, { price: "$0.001", description: "Rate a worker 1-5 stars." });
   if (pay) return pay;
 
-  const taskId = BigInt(c.req.param("id"));
-  const { score } = await c.req.json();
-  if (!score || score < 1 || score > 5) return c.json({ error: "Score must be 1-5" }, 400);
-  const tx = await walletClient.writeContract({
-    address: AGENTHANDS_ADDRESS,
-    abi: AGENTHANDS_ABI,
-    functionName: "rateWorker",
-    args: [taskId, score],
-  });
-  await publicClient.waitForTransactionReceipt({ hash: tx });
-  return c.json({ success: true, txHash: tx });
+  try {
+    const tx = await withWriteLock(() =>
+      walletClient.writeContract({
+        address: AGENTHANDS_ADDRESS,
+        abi: AGENTHANDS_ABI,
+        functionName: "rateWorker",
+        args: [taskId, score],
+      })
+    );
+    await publicClient.waitForTransactionReceipt({ hash: tx });
+    return c.json({ success: true, txHash: tx });
+  } catch (err) {
+    return c.json({ error: "rateWorker failed", reason: describeContractError(err) }, 400);
+  }
 });
 
 // ─── Agent: Get Task (FREE) ──────────────────────────────
@@ -505,12 +557,14 @@ app.post("/api/erc8004/register", async (c) => {
   if (Number(balance) > 0) return c.json({ error: "Agent already registered" }, 400);
 
   const { metadataURI } = await c.req.json().catch(() => ({ metadataURI: "" }));
-  const tx = await walletClient.writeContract({
-    address: IDENTITY_REGISTRY,
-    abi: IDENTITY_ABI,
-    functionName: "register",
-    args: [metadataURI || ""],
-  });
+  const tx = await withWriteLock(() =>
+    walletClient.writeContract({
+      address: IDENTITY_REGISTRY,
+      abi: IDENTITY_ABI,
+      functionName: "register",
+      args: [metadataURI || ""],
+    })
+  );
   const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
   return c.json({ success: true, txHash: tx, blockNumber: Number(receipt.blockNumber) });
 });
