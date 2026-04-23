@@ -9,8 +9,14 @@ import { facilitator, settlePayment } from "thirdweb/x402";
 import "dotenv/config";
 
 // ─── Config ──────────────────────────────────────────────
+// Railway (and most env-file based deploys) love to slip trailing
+// newlines or whitespace into pasted secrets. A single \n on
+// THIRDWEB_SECRET_KEY or WALLET_ADDRESS was enough to make the
+// thirdweb facilitator reject our /accepts request with
+// "Invalid character". Strip everything on read.
 function requireEnv(name: string): string {
-  const v = process.env[name];
+  const raw = process.env[name];
+  const v = raw?.trim();
   if (!v) {
     console.error(`❌ Missing required env var: ${name}`);
     process.exit(1);
@@ -18,15 +24,41 @@ function requireEnv(name: string): string {
   return v;
 }
 
+function optionalEnv(name: string, fallback: string): string {
+  const v = process.env[name]?.trim();
+  return v && v.length > 0 ? v : fallback;
+}
+
 const PRIVATE_KEY = requireEnv("PRIVATE_KEY") as `0x${string}`;
 const AGENTHANDS_ADDRESS = requireEnv("AGENTHANDS_ADDRESS") as `0x${string}`;
 const PAY_TO = requireEnv("WALLET_ADDRESS") as `0x${string}`;
 const THIRDWEB_SECRET_KEY = requireEnv("THIRDWEB_SECRET_KEY");
-const PINATA_JWT = process.env.PINATA_JWT; // optional — only /api/ipfs/upload needs it
-const USDC_ADDRESS = (process.env.USDC_ADDRESS ||
-  "0x01C5C0122039549AD1493B8220cABEdD739BC44E") as `0x${string}`;
-const CELO_SEPOLIA_RPC =
-  process.env.CELO_SEPOLIA_RPC || "https://forno.celo-sepolia.celo-testnet.org";
+const PINATA_JWT = process.env.PINATA_JWT?.trim(); // optional — only /api/ipfs/upload needs it
+const USDC_ADDRESS = optionalEnv(
+  "USDC_ADDRESS",
+  "0x01C5C0122039549AD1493B8220cABEdD739BC44E"
+) as `0x${string}`;
+const CELO_SEPOLIA_RPC = optionalEnv(
+  "CELO_SEPOLIA_RPC",
+  "https://forno.celo-sepolia.celo-testnet.org"
+);
+
+// Fingerprint each env var at boot so we can spot invisible-char
+// pollution from Railway logs without ever printing the secrets.
+function fingerprint(name: string, v: string | undefined) {
+  if (!v) return `${name}=(unset)`;
+  return `${name} len=${v.length} tail=${JSON.stringify(v.slice(-4))}`;
+}
+console.log(
+  "🔑 env fingerprints:",
+  [
+    fingerprint("AGENTHANDS_ADDRESS", AGENTHANDS_ADDRESS),
+    fingerprint("WALLET_ADDRESS", PAY_TO),
+    fingerprint("USDC_ADDRESS", USDC_ADDRESS),
+    fingerprint("THIRDWEB_SECRET_KEY", THIRDWEB_SECRET_KEY),
+    fingerprint("CELO_SEPOLIA_RPC", CELO_SEPOLIA_RPC),
+  ].join(" | ")
+);
 
 // thirdweb client — powers the x402 facilitator that knows how to settle
 // payments on Celo (the public x402.org facilitator doesn't).
