@@ -183,24 +183,45 @@ const REPUTATION_ABI = [
 ] as const;
 
 // ─── x402 helper: charge USDC on Celo Sepolia per request ────
-// thirdweb's facilitator settles payment in a stablecoin (USDC) on the
-// specified chain. settlePayment returns { status: 200 } when the client
-// paid, or { status: 402, responseBody, responseHeaders } otherwise.
-// We wrap it so each gated endpoint can short-circuit in one line.
+// thirdweb's facilitator settles payment in a stablecoin on the specified
+// chain. We pass the USDC asset explicitly (not a "$0.01" dollar string) so
+// the facilitator never has to resolve the token via its registry — this
+// avoids an empty `accepts: []` array on networks it hasn't indexed.
 async function requirePayment(
   c: Context,
-  opts: { price: `$${string}`; description?: string }
+  opts: { priceUsdcAtomic: string; description?: string }
 ): Promise<Response | null> {
   const paymentData =
     c.req.header("PAYMENT-SIGNATURE") || c.req.header("X-PAYMENT") || null;
 
+  // Railway terminates TLS at the edge — inside the container, Hono sees
+  // http://. But x402 signatures are scoped to the exact resource URL,
+  // so advertise https:// to match what agents actually hit.
+  const forwardedProto = c.req.header("x-forwarded-proto");
+  const host = c.req.header("host") ?? new URL(c.req.url).host;
+  const proto = forwardedProto || (host.includes("localhost") ? "http" : "https");
+  const resourceUrl = `${proto}://${host}${new URL(c.req.url).pathname}`;
+
   const result = await settlePayment({
-    resourceUrl: c.req.url,
+    resourceUrl,
     method: c.req.method as "GET" | "POST",
     paymentData,
     payTo: PAY_TO,
     network: X402_NETWORK_CHAIN,
-    price: opts.price,
+    price: {
+      amount: opts.priceUsdcAtomic,
+      asset: {
+        address: USDC_ADDRESS,
+        decimals: 6,
+        // eip712 helps thirdweb sign EIP-3009 TransferWithAuthorization
+        // permits against the right token.
+        eip712: {
+          name: "USDC",
+          version: "2",
+          primaryType: "TransferWithAuthorization" as const,
+        },
+      },
+    },
     facilitator: twFacilitator,
     routeConfig: {
       description: opts.description ?? "",
@@ -210,8 +231,14 @@ async function requirePayment(
 
   if (result.status === 200) return null; // payment OK, let the handler run
 
-  // 402 — forward thirdweb's response (body + headers) verbatim so
-  // x402 clients can parse the payment requirements.
+  // Log the 402 body so we can spot empty-accepts in Railway logs.
+  console.warn(
+    `💳 x402 gate returned ${result.status} for ${c.req.method} ${resourceUrl}`,
+    JSON.stringify(result.responseBody)
+  );
+
+  // Forward thirdweb's response (body + headers) verbatim so x402 clients
+  // can parse the payment requirements.
   return new Response(JSON.stringify(result.responseBody), {
     status: result.status,
     headers: {
@@ -306,7 +333,7 @@ app.post("/api/agent/tasks", async (c) => {
 
   // 2. Charge the x402 fee only after validation passes.
   const pay = await requirePayment(c, {
-    price: "$0.01",
+    priceUsdcAtomic: "10000", // $0.01 USDC
     description: "Create a task on AgentHands — hire a human for a physical-world job (paid in USDC on Celo).",
   });
   if (pay) return pay;
@@ -381,7 +408,7 @@ app.post("/api/agent/tasks", async (c) => {
 app.post("/api/agent/tasks/:id/approve", async (c) => {
   const taskId = BigInt(c.req.param("id"));
 
-  const pay = await requirePayment(c, { price: "$0.001", description: "Approve task and release USDC payment." });
+  const pay = await requirePayment(c, { priceUsdcAtomic: "1000", description: "Approve task and release USDC payment." });
   if (pay) return pay;
 
   try {
@@ -404,7 +431,7 @@ app.post("/api/agent/tasks/:id/approve", async (c) => {
 app.post("/api/agent/tasks/:id/dispute", async (c) => {
   const taskId = BigInt(c.req.param("id"));
 
-  const pay = await requirePayment(c, { price: "$0.001", description: "Dispute task proof." });
+  const pay = await requirePayment(c, { priceUsdcAtomic: "1000", description: "Dispute task proof." });
   if (pay) return pay;
 
   try {
@@ -431,7 +458,7 @@ app.post("/api/agent/tasks/:id/rate", async (c) => {
   const { score } = body;
   if (!score || score < 1 || score > 5) return c.json({ error: "Score must be 1-5" }, 400);
 
-  const pay = await requirePayment(c, { price: "$0.001", description: "Rate a worker 1-5 stars." });
+  const pay = await requirePayment(c, { priceUsdcAtomic: "1000", description: "Rate a worker 1-5 stars." });
   if (pay) return pay;
 
   try {
