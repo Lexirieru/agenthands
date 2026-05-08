@@ -332,7 +332,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 onClick={() => {
                   if (!ensureChain()) return;
                   submitWrite({ ...contractCall, functionName: 'submitProof', args: [taskId, proofCID], ...cip64 } as never);
-                  toast('info', 'Submitting proof on-chain...');
+                  toast('info', 'Submitting proof...');
                 }}
                 disabled={submitting || submitConfirming || !proofCID}
                 className="w-full py-3.5 bg-[#D4700A] disabled:bg-[#8B4513] text-white font-semibold rounded-xl transition text-sm flex items-center justify-center gap-2 min-h-[48px]"
@@ -340,7 +340,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                 {submitting || submitConfirming ? (
                   <><Loader2 size={16} className="animate-spin" /> {submitting ? 'Confirm in wallet...' : 'Confirming...'}</>
                 ) : (
-                  <><Camera size={16} /> Submit Proof On-Chain</>
+                  <><Camera size={16} /> Submit</>
                 )}
               </button>
             </div>
