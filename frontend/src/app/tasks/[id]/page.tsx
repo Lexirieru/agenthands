@@ -4,6 +4,7 @@ import { use, useState, useEffect, useRef, useCallback } from 'react';
 import { useWriteContract, useWaitForTransactionReceipt, useAccount, useSwitchChain } from 'wagmi';
 import { ArrowLeft, Clock, DollarSign, MapPin, User, Loader2, CheckCircle, AlertTriangle, Lock, Hand, Camera, Star, HardHat } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { AGENTHANDS_ADDRESS, CHAIN } from '@/config';
 import AgentHandsABI from '@/abi/AgentHands.json';
 import ProofUpload from '@/components/ProofUpload';
@@ -39,6 +40,7 @@ function TxOverlay({ message }: { message: string }) {
 export default function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const taskId = BigInt(id);
+  const router = useRouter();
   const { address, chainId: currentChainId } = useAccount();
   const { switchChain } = useSwitchChain();
   const [proofCID, setProofCID] = useState('');
@@ -115,8 +117,22 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   useEffect(() => { if (approveSuccess) { toast('success', 'Payment released!'); invalidateTask(); } }, [approveSuccess, invalidateTask]);
   useEffect(() => { if (disputeSuccess) { toast('success', 'Task disputed'); invalidateTask(); } }, [disputeSuccess, invalidateTask]);
   useEffect(() => { if (cancelSuccess) { toast('success', 'Task cancelled'); invalidateTask(); } }, [cancelSuccess, invalidateTask]);
-  useEffect(() => { if (rateWorkerSuccess) { toast('success', 'Worker rated!'); invalidateTask(); } }, [rateWorkerSuccess, invalidateTask]);
-  useEffect(() => { if (rateAgentSuccess) { toast('success', 'Agent rated!'); invalidateTask(); } }, [rateAgentSuccess, invalidateTask]);
+  useEffect(() => {
+    if (rateWorkerSuccess) {
+      toast('success', 'Worker rated!');
+      invalidateTask();
+      const t = setTimeout(() => router.push('/tasks'), 1200);
+      return () => clearTimeout(t);
+    }
+  }, [rateWorkerSuccess, invalidateTask, router]);
+  useEffect(() => {
+    if (rateAgentSuccess) {
+      toast('success', 'Agent rated!');
+      invalidateTask();
+      const t = setTimeout(() => router.push('/tasks'), 1200);
+      return () => clearTimeout(t);
+    }
+  }, [rateAgentSuccess, invalidateTask, router]);
 
   if (isLoading) {
     return (
@@ -269,7 +285,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
           {status === 1 && isWorker && (
             <div className="bg-[var(--card-solid)] border border-[var(--border)] rounded-2xl p-5 space-y-4">
               <h2 className="text-lg font-semibold text-[#5C2D0A]">Submit Proof</h2>
-              <ProofUpload onCIDReady={(cid) => setProofCID(cid)} />
+              <ProofUpload taskId={taskId} onCIDReady={(cid) => setProofCID(cid)} />
               {!proofCID && (
                 <>
                   <div className="text-xs text-[#8B4513] font-label">Or paste CID manually:</div>
@@ -383,7 +399,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                     toast('info', 'Rating worker...');
                   }}
                   disabled={ratingWorker || rateWorkerConfirming}
-                  className="w-full py-3 bg-[var(--card)] text-[#D4700A] rounded-xl transition text-sm font-medium flex items-center justify-center gap-2 min-h-[48px]"
+                  className="w-full py-3 bg-[#5C2D0A] hover:bg-[#3F1D06] disabled:bg-[#8B4513] text-white rounded-xl transition text-sm font-medium flex items-center justify-center gap-2 min-h-[48px]"
                 >
                   {ratingWorker || rateWorkerConfirming ? <><Loader2 size={16} className="animate-spin" /> Rating...</> : 'Rate Worker'}
                 </button>
@@ -396,7 +412,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
                     toast('info', 'Rating agent...');
                   }}
                   disabled={ratingAgent || rateAgentConfirming}
-                  className="w-full py-3 bg-[var(--card)] text-[#D4700A] rounded-xl transition text-sm font-medium flex items-center justify-center gap-2 min-h-[48px]"
+                  className="w-full py-3 bg-[#5C2D0A] hover:bg-[#3F1D06] disabled:bg-[#8B4513] text-white rounded-xl transition text-sm font-medium flex items-center justify-center gap-2 min-h-[48px]"
                 >
                   {ratingAgent || rateAgentConfirming ? <><Loader2 size={16} className="animate-spin" /> Rating...</> : 'Rate Agent'}
                 </button>
