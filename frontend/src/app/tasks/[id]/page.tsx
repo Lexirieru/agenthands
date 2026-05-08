@@ -294,23 +294,23 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
           {status === 0 && !isAgent && (
             <div className="bg-[var(--card-solid)] border border-[var(--border)] rounded-2xl p-5 space-y-4">
               <SelfVerify onVerified={() => setSelfVerified(true)} />
-              <button
-                onClick={() => {
-                  if (!ensureChain()) return;
-                  acceptWrite({ ...contractCall, functionName: 'acceptTask', args: [taskId], ...cip64 } as never);
-                  toast('info', 'Confirm transaction in wallet...');
-                }}
-                disabled={accepting || acceptConfirming || !selfVerified}
-                className="w-full py-3.5 bg-[#5C2D0A] hover:bg-[#6B3A1F] disabled:bg-[#8B4513] text-white font-semibold rounded-xl transition text-sm flex items-center justify-center gap-2 min-h-[48px]"
-              >
-                {accepting || acceptConfirming ? (
-                  <><Loader2 size={16} className="animate-spin" /> {accepting ? 'Confirm in wallet...' : 'Confirming...'}</>
-                ) : !selfVerified ? (
-                  <><Lock size={16} /> Verify identity to accept</>
-                ) : (
-                  <><Hand size={16} /> Accept This Task</>
-                )}
-              </button>
+              {selfVerified && (
+                <button
+                  onClick={() => {
+                    if (!ensureChain()) return;
+                    acceptWrite({ ...contractCall, functionName: 'acceptTask', args: [taskId], ...cip64 } as never);
+                    toast('info', 'Confirm transaction in wallet...');
+                  }}
+                  disabled={accepting || acceptConfirming}
+                  className="w-full py-3.5 bg-[#5C2D0A] hover:bg-[#6B3A1F] disabled:bg-[#8B4513] text-white font-semibold rounded-xl transition text-sm flex items-center justify-center gap-2 min-h-[48px]"
+                >
+                  {accepting || acceptConfirming ? (
+                    <><Loader2 size={16} className="animate-spin" /> {accepting ? 'Confirm in wallet...' : 'Confirming...'}</>
+                  ) : (
+                    <><Hand size={16} /> Accept This Task</>
+                  )}
+                </button>
+              )}
             </div>
           )}
 
