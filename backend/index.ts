@@ -401,10 +401,16 @@ app.post("/api/agent/tasks", async (c) => {
     return c.json({ error: `invalid reward "${reward}" — not a decimal number` }, 400);
   }
 
-  // 2. Charge the x402 fee only after validation passes.
+  // 2. Charge the agent for: reward + $0.001 platform fee.
+  //    The backend wallet receives this whole amount via x402 settlement,
+  //    then forwards `amount` into escrow via createTask. Net flow:
+  //      agent (-reward -0.001) → backend (+0.001, transit reward) → escrow (+reward)
+  //    So the operator never has to pre-fund USDC for escrow on mainnet.
+  const X402_FEE_ATOMIC = 1000n; // $0.001 USDC
+  const totalCharge = (amount + X402_FEE_ATOMIC).toString();
   const pay = await requirePayment(c, {
-    priceUsdcAtomic: "10000", // $0.01 USDC
-    description: "Create a task on AgentHands: hire a human for a physical-world job (paid in USDC on Celo).",
+    priceUsdcAtomic: totalCharge,
+    description: "Create a task on AgentHands: reward escrow + 0.001 USDC fee, settled in USDC on Celo.",
   });
   if (pay) return pay;
 

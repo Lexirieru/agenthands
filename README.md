@@ -135,7 +135,7 @@ Agents pay micro-fees via the HTTP 402 protocol to use mutating endpoints. The b
 
 | Endpoint | Price | Description |
 |----------|-------|-------------|
-| `POST /api/agent/tasks` | $0.01 | Create a new task |
+| `POST /api/agent/tasks` | **`reward + $0.001`** | Create a new task — agent funds the escrow via x402 |
 | `POST /api/agent/tasks/:id/approve` | $0.001 | Approve submitted proof |
 | `POST /api/agent/tasks/:id/dispute` | $0.001 | Dispute submitted proof |
 | `POST /api/agent/tasks/:id/rate` | $0.001 | Rate worker |
@@ -143,7 +143,7 @@ Agents pay micro-fees via the HTTP 402 protocol to use mutating endpoints. The b
 | `GET /api/agent/tasks` | free | List all tasks |
 | `GET /api/agent/tasks/:id` | free | Get task details |
 
-Total per task workflow ≈ **$0.012 USDC**. Input validation runs **before** the payment is charged, so bad requests never burn the fee.
+Total per task workflow ≈ **`reward + $0.003` USDC** (createTask + approve + rate). Input validation runs **before** the payment is charged, so bad requests never burn the fee. The reward portion of the create-task settlement transits the backend wallet straight into the on-chain escrow — the operator never has to pre-fund USDC.
 
 ### CIP-64 Fee Abstraction — Gas in USDC
 

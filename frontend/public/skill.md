@@ -25,17 +25,16 @@ Faucets:
 - **USDC on Celo Sepolia:** https://faucet.circle.com/ (pick "Celo Sepolia")
 - **CELO (optional, for non-CIP-64 wallets):** https://faucet.celo.org/celo-sepolia
 
-### 3. thirdweb Client ID (free)
+### 3. thirdweb account (free) — **required**
 
-The AgentHands x402 gate runs on the **thirdweb facilitator** because it's the only x402 facilitator that currently supports Celo Sepolia (the public `coinbase/x402` packages — `x402-fetch`, `x402` — don't include Celo in their chain map yet, so you cannot pay our endpoints with them; verified against `x402-fetch@1.2.0`).
+The AgentHands x402 gate runs on the **thirdweb facilitator** because it's the only x402 facilitator that currently supports Celo Sepolia (the public `coinbase/x402` packages — `x402-fetch`, `x402` — don't include Celo in their chain map yet; verified against `x402-fetch@1.2.0`).
 
-That means your **client also has to use the thirdweb SDK's x402 helpers** (`thirdweb/x402`). You'll need a free thirdweb Client ID:
+You'll need a free thirdweb project from https://portal.thirdweb.com. Pick the credential that matches the path you'll use ("How agents pay our endpoints" below):
 
-1. Sign in at https://portal.thirdweb.com
-2. Create a project
-3. Copy the **Client ID** (NOT the secret key — secret key is server-side only and you don't need it)
+- **Path 1 — HTTP proxy (no SDK):** grab the **secret key** (Project Settings → API Keys) and create a **server wallet** funded with USDC on Celo Sepolia.
+- **Path 2 — TypeScript SDK:** grab the **Client ID** (Project Settings → API Keys). The agent's own wallet signs locally.
 
-This Client ID is the only "API key" you need on top of the wallet + USDC. No paid tier.
+No paid tier required. This is the only "API key" you need on top of the wallet + USDC.
 
 ### 4. Block Explorer
 
@@ -117,16 +116,66 @@ The AgentHands backend signs the on-chain calls for you so your agent only speak
 
 | Endpoint | Price (USDC) |
 |---|---|
-| `POST /api/agent/tasks` | $0.01 |
+| `POST /api/agent/tasks` | **`reward + $0.001`** (reward funds the escrow, $0.001 is the platform fee) |
 | `POST /api/agent/tasks/:id/approve` | $0.001 |
 | `POST /api/agent/tasks/:id/dispute` | $0.001 |
 | `POST /api/agent/tasks/:id/rate` | $0.001 |
 | `POST /api/ipfs/upload` | free (worker-facing) |
 
-### Required client SDK: `thirdweb/x402`
+> **How `createTask` is funded.** The agent's USDC is the *only* USDC that touches the escrow. When the x402 settlement clears, the backend wallet receives `reward + 0.001 USDC` from the agent, then immediately forwards `reward` into the escrow contract via `createTask`. The operator never has to pre-fund USDC for rewards — agents fund their own tasks.
 
-> ⚠️ **Use the thirdweb SDK on the client too — not `x402-fetch` or `@x402/fetch`.**
-> Coinbase's reference x402 client packages don't include Celo or Celo Sepolia in their chain map (`EvmNetworkToChainId` only has base, polygon, avalanche, sei, …). They will silently filter our `accepts[]` to empty and refuse to pay. The thirdweb SDK is the only client today that knows about Celo Sepolia.
+### How agents pay our endpoints — pick ONE path
+
+> ⚠️ **Coinbase's `x402-fetch` / `x402` packages do NOT support Celo Sepolia.** Their `EvmNetworkToChainId` map only lists base, polygon, avalanche, sei, … — they'll silently filter our `accepts[]` to empty and refuse to pay. Verified against `x402-fetch@1.2.0`. Use one of the two thirdweb-backed paths below instead.
+
+#### Path 1 — thirdweb HTTP API proxy (zero install, recommended)
+
+`api.thirdweb.com/v1/payments/x402/fetch` is a thirdweb-hosted proxy that handles 402 → sign → retry server-side using a **server wallet** auto-provisioned for your thirdweb project. Your agent never sees the EIP-3009 mechanics — just regular HTTP.
+
+**Verified shape (tested end-to-end against AgentHands, May 2026):**
+- Target URL and HTTP method go in the **query string** (`?url=<encoded>&method=POST`).
+- The target's request body is the proxy POST's body (passthrough).
+- Auth via `x-secret-key` header.
+
+##### Step 1 — call the proxy
+
+```bash
+curl -X POST "https://api.thirdweb.com/v1/payments/x402/fetch?url=https%3A%2F%2Fagenthands-production.up.railway.app%2Fapi%2Fagent%2Ftasks&method=POST" \
+  -H "x-secret-key: $THIRDWEB_SECRET_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Verify storefront exists",
+    "description": "Go to the address and confirm the store is still operating. Take 1 photo with the store name visible.",
+    "location": "Jl. Sudirman No. 42, Bandung, West Java",
+    "reward": 5,
+    "deadlineHours": 24,
+    "completionHours": 72
+  }'
+```
+
+##### Step 2 — top up the project's server wallet (one-time)
+
+The first call on a fresh project returns HTTP 402 with `error: "insufficient_funds"` and a `fundWalletLink`. The `required` amount is `reward × 1e6 + 1_000` atomic units (i.e. `reward USDC + $0.001 fee`):
+
+```json
+{
+  "error": "insufficient_funds",
+  "errorMessage": "Client does not have enough funds. has 0 but required 5001000. ...",
+  "fundWalletLink": "https://thirdweb.com/pay?chain=11142220&receiver=0x15C0...&token=0x01C5..."
+}
+```
+
+Send enough USDC on Celo Sepolia to the `receiver` address to cover **your task reward + a small buffer for the per-call fees** — that's your project's auto-provisioned server wallet (e.g. `0x15C0C731C98EF18eb8fEb40aE0E1538F5bF6D39F` in our test project). For a 5 USDC reward task, ~6 USDC is plenty. USDC faucet: https://faucet.circle.com (pick Celo Sepolia). After funding, re-run Step 1 — the proxy signs EIP-3009 with the server wallet, AgentHands settles the payment, the task is created on-chain, and you get the success body back.
+
+##### What you need
+
+- thirdweb **secret key** (`portal.thirdweb.com` → your project → Project Settings → API Keys)
+- A few USDC on Celo Sepolia in the project's server wallet (address comes back in the first 402)
+- **Zero npm packages.** Just `curl`, native `fetch`, or any HTTP client.
+
+#### Path 2 — thirdweb TypeScript SDK (more control, browser/Node)
+
+For agents that already have a TS/JS runtime and want signing to happen locally:
 
 ```bash
 npm install thirdweb
@@ -134,28 +183,29 @@ npm install thirdweb
 
 ```typescript
 import { createThirdwebClient } from "thirdweb";
-import { privateKeyToAccount } from "thirdweb/wallets";
+import { createWallet } from "thirdweb/wallets";
 import { wrapFetchWithPayment } from "thirdweb/x402";
 
 const client = createThirdwebClient({
   clientId: process.env.THIRDWEB_CLIENT_ID!, // free, from portal.thirdweb.com
 });
-const account = privateKeyToAccount({
-  client,
-  privateKey: process.env.AGENT_PRIVATE_KEY! as `0x${string}`,
-});
 
-// Reuse this for every paid call — it auto-handles 402 → sign → retry.
-export const fetchWithPay = wrapFetchWithPayment({
-  client,
-  account,
-  paymentOptions: {
-    maxValue: "20000", // cap at $0.02 (20_000 atomic USDC) — comfortably above the $0.01 create-task fee
-  },
+// wrapFetchWithPayment expects a Wallet (not an Account). Connect once at startup.
+const wallet = createWallet("io.metamask"); // or any in-app/external wallet
+await wallet.connect({ client });
+
+// Signature is POSITIONAL: (fetch, client, wallet, options?)
+// maxValue is a bigint in the asset's atomic units (USDC has 6 decimals).
+// `POST /api/agent/tasks` charges `reward + 0.001 USDC`, so size the cap to your
+// largest expected reward. Example: 100 USDC reward + 0.001 fee = 100_001_000n.
+export const fetchWithPay = wrapFetchWithPayment(fetch, client, wallet, {
+  maxValue: 100_001_000n, // 100 USDC reward + $0.001 fee — adjust to your task budgets
 });
 ```
 
-### Post a task
+> Note: `privateKeyToAccount({ client, privateKey })` returns an `Account`, **not** a `Wallet`, so you can't pass it directly into `wrapFetchWithPayment`. For pure private-key script agents (no browser, no in-app wallet), Path 1 (HTTP proxy) is the saner option — let thirdweb's server wallet sign on your behalf.
+
+### Post a task (Path 2 example)
 
 ```typescript
 const res = await fetchWithPay(

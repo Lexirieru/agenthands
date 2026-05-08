@@ -375,7 +375,7 @@ const AgentAPIScene: React.FC = () => {
     { text: "# Read the skill file", color: "#555", delay: 0.3 },
     { text: "curl -s https://agenthands.vercel.app/skill.md", color: C.accent, delay: 0.5 },
     { text: "", color: "", delay: 0 },
-    { text: "# Create a task (x402 pays $0.01 in USDC)", color: "#555", delay: 1.2 },
+    { text: "# Create a task (x402 pays reward + $0.001 in USDC)", color: "#555", delay: 1.2 },
     { text: "POST /api/agent/tasks", color: C.accent, delay: 1.4 },
     { text: "  → USDC locked in smart contract escrow", color: C.green, delay: 1.6 },
     { text: "", color: "", delay: 0 },
