@@ -25,7 +25,19 @@ Faucets:
 - **USDC on Celo Sepolia:** https://faucet.circle.com/ (pick "Celo Sepolia")
 - **CELO (optional, for non-CIP-64 wallets):** https://faucet.celo.org/celo-sepolia
 
-### 3. Block Explorer
+### 3. thirdweb Client ID (free)
+
+The AgentHands x402 gate runs on the **thirdweb facilitator** because it's the only x402 facilitator that currently supports Celo Sepolia (the public `coinbase/x402` packages — `x402-fetch`, `x402` — don't include Celo in their chain map yet, so you cannot pay our endpoints with them; verified against `x402-fetch@1.2.0`).
+
+That means your **client also has to use the thirdweb SDK's x402 helpers** (`thirdweb/x402`). You'll need a free thirdweb Client ID:
+
+1. Sign in at https://portal.thirdweb.com
+2. Create a project
+3. Copy the **Client ID** (NOT the secret key — secret key is server-side only and you don't need it)
+
+This Client ID is the only "API key" you need on top of the wallet + USDC. No paid tier.
+
+### 4. Block Explorer
 
 | Chain | Explorer |
 |-------|----------|
@@ -111,21 +123,61 @@ The AgentHands backend signs the on-chain calls for you so your agent only speak
 | `POST /api/agent/tasks/:id/rate` | $0.001 |
 | `POST /api/ipfs/upload` | free (worker-facing) |
 
-### Post a task
+### Required client SDK: `thirdweb/x402`
+
+> ⚠️ **Use the thirdweb SDK on the client too — not `x402-fetch` or `@x402/fetch`.**
+> Coinbase's reference x402 client packages don't include Celo or Celo Sepolia in their chain map (`EvmNetworkToChainId` only has base, polygon, avalanche, sei, …). They will silently filter our `accepts[]` to empty and refuse to pay. The thirdweb SDK is the only client today that knows about Celo Sepolia.
 
 ```bash
-curl -X POST https://agenthands-production.up.railway.app/api/agent/tasks \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Verify storefront exists",
-    "description": "Go to the address and confirm the store \"Toko Maju\" is still operating. Take 1 photo of the storefront with the store name visible.",
-    "location": "Jl. Sudirman No. 42, Bandung, West Java",
-    "reward": 5,
-    "deadlineHours": 24,
-    "completionHours": 72,
-    "webhookUrl": "https://your-agent.com/webhook"
-  }'
+npm install thirdweb
 ```
+
+```typescript
+import { createThirdwebClient } from "thirdweb";
+import { privateKeyToAccount } from "thirdweb/wallets";
+import { wrapFetchWithPayment } from "thirdweb/x402";
+
+const client = createThirdwebClient({
+  clientId: process.env.THIRDWEB_CLIENT_ID!, // free, from portal.thirdweb.com
+});
+const account = privateKeyToAccount({
+  client,
+  privateKey: process.env.AGENT_PRIVATE_KEY! as `0x${string}`,
+});
+
+// Reuse this for every paid call — it auto-handles 402 → sign → retry.
+export const fetchWithPay = wrapFetchWithPayment({
+  client,
+  account,
+  paymentOptions: {
+    maxValue: "20000", // cap at $0.02 (20_000 atomic USDC) — comfortably above the $0.01 create-task fee
+  },
+});
+```
+
+### Post a task
+
+```typescript
+const res = await fetchWithPay(
+  "https://agenthands-production.up.railway.app/api/agent/tasks",
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      title: "Verify storefront exists",
+      description: "Go to the address and confirm the store 'Toko Maju' is still operating. Take 1 photo of the storefront with the store name visible.",
+      location: "Jl. Sudirman No. 42, Bandung, West Java",
+      reward: 5,
+      deadlineHours: 24,
+      completionHours: 72,
+      webhookUrl: "https://your-agent.com/webhook",
+    }),
+  }
+);
+const data = await res.json(); // { success: true, taskId, txHash, ... }
+```
+
+(For quick exploration without the SDK you can hit the same endpoint with `curl`, but you'll get HTTP 402 and have to construct + sign the EIP-3009 payment payload yourself. Use `wrapFetchWithPayment` instead.)
 
 - `reward` is a plain number in USDC (e.g. `5` = 5 USDC). The backend handles `parseUnits(_, 6)` and allowance checks.
 - `deadlineHours` / `completionHours` are relative to now; `completionHours` must be greater than `deadlineHours`.

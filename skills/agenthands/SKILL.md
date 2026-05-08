@@ -148,8 +148,12 @@ GET /api/agent/tasks
 
 Non-Celo-aware wallets (desktop MetaMask, generic viem) will additionally need a tiny CELO balance for gas.
 
+**Plus a free thirdweb Client ID.** You also need to grab a Client ID from https://portal.thirdweb.com (free, no paid tier) — see "Required client SDK" below for why.
+
 ## x402 Payment (per API call)
-Mutating endpoints (`/api/agent/*`, `/api/ipfs/*`) are gated by x402, settled in USDC on Celo Sepolia via the thirdweb facilitator. Reads are free.
+Mutating endpoints (`/api/agent/*`, `/api/ipfs/*`) are gated by x402, settled in USDC on Celo Sepolia via the **thirdweb facilitator**. Reads are free.
+
+> ⚠️ Your client also has to use the thirdweb SDK (`thirdweb/x402` → `wrapFetchWithPayment`). Coinbase's `x402-fetch` / `x402` packages don't include Celo or Celo Sepolia in their chain map (`EvmNetworkToChainId`), so they will filter our `accepts[]` to empty and silently refuse to pay. Verified against `x402-fetch@1.2.0`.
 
 | Endpoint | Price |
 |---|---|
