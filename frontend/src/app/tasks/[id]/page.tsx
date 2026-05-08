@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AGENTHANDS_ADDRESS, CHAIN } from '@/config';
 import AgentHandsABI from '@/abi/AgentHands.json';
-import ProofUpload from '@/components/ProofUpload';
+import ProofUpload, { type ProofUploadHandle } from '@/components/ProofUpload';
 import SelfVerify from '@/components/SelfVerify';
 import { formatUSDC, getStatusDisplay, truncateAddress } from '@/lib/utils/format';
 import { fetchSelfVerified } from '@/lib/utils/verification';
@@ -47,7 +47,10 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const [rating, setRating] = useState(5);
   const [txMessage, setTxMessage] = useState<string | null>(null);
   const [selfVerified, setSelfVerified] = useState(false);
+  const [hasProofContent, setHasProofContent] = useState(false);
+  const [pinning, setPinning] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const proofUploadRef = useRef<ProofUploadHandle>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -315,34 +318,75 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
           {status === 1 && isWorker && (
             <div className="bg-[var(--card-solid)] border border-[var(--border)] rounded-2xl p-5 space-y-4">
               <h2 className="text-lg font-semibold text-[#5C2D0A]">Submit Proof</h2>
-              <ProofUpload taskId={taskId} onCIDReady={(cid) => setProofCID(cid)} />
+              <ProofUpload
+                ref={proofUploadRef}
+                taskId={taskId}
+                onCIDReady={(cid) => setProofCID(cid)}
+                onContentChange={setHasProofContent}
+              />
               {!proofCID && (
-                <>
-                  <div className="text-xs text-[#8B4513] font-label">Or paste CID manually:</div>
+                <details className="group">
+                  <summary className="text-xs text-[#8B4513] font-label cursor-pointer select-none hover:text-[#5C2D0A] transition list-none flex items-center gap-1">
+                    <span className="inline-block transition-transform group-open:rotate-90">▸</span>
+                    Or paste CID manually <span className="text-[#A8763B]">(optional)</span>
+                  </summary>
                   <input
                     type="text"
                     value={proofCID}
                     onChange={(e) => setProofCID(e.target.value)}
                     placeholder="IPFS CID (e.g. QmXyz...)"
-                    className="w-full px-4 py-3 bg-[var(--card)] border border-[var(--border)] rounded-xl text-[#5C2D0A] placeholder-[#8B4513] focus:outline-none focus:border-[#D4700A] text-sm"
+                    className="mt-2 w-full px-4 py-3 bg-[var(--card)] border border-[var(--border)] rounded-xl text-[#5C2D0A] placeholder-[#8B4513] focus:outline-none focus:border-[#D4700A] text-sm"
                   />
-                </>
+                </details>
               )}
               <button
-                onClick={() => {
+                onClick={async () => {
                   if (!ensureChain()) return;
-                  submitWrite({ ...contractCall, functionName: 'submitProof', args: [taskId, proofCID], ...cip64 } as never);
+                  let cidToUse = proofCID;
+                  if (!cidToUse) {
+                    setPinning(true);
+                    try {
+                      const uploaded = await proofUploadRef.current?.ensureUploaded();
+                      if (!uploaded) {
+                        toast('error', 'Add some content first.');
+                        return;
+                      }
+                      cidToUse = uploaded;
+                    } finally {
+                      setPinning(false);
+                    }
+                  }
+                  submitWrite({ ...contractCall, functionName: 'submitProof', args: [taskId, cidToUse], ...cip64 } as never);
                   toast('info', 'Submitting proof...');
                 }}
-                disabled={submitting || submitConfirming || !proofCID}
+                disabled={submitting || submitConfirming || pinning || (!proofCID && !hasProofContent)}
                 className="w-full py-3.5 bg-[#D4700A] disabled:bg-[#8B4513] text-white font-semibold rounded-xl transition text-sm flex items-center justify-center gap-2 min-h-[48px]"
               >
-                {submitting || submitConfirming ? (
+                {pinning ? (
+                  <><Loader2 size={16} className="animate-spin" /> Pinning to IPFS…</>
+                ) : submitting || submitConfirming ? (
                   <><Loader2 size={16} className="animate-spin" /> {submitting ? 'Confirm in wallet...' : 'Confirming...'}</>
                 ) : (
-                  <><Camera size={16} /> Submit</>
+                  'Submit'
                 )}
               </button>
+            </div>
+          )}
+
+          {/* Worker — waiting for agent review */}
+          {status === 2 && isWorker && (
+            <div className="bg-[var(--card-solid)] border border-[var(--border)] rounded-2xl p-5 flex items-start gap-3">
+              <div className="mt-0.5 w-10 h-10 rounded-full bg-[#D4700A]/15 flex items-center justify-center shrink-0">
+                <Loader2 size={18} className="text-[#D4700A] animate-spin" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-base font-semibold text-[#5C2D0A]">Waiting for agent review</h2>
+                <p className="text-xs text-[#8B4513] mt-1 leading-relaxed">
+                  Your proof is submitted on-chain. The agent will approve and release payment, or
+                  dispute if it doesn&apos;t match. You&apos;ll see the status update here as soon
+                  as they act.
+                </p>
+              </div>
             </div>
           )}
 
