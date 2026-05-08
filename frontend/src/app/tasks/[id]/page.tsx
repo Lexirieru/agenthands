@@ -64,7 +64,7 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   }, [address]);
 
   const { data: taskData, isLoading } = useTaskDetail(taskId);
-  const { invalidateDetail, invalidateList } = useInvalidateTasks();
+  const { invalidateDetail, invalidateList, patchDetail } = useInvalidateTasks();
   const cip64 = useCip64();
 
   const ensureChain = useCallback(() => {
@@ -111,12 +111,42 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
     else setTxMessage(null);
   }, [acceptConfirming, submitConfirming, approveConfirming, disputeConfirming, cancelConfirming, rateWorkerConfirming, rateAgentConfirming]);
 
-  // On success -> refetch + toast
-  useEffect(() => { if (acceptSuccess) { toast('success', 'Task accepted!'); invalidateTask(); } }, [acceptSuccess, invalidateTask]);
-  useEffect(() => { if (submitSuccess) { toast('success', 'Proof submitted!'); invalidateTask(); } }, [submitSuccess, invalidateTask]);
-  useEffect(() => { if (approveSuccess) { toast('success', 'Payment released!'); invalidateTask(); } }, [approveSuccess, invalidateTask]);
-  useEffect(() => { if (disputeSuccess) { toast('success', 'Task disputed'); invalidateTask(); } }, [disputeSuccess, invalidateTask]);
-  useEffect(() => { if (cancelSuccess) { toast('success', 'Task cancelled'); invalidateTask(); } }, [cancelSuccess, invalidateTask]);
+  // On success -> patch the cache optimistically so the UI reflects the new
+  // state immediately. The global event watcher (useTaskEventWatcher) and
+  // the per-query polling reconcile the cache with chain state within a few
+  // seconds, but calling invalidate here would refetch *now* — and on a
+  // freshly mined block the RPC node often still serves stale data, which
+  // would clobber the optimistic patch and make the UI flicker back.
+  useEffect(() => {
+    if (acceptSuccess && address) {
+      toast('success', 'Task accepted!');
+      patchDetail(taskId, { worker: address, status: 1 });
+    }
+  }, [acceptSuccess, address, taskId, patchDetail]);
+  useEffect(() => {
+    if (submitSuccess) {
+      toast('success', 'Proof submitted!');
+      patchDetail(taskId, { proofCID, status: 2 });
+    }
+  }, [submitSuccess, proofCID, taskId, patchDetail]);
+  useEffect(() => {
+    if (approveSuccess) {
+      toast('success', 'Payment released!');
+      patchDetail(taskId, { status: 3 });
+    }
+  }, [approveSuccess, taskId, patchDetail]);
+  useEffect(() => {
+    if (disputeSuccess) {
+      toast('success', 'Task disputed');
+      patchDetail(taskId, { status: 4 });
+    }
+  }, [disputeSuccess, taskId, patchDetail]);
+  useEffect(() => {
+    if (cancelSuccess) {
+      toast('success', 'Task cancelled');
+      patchDetail(taskId, { status: 5 });
+    }
+  }, [cancelSuccess, taskId, patchDetail]);
   useEffect(() => {
     if (rateWorkerSuccess) {
       toast('success', 'Worker rated!');
