@@ -7,13 +7,9 @@ import { AGENTHANDS_ADDRESS, CHAIN } from "@/config";
 import AgentHandsABI from "@/abi/AgentHands.json";
 import type { TaskData } from "@/types/task";
 
-// Prefer transports defined on the wagmi CHAIN (so mainnet switch "just works"
-// by changing CHAIN in @/config), then fall back to the official Forno
-// endpoint for whichever chain is active.
-const fallbackRpc =
-  CHAIN.id === 11142220
-    ? "https://forno.celo-sepolia.celo-testnet.org"
-    : "https://forno.celo.org";
+// Fall back to the official Forno endpoint if the wagmi CHAIN's transport
+// is unreachable. AgentHands runs on Celo mainnet.
+const fallbackRpc = "https://forno.celo.org";
 
 const publicClient = createPublicClient({
   chain: CHAIN,

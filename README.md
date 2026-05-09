@@ -29,7 +29,7 @@ Built for **The Synthesis Hackathon** by an AI agent (MyCelo, powered by Claude 
 │                     └──────────────────┬──────────────────────┘     │
 │                                        │                             │
 │                          ┌─────────────▼────────────┐                │
-│                          │       Celo Sepolia       │                │
+│                          │       Celo mainnet       │                │
 │                          │  (Celo Mainnet-ready)    │                │
 │                          └──────────────────────────┘                │
 │                                                                      │
@@ -104,26 +104,16 @@ agenthands/
 
 ## 🔗 Contract Addresses
 
-### Celo Sepolia (active deployment)
+### Celo mainnet (chain id `42220`)
 
 | Component | Address |
 |-----------|---------|
-| **Proxy (AgentHands)** | `0x1d7939E37e08802A6B86204f8E3C52bA4a6cBfba` |
-| Implementation | `0xfda1E869846776e3c182f5E105640Ac48D474605` |
-| USDC | `0x01C5C0122039549AD1493B8220cABEdD739BC44E` |
-| USDC Fee Adapter (CIP-64) | `0x4822e58de6f5e485eF90df51C41CE01721331dC0` |
-| Explorer | https://celo-sepolia.blockscout.com/address/0x1d7939E37e08802A6B86204f8E3C52bA4a6cBfba |
-
-### Celo Mainnet (future)
-
-Target addresses for mainnet switchover:
-
-| Component | Address |
-|-----------|---------|
+| **Proxy (AgentHands)** | [`0xADA0466303441102cb16F8eC1594C744d603f746`](https://celoscan.io/address/0xADA0466303441102cb16F8eC1594C744d603f746) |
+| Implementation | [`0x29faf6cAFA4BeA1dC7c232f0a1818d4da6b724DD`](https://celoscan.io/address/0x29faf6cAFA4BeA1dC7c232f0a1818d4da6b724DD) |
 | USDC | `0xcebA9300f2b948710d2653dD7B07f33A8B32118C` |
 | USDC Fee Adapter (CIP-64) | `0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B` |
 
-Flip `CHAIN = celo` in `frontend/src/config/index.ts`, redeploy the UUPS proxy with `Deploy.s.sol` against mainnet (sets USDC as the allowed token), and update `AGENTHANDS_ADDRESS` + `USDC_ADDRESS` env vars in Railway.
+UUPS upgradeable. Future implementation upgrades keep the proxy address stable.
 
 ---
 
@@ -157,7 +147,7 @@ Workers prove they're real humans using Self Protocol's zero-knowledge identity 
 
 AI agents are identified and rated on-chain via ERC-8004 Identity and Reputation registries on Celo. The `AgentBadge` component reads both registries to show trust status.
 
-| Registry | Address (Celo Sepolia) |
+| Registry | Address (Celo mainnet) |
 |----------|----------------------|
 | Identity | `0x8004A818BFB912233c491871b3d84c89A494BD9e` |
 | Reputation | `0x8004B663056A597Dffe9eCcC1965A193B7388713` |
@@ -185,7 +175,7 @@ Agents can register a `webhookUrl` when creating tasks. The backend POSTs status
 | Gas | CIP-64 fee abstraction (USDC-in-gas) on Celo-native wallets |
 | Identity | Self Protocol, ERC-8004 |
 | Storage | IPFS via Pinata |
-| Chain | Celo Sepolia (mainnet-ready) |
+| Chain | Celo mainnet (mainnet-ready) |
 | Package Manager | Bun |
 
 ---
@@ -195,7 +185,7 @@ Agents can register a `webhookUrl` when creating tasks. The backend POSTs status
 ### Prerequisites
 - [Bun](https://bun.sh) (v1.0+)
 - [Foundry](https://book.getfoundry.sh) (for contracts)
-- A wallet with Celo Sepolia USDC + a small CELO balance for gas (or use MiniPay/Valora to pay gas in USDC via CIP-64)
+- A wallet with Celo mainnet USDC + a small CELO balance for gas (or use MiniPay/Valora to pay gas in USDC via CIP-64)
 - A free [thirdweb](https://thirdweb.com) project (for the x402 facilitator secret key)
 
 ### Smart Contracts
@@ -205,12 +195,12 @@ cd contracts
 forge install
 forge test -vv          # 19/19 should pass
 
-# Fresh deploy to Celo Sepolia (needs PRIVATE_KEY + USDC_ADDRESS in env)
+# Fresh deploy to Celo mainnet (needs PRIVATE_KEY + USDC_ADDRESS in env)
 forge script script/Deploy.s.sol:DeployScript \
-  --rpc-url https://forno.celo-sepolia.celo-testnet.org \
+  --rpc-url https://forno.celo.org \
   --broadcast --slow --verify \
   --verifier blockscout \
-  --verifier-url https://celo-sepolia.blockscout.com/api/
+  --verifier-url https://celoscan.io/api/
 ```
 
 ### Frontend
@@ -292,7 +282,7 @@ This provides complete API documentation, contract ABIs, and code examples for a
 
 **Axel Urwawuska Atarubby** — Solo developer + AI collaboration
 
-Built with **MyCelo** (AI agent powered by Claude Opus via OpenClaw). The human provided a GitHub fine-grained token, and the agent autonomously designed the architecture, wrote all smart contracts, built the frontend and backend, ran tests, deployed to Celo Sepolia, and pushed all code to this repository.
+Built with **MyCelo** (AI agent powered by Claude Opus via OpenClaw). The human provided a GitHub fine-grained token, and the agent autonomously designed the architecture, wrote all smart contracts, built the frontend and backend, ran tests, deployed to Celo mainnet, and pushed all code to this repository.
 
 The landing page was designed and built by the human developer.
 

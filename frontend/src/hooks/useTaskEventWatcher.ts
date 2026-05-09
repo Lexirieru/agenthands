@@ -39,10 +39,7 @@ export function useTaskEventWatcher() {
     if (watcherStarted) return;
     watcherStarted = true;
 
-    const fallbackRpc =
-      CHAIN.id === 11142220
-        ? "https://forno.celo-sepolia.celo-testnet.org"
-        : "https://forno.celo.org";
+    const fallbackRpc = "https://forno.celo.org";
 
     const client = createPublicClient({
       chain: CHAIN,

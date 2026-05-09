@@ -2,9 +2,9 @@ import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { createWalletClient, createPublicClient, http, parseUnits } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { celoSepolia } from "viem/chains";
+import { celo } from "viem/chains";
 import { createThirdwebClient } from "thirdweb";
-import { celoSepoliaTestnet as twCeloSepolia } from "thirdweb/chains";
+import { celo as twCelo } from "thirdweb/chains";
 import { facilitator, settlePayment } from "thirdweb/x402";
 import "dotenv/config";
 
@@ -36,11 +36,13 @@ const THIRDWEB_SECRET_KEY = requireEnv("THIRDWEB_SECRET_KEY");
 const PINATA_JWT = process.env.PINATA_JWT?.trim(); // optional — only /api/ipfs/upload needs it
 const USDC_ADDRESS = optionalEnv(
   "USDC_ADDRESS",
-  "0x01C5C0122039549AD1493B8220cABEdD739BC44E"
+  "0xcebA9300f2b948710d2653dD7B07f33A8B32118C"
 ) as `0x${string}`;
-const CELO_SEPOLIA_RPC = optionalEnv(
-  "CELO_SEPOLIA_RPC",
-  "https://forno.celo-sepolia.celo-testnet.org"
+// CELO_RPC is the canonical name; CELO_RPC is kept as a legacy
+// fallback so older Railway deployments don't break on rename.
+const CELO_RPC = optionalEnv(
+  "CELO_RPC",
+  optionalEnv("CELO_RPC", "https://forno.celo.org")
 );
 
 // Fingerprint each env var at boot so we can spot invisible-char
@@ -56,7 +58,7 @@ console.log(
     fingerprint("WALLET_ADDRESS", PAY_TO),
     fingerprint("USDC_ADDRESS", USDC_ADDRESS),
     fingerprint("THIRDWEB_SECRET_KEY", THIRDWEB_SECRET_KEY),
-    fingerprint("CELO_SEPOLIA_RPC", CELO_SEPOLIA_RPC),
+    fingerprint("CELO_RPC", CELO_RPC),
   ].join(" | ")
 );
 
@@ -67,8 +69,8 @@ const twFacilitator = facilitator({
   client: thirdwebClient,
   serverWalletAddress: PAY_TO,
 });
-const X402_NETWORK_CHAIN = twCeloSepolia; // task escrow + fees both on Celo Sepolia
-const X402_NETWORK_LABEL = `eip155:${celoSepolia.id}`;
+const X402_NETWORK_CHAIN = twCelo; // task escrow + fees both on Celo mainnet
+const X402_NETWORK_LABEL = `eip155:${celo.id}`;
 
 // Simple write-queue: the backend agent wallet is singleton, so concurrent
 // writeContract calls would race on the nonce. Serialize all writes through
@@ -187,19 +189,19 @@ const AGENTHANDS_ABI = [
   },
 ] as const;
 
-// ─── Clients (Celo Sepolia, USDC escrow) ─────────────────
+// ─── Clients (Celo mainnet, USDC escrow) ─────────────────
 const account = privateKeyToAccount(PRIVATE_KEY);
 const publicClient = createPublicClient({
-  chain: celoSepolia,
-  transport: http(CELO_SEPOLIA_RPC),
+  chain: celo,
+  transport: http(CELO_RPC),
 });
 const walletClient = createWalletClient({
   account,
-  chain: celoSepolia,
-  transport: http(CELO_SEPOLIA_RPC),
+  chain: celo,
+  transport: http(CELO_RPC),
 });
 
-// ─── ERC-8004: Agent Identity (on Celo Sepolia) ──────────
+// ─── ERC-8004: Agent Identity (on Celo mainnet) ──────────
 const IDENTITY_REGISTRY = "0x8004A818BFB912233c491871b3d84c89A494BD9e" as `0x${string}`;
 const REPUTATION_REGISTRY = "0x8004B663056A597Dffe9eCcC1965A193B7388713" as `0x${string}`;
 
@@ -214,7 +216,7 @@ const REPUTATION_ABI = [
   { name: "getClients", type: "function", stateMutability: "view", inputs: [{ name: "agentId", type: "uint256" }], outputs: [{ type: "address[]" }] },
 ] as const;
 
-// ─── x402 helper: charge USDC on Celo Sepolia per request ────
+// ─── x402 helper: charge USDC on Celo mainnet per request ────
 // thirdweb's facilitator settles payment in a stablecoin on the specified
 // chain. We pass the USDC asset explicitly (not a "$0.01" dollar string) so
 // the facilitator never has to resolve the token via its registry — that
@@ -352,8 +354,8 @@ app.get("/", (c) => c.json({
   description: "Marketplace for AI agents to hire humans for physical-world tasks",
   status: "ok",
   agent: account.address,
-  chain: celoSepolia.name,
-  chainId: celoSepolia.id,
+  chain: celo.name,
+  chainId: celo.id,
   escrowToken: { symbol: "USDC", address: USDC_ADDRESS },
   docs: "/skills.md",
   x402: {
@@ -823,7 +825,7 @@ app.post("/api/ipfs/upload", async (c) => {
 // ─── Start ───────────────────────────────────────────────
 const port = Number(process.env.PORT) || 3001;
 console.log(`🤝 AgentHands Backend running on http://localhost:${port}`);
-console.log(`🌿 Escrow chain: ${celoSepolia.name} (${celoSepolia.id}) — USDC @ ${USDC_ADDRESS}`);
+console.log(`🌿 Escrow chain: ${celo.name} (${celo.id}) — USDC @ ${USDC_ADDRESS}`);
 console.log(`💰 x402 via thirdweb facilitator on ${X402_NETWORK_LABEL} — pay in USDC`);
 
 export default { port, fetch: app.fetch };
