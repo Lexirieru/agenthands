@@ -1,6 +1,6 @@
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
-import { createWalletClient, createPublicClient, http, parseUnits } from "viem";
+import { createWalletClient, createPublicClient, http, parseUnits, parseEventLogs } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { celo } from "viem/chains";
 import { createThirdwebClient } from "thirdweb";
@@ -205,6 +205,20 @@ const AGENTHANDS_ABI = [
       { name: "_score", type: "uint8" },
     ],
     outputs: [],
+  },
+  // Used by parseEventLogs to read the taskId straight off the createTask
+  // receipt. Reading taskCount() with a fresh RPC call after the receipt
+  // can race the RPC node's eventual consistency and return the pre-tx
+  // value — the event topic on the receipt is the canonical source.
+  {
+    name: "TaskCreated",
+    type: "event",
+    inputs: [
+      { name: "taskId", type: "uint256", indexed: true },
+      { name: "agent", type: "address", indexed: true },
+      { name: "reward", type: "uint256", indexed: false },
+      { name: "paymentToken", type: "address", indexed: false },
+    ],
   },
 ] as const;
 
@@ -538,13 +552,21 @@ app.post("/api/agent/tasks", async (c) => {
       });
       const receipt = await publicClient.waitForTransactionReceipt({ hash: createTx });
 
-      const taskCount = (await publicClient.readContract({
-        address: AGENTHANDS_ADDRESS,
+      // Pull the taskId straight off the TaskCreated event in the receipt,
+      // not from a fresh taskCount() read — the RPC node sometimes serves
+      // stale state right after the receipt is confirmed and we'd return
+      // taskId = (count − 1).
+      const events = parseEventLogs({
         abi: AGENTHANDS_ABI,
-        functionName: "taskCount",
-      })) as bigint;
+        logs: receipt.logs,
+        eventName: "TaskCreated",
+      });
+      const taskId = events[0]?.args.taskId?.toString();
+      if (!taskId) {
+        throw new Error("createTask receipt has no TaskCreated event");
+      }
 
-      return { approveTx, createTx, receipt, taskId: taskCount.toString() };
+      return { approveTx, createTx, receipt, taskId };
     });
     approveTx = at;
 
