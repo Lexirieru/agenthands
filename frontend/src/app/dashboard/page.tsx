@@ -3,18 +3,20 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
-import { Briefcase, CheckCircle, Clock, Zap, Bot, HardHat } from 'lucide-react';
+import { Briefcase, CheckCircle, Clock, Zap, HardHat, ExternalLink } from 'lucide-react';
 import gsap from 'gsap';
 import TaskCard from '@/components/TaskCard';
 import ConnectPrompt from '@/components/ConnectPrompt';
 import DollarsCard from '@/components/DollarsCard';
+import SelfVerify from '@/components/SelfVerify';
 import { useAllTasks } from '@/hooks/useTasks';
+import { EXPLORER_URL } from '@/config';
 
-type Tab = 'agent' | 'worker';
+type JobTab = 'active' | 'done';
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
-  const [tab, setTab] = useState<Tab>('worker');
+  const [jobTab, setJobTab] = useState<JobTab>('active');
   const statsRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -28,7 +30,21 @@ export default function DashboardPage() {
     };
   }, [allTasks, address]);
 
-  const activeTasks = tab === 'agent' ? myAgentTasks : myWorkerTasks;
+  // "Active" worker tasks = currently being worked on (Accepted=1) or
+  //   awaiting agent review (Submitted=2). "Done" = Completed=3 only —
+  //   anything settled with the worker actually paid out.
+  const activeWorkerTasks = useMemo(
+    () => myWorkerTasks.filter((t) => {
+      const s = Number(t.status);
+      return s === 1 || s === 2;
+    }),
+    [myWorkerTasks]
+  );
+  const doneWorkerTasks = useMemo(
+    () => myWorkerTasks.filter((t) => Number(t.status) === 3),
+    [myWorkerTasks]
+  );
+  const visibleTasks = jobTab === 'active' ? activeWorkerTasks : doneWorkerTasks;
 
   const completedCount = myAgentTasks.filter((t) => Number(t.status) === 3).length +
     myWorkerTasks.filter((t) => Number(t.status) === 3).length;
@@ -55,7 +71,7 @@ export default function DashboardPage() {
       }, gridRef);
       return () => ctx.revert();
     }
-  }, [isLoading, tab]);
+  }, [isLoading, jobTab]);
 
   if (!isConnected) {
     return (
@@ -68,11 +84,20 @@ export default function DashboardPage() {
   return (
     <div className="min-h-[calc(100dvh-7.5rem)] px-4 py-6 md:py-8 md:px-6 lg:px-8 overflow-y-auto mx-auto w-full max-w-7xl">
       <div className="flex items-center justify-between mb-6 md:mb-8">
-        <div>
+        <div className="min-w-0">
           <h1 className="text-2xl md:text-4xl font-bold text-[#5C2D0A] font-heading">Dashboard</h1>
-          <p className="text-[#8B4513] font-mono text-xs mt-0.5">
-            {address?.slice(0, 8)}...{address?.slice(-6)}
-          </p>
+          {address && (
+            <a
+              href={`${EXPLORER_URL}/address/${address}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-[#8B4513] hover:text-[#D4700A] font-mono text-xs mt-0.5 transition-colors"
+              title="View on Celoscan"
+            >
+              {address.slice(0, 8)}...{address.slice(-6)}
+              <ExternalLink size={11} className="opacity-70" />
+            </a>
+          )}
         </div>
       </div>
 
@@ -129,19 +154,38 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-4 bg-[var(--card)] p-1 rounded-xl">
-        {(['worker'] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`flex-1 px-3 py-2.5 rounded-lg text-sm font-medium font-label transition-colors min-h-[44px] ${
-              tab === t ? 'bg-[#5C2D0A] text-white' : 'text-[#8B4513]'
-            }`}
-          >
-              <><HardHat size={14} className="inline mr-1" />Worker ({myWorkerTasks.length})</>
-          </button>
-        ))}
+      {/* Identity verification (moved here from /profile) */}
+      <div className="mb-6 md:mb-8">
+        <SelfVerify onVerified={() => {}} />
+      </div>
+
+      {/* Job tabs — Active (Accepted/Submitted) vs Done (Completed). The
+          single dark indicator pill slides between the two tabs in sync
+          with the click, same animation pattern as ProofUpload's tabs. */}
+      <div className="relative flex p-1 mb-4 bg-[var(--card)] rounded-xl border border-[var(--border)]">
+        <span
+          aria-hidden
+          className="absolute top-1 bottom-1 left-1 w-[calc(50%-0.25rem)] bg-[#5C2D0A] rounded-lg transition-transform duration-300 ease-out will-change-transform"
+          style={{ transform: jobTab === 'done' ? 'translateX(100%)' : 'translateX(0)' }}
+        />
+        <button
+          type="button"
+          onClick={() => setJobTab('active')}
+          className={`flex-1 relative z-10 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 transition-colors duration-300 min-h-[44px] ${
+            jobTab === 'active' ? 'text-white' : 'text-[#8B4513] hover:text-[#5C2D0A]'
+          }`}
+        >
+          <HardHat size={14} /> Active ({activeWorkerTasks.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setJobTab('done')}
+          className={`flex-1 relative z-10 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 transition-colors duration-300 min-h-[44px] ${
+            jobTab === 'done' ? 'text-white' : 'text-[#8B4513] hover:text-[#5C2D0A]'
+          }`}
+        >
+          <CheckCircle size={14} /> Done ({doneWorkerTasks.length})
+        </button>
       </div>
 
       {/* Task List */}
@@ -151,24 +195,30 @@ export default function DashboardPage() {
             <div key={i} className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 animate-pulse h-32" />
           ))}
         </div>
-      ) : activeTasks.length === 0 ? (
+      ) : visibleTasks.length === 0 ? (
         <div className="text-center py-12">
           <div className="mb-3 flex justify-center">
-            {tab === 'agent' ? <Bot size={36} className="text-[#D4700A]" /> : <HardHat size={36} className="text-[#D4700A]" />}
+            {jobTab === 'active' ? (
+              <HardHat size={36} className="text-[#D4700A]" />
+            ) : (
+              <CheckCircle size={36} className="text-[#D4700A]" />
+            )}
           </div>
           <p className="text-sm text-[#5C2D0A] font-medium">
-            {tab === 'agent' ? "No tasks posted yet" : "No tasks accepted yet"}
+            {jobTab === 'active' ? 'No active jobs right now' : 'No completed jobs yet'}
           </p>
-          <Link
-            href={tab === 'agent' ? '/tasks/new' : '/tasks'}
-            className="inline-block mt-4 px-6 py-2.5 bg-[#5C2D0A] text-white font-semibold rounded-xl transition text-sm min-h-[44px]"
-          >
-            {tab === 'agent' ? 'Post Your First Task' : 'Browse Tasks'}
-          </Link>
+          {jobTab === 'active' && (
+            <Link
+              href="/tasks"
+              className="inline-block mt-4 px-6 py-2.5 bg-[#5C2D0A] text-white font-semibold rounded-xl transition text-sm min-h-[44px]"
+            >
+              Browse Tasks
+            </Link>
+          )}
         </div>
       ) : (
         <div ref={gridRef} className="space-y-3 md:grid md:grid-cols-2 lg:md:grid-cols-3 md:gap-4 md:space-y-0">
-          {activeTasks.map((task, i) => (
+          {visibleTasks.map((task, i) => (
             <div key={i} className="dash-card">
               <TaskCard
                 id={task.id || BigInt(i + 1)}

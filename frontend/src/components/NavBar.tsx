@@ -62,30 +62,10 @@ function IconPortfolio({ active }: { active: boolean }) {
   );
 }
 
-function IconProfile({ active }: { active: boolean }) {
-  const c = active ? "#D4700A" : "#8B4513";
-  return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={c}
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  );
-}
-
 const tabs = [
   { href: "/", label: "Feed", Icon: IconFeed },
   { href: "/search", label: "Explore", Icon: IconExplore },
   { href: "/dashboard", label: "Dashboard", Icon: IconPortfolio },
-  { href: "/profile", label: "Profile", Icon: IconProfile },
 ];
 
 export default function NavBar() {

@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
-const tabs = ["/", "/search", "/dashboard", "/profile"];
+const tabs = ["/", "/search", "/dashboard"];
 
 export default function SwipeNav({ children }: { children: React.ReactNode }) {
   const router = useRouter();
