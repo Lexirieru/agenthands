@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { MapPin, Clock, ArrowRight, Share2 } from "lucide-react";
-import { formatUSDC, getStatusDisplay, truncateAddress } from "@/lib/utils/format";
+import {
+  formatTokenAmount,
+  getStatusDisplay,
+  tokenInfoForAddress,
+  truncateAddress,
+} from "@/lib/utils/format";
 import type { TaskData } from "@/types/task";
 
 interface Props {
@@ -16,7 +21,8 @@ export default function SwipeCard({ task, index, total }: Props) {
   const statusInfo = getStatusDisplay(status);
   const deadlineDate = new Date(Number(task.deadline) * 1000);
   const isExpired = deadlineDate < new Date() && status === 0;
-  const rewardFormatted = formatUSDC(task.reward);
+  const tokenInfo = tokenInfoForAddress(task.paymentToken);
+  const rewardFormatted = formatTokenAmount(task.reward, tokenInfo.decimals);
 
   const statusStyle: Record<number, string> = {
     0: "bg-emerald-100 text-emerald-700",
@@ -37,9 +43,14 @@ export default function SwipeCard({ task, index, total }: Props) {
         <div className="p-5 pb-4">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-2">
-              <span className="text-3xl font-semibold text-[#2C1810] tracking-tight">${rewardFormatted}</span>
-              <img src="/usdclogo.png" alt="USDC" className="h-7 w-7" />
-              <span className="text-sm text-[#9B8574]">USDC</span>
+              <span className="text-3xl font-semibold text-[#2C1810] tracking-tight">
+                {tokenInfo.isStablecoin ? `$${rewardFormatted}` : rewardFormatted}
+              </span>
+              {tokenInfo.logo && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={tokenInfo.logo} alt={tokenInfo.symbol} className="h-7 w-7" />
+              )}
+              <span className="text-sm text-[#9B8574]">{tokenInfo.symbol}</span>
             </div>
             <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
               isExpired ? "bg-gray-100 text-gray-500" : (statusStyle[status] || statusStyle[0])

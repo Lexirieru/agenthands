@@ -10,12 +10,19 @@ import ConnectPrompt from '@/components/ConnectPrompt';
 import DollarsCard from '@/components/DollarsCard';
 import SelfVerify from '@/components/SelfVerify';
 import { useAllTasks } from '@/hooks/useTasks';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { useIsMiniPay } from '@/hooks/useIsMiniPay';
 import { EXPLORER_URL } from '@/config';
 
 type JobTab = 'active' | 'done';
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
+  const isMobile = useIsMobile();
+  const isMiniPay = useIsMiniPay();
+  // CELO is volatile and not part of MiniPay's stablecoin-first surface,
+  // so we only fold it into the Dollars total on desktop browsers.
+  const includeCelo = !isMobile && !isMiniPay;
   const [jobTab, setJobTab] = useState<JobTab>('active');
   const statsRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -103,7 +110,10 @@ export default function DashboardPage() {
 
       {/* Dollars total + per-token breakdown */}
       <div className="mb-6 md:mb-8">
-        <DollarsCard address={address as `0x${string}` | undefined} />
+        <DollarsCard
+          address={address as `0x${string}` | undefined}
+          includeCelo={includeCelo}
+        />
       </div>
 
       {/* Stats */}
@@ -229,6 +239,7 @@ export default function DashboardPage() {
                 deadline={task.deadline}
                 status={Number(task.status)}
                 agent={task.agent}
+                paymentToken={task.paymentToken}
               />
             </div>
           ))}

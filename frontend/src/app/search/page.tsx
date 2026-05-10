@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { formatUSDC, getStatusDisplay, truncateAddress } from "@/lib/utils/format";
+import {
+  formatRewardDisplay,
+  getStatusDisplay,
+  tokenInfoForAddress,
+  truncateAddress,
+} from "@/lib/utils/format";
 import { MapPin, Clock } from "lucide-react";
 import Link from "next/link";
 import { useAllTasks } from "@/hooks/useTasks";
@@ -96,8 +101,20 @@ export default function SearchPage() {
                       <span className="text-xs text-[#8B4513] line-clamp-1">{task.location}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <img src="/usdclogo.png" alt="USDC" className="h-4 w-4" />
-                      <span className="text-sm font-bold text-[#D4700A]">${formatUSDC(task.reward)}</span>
+                      {(() => {
+                        const ti = tokenInfoForAddress(task.paymentToken);
+                        return (
+                          <>
+                            {ti.logo && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={ti.logo} alt={ti.symbol} className="h-4 w-4" />
+                            )}
+                            <span className="text-sm font-bold text-[#D4700A]">
+                              {formatRewardDisplay(task.reward, task.paymentToken)}
+                            </span>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                   <p className="text-[#8B4513] text-[10px] mt-2 font-mono">{truncateAddress(task.agent)}</p>

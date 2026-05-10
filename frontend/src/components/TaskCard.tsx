@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { Clock, MapPin } from "lucide-react";
-import { formatUSDC, getStatusDisplay, truncateAddress } from "@/lib/utils/format";
+import {
+  formatRewardDisplay,
+  getStatusDisplay,
+  tokenInfoForAddress,
+  truncateAddress,
+} from "@/lib/utils/format";
 
 interface TaskCardProps {
   id: bigint;
@@ -13,6 +18,8 @@ interface TaskCardProps {
   deadline: bigint;
   status: number;
   agent: string;
+  /** Payment token address — drives reward formatting + logo. Defaults to USDC. */
+  paymentToken?: string;
 }
 
 export default function TaskCard({
@@ -24,7 +31,10 @@ export default function TaskCard({
   deadline,
   status,
   agent,
+  paymentToken,
 }: TaskCardProps) {
+  const tokenInfo = tokenInfoForAddress(paymentToken);
+  const rewardLabel = formatRewardDisplay(reward, paymentToken);
   const statusInfo = getStatusDisplay(status);
   const deadlineDate = new Date(Number(deadline) * 1000);
   const isExpired = deadlineDate < new Date() && status === 0;
@@ -50,8 +60,11 @@ export default function TaskCard({
         {/* Footer */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[#8B4513] font-label">
           <div className="flex items-center gap-1">
-            <img src="/usdclogo.png" alt="USDC" className="h-4 w-4" />
-            <span className="text-[#5C2D0A] font-medium">${formatUSDC(reward)}</span>
+            {tokenInfo.logo && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={tokenInfo.logo} alt={tokenInfo.symbol} className="h-4 w-4" />
+            )}
+            <span className="text-[#5C2D0A] font-medium">{rewardLabel}</span>
           </div>
           <div className="flex items-center gap-1">
             <MapPin size={12} />

@@ -9,7 +9,12 @@ import { AGENTHANDS_ADDRESS, CHAIN } from '@/config';
 import AgentHandsABI from '@/abi/AgentHands.json';
 import ProofUpload, { type ProofUploadHandle } from '@/components/ProofUpload';
 import SelfVerify from '@/components/SelfVerify';
-import { formatUSDC, getStatusDisplay, truncateAddress } from '@/lib/utils/format';
+import {
+  formatTokenAmount,
+  getStatusDisplay,
+  tokenInfoForAddress,
+  truncateAddress,
+} from '@/lib/utils/format';
 import { fetchSelfVerified } from '@/lib/utils/verification';
 import { useCip64 } from '@/hooks/useCip64';
 import { toast } from '@/components/Toast';
@@ -188,7 +193,8 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const status = Number(t.status);
   const statusInfo = getStatusDisplay(status);
   const statusColor = STATUS_COLORS[status] || STATUS_COLORS[0];
-  const rewardFormatted = formatUSDC(t.reward);
+  const tokenInfo = tokenInfoForAddress(t.paymentToken);
+  const rewardFormatted = formatTokenAmount(t.reward, tokenInfo.decimals);
   const isAgent = address?.toLowerCase() === t.agent?.toLowerCase();
   const isWorker = address?.toLowerCase() === t.worker?.toLowerCase();
   const deadline = new Date(Number(t.deadline) * 1000);
@@ -226,10 +232,15 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
 
           {/* Reward */}
           <div className="flex items-center gap-2 p-3 bg-[#D4700A]/10 rounded-xl border border-[#D4700A]/20 mb-4">
-            <img src="/usdclogo.png" alt="USDC" className="h-8 w-8" />
+            {tokenInfo.logo && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={tokenInfo.logo} alt={tokenInfo.symbol} className="h-8 w-8" />
+            )}
             <div>
-              <span className="text-2xl font-bold text-[#D4700A]">${rewardFormatted}</span>
-              <div className="text-xs text-[#8B4513] font-label">USDC</div>
+              <span className="text-2xl font-bold text-[#D4700A]">
+                {tokenInfo.isStablecoin ? `$${rewardFormatted}` : rewardFormatted}
+              </span>
+              <div className="text-xs text-[#8B4513] font-label">{tokenInfo.symbol}</div>
             </div>
           </div>
 

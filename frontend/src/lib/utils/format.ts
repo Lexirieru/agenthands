@@ -1,28 +1,97 @@
+import {
+  STABLECOINS,
+  CELO_TOKEN_ADDRESS,
+  CELO_TOKEN_DECIMALS,
+} from "@/config";
+
 const USDC_DECIMALS = 6;
 
 /**
  * Format raw USDC amount (6 decimals) to a short human-readable string.
- * e.g. 1_000_000n -> "1.00", 5_000n -> "0.005"
+ * Kept for legacy callers — prefer `formatRewardDisplay(raw, paymentToken)`
+ * everywhere new so multi-token rewards (USDT/USDm/CELO) render correctly.
  */
 export function formatUSDC(raw: string | number | bigint): string {
+  return formatTokenAmount(raw, USDC_DECIMALS, { trimTrailingZeros: false });
+}
+
+/**
+ * Format an arbitrary on-chain token amount given its decimals.
+ *  - 1_000_000n at 6 decimals → "1"
+ *  - 100_000_000_000_000_000n at 18 decimals → "0.1"
+ *  - With trimTrailingZeros=false: "1" → "1.00" (legacy USDC display).
+ */
+export function formatTokenAmount(
+  raw: string | number | bigint,
+  decimals: number,
+  opts: { trimTrailingZeros?: boolean } = { trimTrailingZeros: true }
+): string {
   try {
     const value = BigInt(raw);
-    const divisor = BigInt(10) ** BigInt(USDC_DECIMALS);
+    const divisor = BigInt(10) ** BigInt(decimals);
     const whole = value / divisor;
     const fraction = value % divisor;
 
     if (fraction === BigInt(0)) {
-      return `${whole}.00`;
+      return opts.trimTrailingZeros ? `${whole}` : `${whole}.00`;
     }
 
-    const fractionStr = fraction
-      .toString()
-      .padStart(USDC_DECIMALS, '0')
-      .replace(/0+$/, '');
+    let fractionStr = fraction.toString().padStart(decimals, "0");
+    if (opts.trimTrailingZeros) {
+      fractionStr = fractionStr.replace(/0+$/, "");
+    }
     return `${whole}.${fractionStr}`;
   } catch {
     return raw.toString();
   }
+}
+
+export type TokenInfo = {
+  symbol: string;
+  decimals: number;
+  isStablecoin: boolean;
+  logo: string | null;
+};
+
+/**
+ * Look up the user-facing metadata for a payment token address. Falls back
+ * to USDC when the address is missing (legacy code paths) and to a generic
+ * "TOKEN" label for anything not in our registry, so callers never crash.
+ */
+export function tokenInfoForAddress(addr: string | undefined | null): TokenInfo {
+  if (!addr) {
+    const usdc = STABLECOINS.find((s) => s.symbol === "USDC")!;
+    return { symbol: usdc.symbol, decimals: usdc.decimals, isStablecoin: true, logo: usdc.logo };
+  }
+  const a = addr.toLowerCase();
+  for (const s of STABLECOINS) {
+    if (s.address.toLowerCase() === a) {
+      return { symbol: s.symbol, decimals: s.decimals, isStablecoin: true, logo: s.logo };
+    }
+  }
+  if (a === CELO_TOKEN_ADDRESS.toLowerCase()) {
+    return {
+      symbol: "CELO",
+      decimals: CELO_TOKEN_DECIMALS,
+      isStablecoin: false,
+      logo: "/celologotoken.png",
+    };
+  }
+  return { symbol: "TOKEN", decimals: 18, isStablecoin: false, logo: null };
+}
+
+/**
+ * Render a reward amount with its token symbol, picking the right format:
+ *  - stablecoins: "$0.5" (USD-style, since they're 1:1 with USD)
+ *  - everything else: "0.1 CELO" (no $ prefix — value isn't $-pegged)
+ */
+export function formatRewardDisplay(
+  raw: string | number | bigint,
+  paymentToken: string | undefined | null
+): string {
+  const info = tokenInfoForAddress(paymentToken);
+  const amount = formatTokenAmount(raw, info.decimals);
+  return info.isStablecoin ? `$${amount}` : `${amount} ${info.symbol}`;
 }
 
 /**

@@ -195,6 +195,7 @@ export default function TasksPage() {
                 deadline={task.deadline}
                 status={Number(task.status)}
                 agent={task.agent}
+                paymentToken={task.paymentToken}
               />
             </div>
           ))}
