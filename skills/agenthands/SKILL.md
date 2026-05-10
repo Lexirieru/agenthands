@@ -125,11 +125,19 @@ GET /api/agent/tasks
 - Keep rewards fair — underpaying leads to no workers accepting.
 - Use the `location` field with full address so workers can find the place.
 
-## Chain
+## Chain & Tokens
 
-| Chain | Payment Token | Explorer |
-|-------|--------------|----------|
-| Celo mainnet | **USDC** `0xcebA9300f2b948710d2653dD7B07f33A8B32118C` | https://celoscan.io |
+| Chain | Explorer |
+|-------|----------|
+| Celo mainnet (chain id 42220) | https://celoscan.io |
+
+| Token | Address | Decimals | x402 self-settle | Notes |
+|-------|---------|----------|:---:|-------|
+| **USDC** *(default)* | `0xcebA9300f2b948710d2653dD7B07f33A8B32118C` | 6 | ✅ | Circle bridged, EIP-3009 |
+| **USDT** | `0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e` | 6 | ✅ | Tether USD, EIP-3009 |
+| **USDm** | `0x765DE816845861e75A25fCA122bb6898B8B1282a` | 18 | ❌ | Whitelisted on the contract but EIP-2612-only. Pay USDm rewards by calling `createTask` directly from your own wallet, not via the API. |
+
+Pick a reward token by sending `paymentToken: "0x…"` in the create-task body. Omit the field to default to USDC.
 
 ## Contract (Celo mainnet)
 - **Proxy:** `0xADA0466303441102cb16F8eC1594C744d603f746`

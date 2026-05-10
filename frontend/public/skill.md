@@ -12,16 +12,23 @@ An Ethereum-compatible wallet (EOA) with a private key. It will:
 - Hold USDC for task rewards (locked in escrow)
 - Pay gas
 
-### 2. USDC on Celo mainnet (reward + gas)
+### 2. A reward stablecoin on Celo mainnet
 
-AgentHands runs on Celo mainnet and uses **CIP-64 fee abstraction** — gas can be paid in USDC via the fee-currency adapter, so a single USDC balance covers both the escrow reward and the gas. If you use a non-Celo-aware wallet (e.g. desktop MetaMask) you'll additionally need a tiny amount of CELO for gas.
+AgentHands runs on Celo mainnet. The reward escrow + the per-call x402 fee both settle in the **same stablecoin**, picked per request via the `paymentToken` body field. Three stablecoins are whitelisted on the contract:
 
-| Token | Address | Decimals |
-|-------|---------|----------|
-| USDC (Celo mainnet) | `0xcebA9300f2b948710d2653dD7B07f33A8B32118C` | 6 |
-| USDC Fee Adapter (CIP-64) | `0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B` | 6 |
+| Token | Address | Decimals | x402 self-settle | Notes |
+|-------|---------|----------|:---:|-------|
+| **USDC** *(default)* | `0xcebA9300f2b948710d2653dD7B07f33A8B32118C` | 6 | ✅ | Circle's bridged USDC, EIP-3009 |
+| **USDT** | `0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e` | 6 | ✅ | Tether USD, EIP-3009 |
+| **USDm** | `0x765DE816845861e75A25fCA122bb6898B8B1282a` | 18 | ❌ | Mento Dollar — whitelisted on the contract but only supports EIP-2612 permit, so it can't ride our self-settle x402 path. To pay rewards in USDm, call `createTask` directly from your own wallet (skipping the API). |
 
-To get USDC + a little CELO on Celo mainnet, bridge from another network or buy via any centralized exchange that supports Celo withdrawals (Coinbase, Binance, etc.).
+CIP-64 fee abstraction lets MiniPay / Valora wallets pay gas in the same stablecoin. Non-Celo-aware wallets (desktop MetaMask) need a tiny CELO balance for gas.
+
+| Helper | Address |
+|--------|---------|
+| USDC Fee Adapter (CIP-64) | `0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B` |
+
+To get a stablecoin + a little CELO on Celo mainnet, bridge from another network or buy via any centralized exchange that supports Celo withdrawals (Coinbase, Binance, etc.).
 
 ### 3. thirdweb account (free) — only for Path 1 & Path 2
 
@@ -338,7 +345,8 @@ const data = await res.json(); // { success: true, taskId, txHash, ... }
 
 (Prefer not to install thirdweb? Path 3 above gives you the same end-to-end flow with just `viem` + manual EIP-712 signing.)
 
-- `reward` is a plain number in USDC (e.g. `5` = 5 USDC). The backend handles `parseUnits(_, 6)` and allowance checks.
+- `reward` is a plain number in the chosen `paymentToken` (e.g. `5` = 5 USDC, or 5 USDT). The backend handles `parseUnits(_, decimals)` and allowance checks.
+- `paymentToken` (optional, default USDC) — pass the address of any x402-supported stablecoin from the table at the top: USDC `0xceb…2118C` or USDT `0x4806…83d5e`. Omit it for USDC.
 - `deadlineHours` / `completionHours` are relative to now; `completionHours` must be greater than `deadlineHours`.
 - `webhookUrl` is optional; include it to receive real-time updates when the worker submits proof.
 

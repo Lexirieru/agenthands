@@ -38,6 +38,34 @@ const USDC_ADDRESS = optionalEnv(
   "USDC_ADDRESS",
   "0xcebA9300f2b948710d2653dD7B07f33A8B32118C"
 ) as `0x${string}`;
+const USDT_ADDRESS = optionalEnv(
+  "USDT_ADDRESS",
+  "0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e"
+) as `0x${string}`;
+
+// Tokens that x402 (specifically EIP-3009 self-settle) supports for the
+// reward escrow on `POST /api/agent/tasks`. USDm is whitelisted on the
+// contract but only supports EIP-2612 permit — agents have to direct-call
+// createTask with USDm; we don't gate it through x402 yet.
+type X402TokenConfig = { address: `0x${string}`; decimals: number; symbol: string };
+const X402_TOKENS: Record<string, X402TokenConfig> = {
+  [USDC_ADDRESS.toLowerCase()]: { address: USDC_ADDRESS, decimals: 6, symbol: "USDC" },
+  [USDT_ADDRESS.toLowerCase()]: { address: USDT_ADDRESS, decimals: 6, symbol: "USDT" },
+};
+function resolveX402Token(addr: string | undefined | null): X402TokenConfig {
+  if (!addr) return X402_TOKENS[USDC_ADDRESS.toLowerCase()]!;
+  const cfg = X402_TOKENS[addr.toLowerCase()];
+  if (!cfg) {
+    throw new Error(
+      `paymentToken ${addr} not supported via x402. Allowed: ${Object.values(
+        X402_TOKENS
+      )
+        .map((t) => `${t.symbol} (${t.address})`)
+        .join(", ")}`
+    );
+  }
+  return cfg;
+}
 // CELO_RPC is the canonical name; CELO_RPC is kept as a legacy
 // fallback so older Railway deployments don't break on rename.
 const CELO_RPC = optionalEnv(
@@ -263,8 +291,14 @@ const REPUTATION_ABI = [
 // same 402 + accepts response and same X-PAYMENT shape.
 async function requirePayment(
   c: Context,
-  opts: { priceUsdcAtomic: string; description?: string }
+  opts: {
+    priceAtomic: string;
+    description?: string;
+    /** EIP-3009-capable token to settle in. Defaults to USDC. */
+    token?: X402TokenConfig;
+  }
 ): Promise<Response | null> {
+  const token = opts.token ?? X402_TOKENS[USDC_ADDRESS.toLowerCase()]!;
   const paymentData =
     c.req.header("PAYMENT-SIGNATURE") || c.req.header("X-PAYMENT") || null;
 
@@ -298,8 +332,8 @@ async function requirePayment(
     payTo: PAY_TO,
     network: X402_NETWORK_CHAIN,
     price: {
-      amount: opts.priceUsdcAtomic,
-      asset: { address: USDC_ADDRESS, decimals: 6 },
+      amount: opts.priceAtomic,
+      asset: { address: token.address, decimals: token.decimals },
     },
     facilitator: twFacilitator,
     routeConfig: {
@@ -316,7 +350,7 @@ async function requirePayment(
       method: c.req.method,
       payTo: PAY_TO,
       network: { id: X402_NETWORK_CHAIN.id, name: X402_NETWORK_CHAIN.name },
-      price: { amount: opts.priceUsdcAtomic, asset: USDC_ADDRESS },
+      price: { amount: opts.priceAtomic, asset: token.address, symbol: token.symbol },
       paymentDataBytes: paymentData?.length ?? 0,
     });
     verify = await verifyPayment(verifyArgs);
@@ -389,7 +423,7 @@ async function requirePayment(
 
     const tx = await withWriteLock(() =>
       walletClient.writeContract({
-        address: USDC_ADDRESS,
+        address: token.address,
         abi: ERC20_ABI,
         functionName: "transferWithAuthorization",
         args: [
@@ -486,7 +520,16 @@ app.post("/api/agent/tasks", async (c) => {
   // 1. Validate the request BEFORE charging the x402 fee — bad requests
   //    shouldn't burn the agent's micropayment.
   const body = await c.req.json().catch(() => ({}));
-  const { title, description, location, reward, deadlineHours = 24, completionHours = 72, webhookUrl } = body;
+  const {
+    title,
+    description,
+    location,
+    reward,
+    paymentToken: paymentTokenArg,
+    deadlineHours = 24,
+    completionHours = 72,
+    webhookUrl,
+  } = body;
 
   if (!title || !description || !location || reward === undefined) {
     return c.json({ error: "Missing required fields: title, description, location, reward" }, 400);
@@ -498,23 +541,37 @@ app.post("/api/agent/tasks", async (c) => {
     return c.json({ error: "completionHours must be greater than deadlineHours, both positive" }, 400);
   }
 
+  // Resolve the reward token. Default = USDC; agents can opt into USDT by
+  // sending `paymentToken: "0x4806…83d5e"` in the request body. USDm is
+  // whitelisted on the contract but doesn't support EIP-3009, so it can't
+  // ride the x402 self-settle path — agents that want USDm have to call
+  // createTask directly from their own wallet.
+  let token: X402TokenConfig;
+  try {
+    token = resolveX402Token(paymentTokenArg);
+  } catch (err) {
+    return c.json({ error: err instanceof Error ? err.message : String(err) }, 400);
+  }
+
   let amount: bigint;
   try {
-    amount = parseUnits(String(reward), 6); // USDC has 6 decimals
+    amount = parseUnits(String(reward), token.decimals);
   } catch {
     return c.json({ error: `invalid reward "${reward}" — not a decimal number` }, 400);
   }
 
-  // 2. Charge the agent for: reward + $0.001 platform fee.
+  // 2. Charge the agent for: reward + $0.001 platform fee. Both USDC and
+  //    USDT have 6 decimals, so the fee is 1000 atomic units in either.
   //    The backend wallet receives this whole amount via x402 settlement,
   //    then forwards `amount` into escrow via createTask. Net flow:
   //      agent (-reward -0.001) → backend (+0.001, transit reward) → escrow (+reward)
-  //    So the operator never has to pre-fund USDC for escrow on mainnet.
-  const X402_FEE_ATOMIC = 1000n; // $0.001 USDC
+  //    So the operator never has to pre-fund the reward token on mainnet.
+  const X402_FEE_ATOMIC = 1000n; // $0.001 in 6-decimal stablecoin
   const totalCharge = (amount + X402_FEE_ATOMIC).toString();
   const pay = await requirePayment(c, {
-    priceUsdcAtomic: totalCharge,
-    description: "Create a task on AgentHands: reward escrow + 0.001 USDC fee, settled in USDC on Celo.",
+    priceAtomic: totalCharge,
+    description: `Create a task on AgentHands: reward escrow + 0.001 ${token.symbol} fee, settled in ${token.symbol} on Celo.`,
+    token,
   });
   if (pay) return pay;
 
@@ -527,7 +584,7 @@ app.post("/api/agent/tasks", async (c) => {
     // Serialize writes so concurrent requests don't race on the shared wallet's nonce.
     const { approveTx: at, createTx, receipt, taskId } = await withWriteLock(async () => {
       const allowance = (await publicClient.readContract({
-        address: USDC_ADDRESS,
+        address: token.address,
         abi: ERC20_ABI,
         functionName: "allowance",
         args: [account.address, AGENTHANDS_ADDRESS],
@@ -536,7 +593,7 @@ app.post("/api/agent/tasks", async (c) => {
       let approveTx: `0x${string}` | null = null;
       if (allowance < amount) {
         approveTx = await walletClient.writeContract({
-          address: USDC_ADDRESS,
+          address: token.address,
           abi: ERC20_ABI,
           functionName: "approve",
           args: [AGENTHANDS_ADDRESS, amount],
@@ -548,7 +605,7 @@ app.post("/api/agent/tasks", async (c) => {
         address: AGENTHANDS_ADDRESS,
         abi: AGENTHANDS_ABI,
         functionName: "createTask",
-        args: [USDC_ADDRESS, amount, deadline, completionDeadline, title, description, location],
+        args: [token.address, amount, deadline, completionDeadline, title, description, location],
       });
       const receipt = await publicClient.waitForTransactionReceipt({ hash: createTx });
 
@@ -583,7 +640,7 @@ app.post("/api/agent/tasks", async (c) => {
       blockNumber: Number(receipt.blockNumber),
       taskId,
       webhookRegistered: !!webhookUrl,
-      task: { title, description, location, reward, currency: "USDC" },
+      task: { title, description, location, reward, currency: token.symbol, paymentToken: token.address },
     });
   } catch (err) {
     const reason = describeContractError(err);
@@ -596,7 +653,7 @@ app.post("/api/agent/tasks", async (c) => {
 app.post("/api/agent/tasks/:id/approve", async (c) => {
   const taskId = BigInt(c.req.param("id"));
 
-  const pay = await requirePayment(c, { priceUsdcAtomic: "1000", description: "Approve task and release USDC payment." });
+  const pay = await requirePayment(c, { priceAtomic: "1000", description: "Approve task and release USDC payment." });
   if (pay) return pay;
 
   try {
@@ -619,7 +676,7 @@ app.post("/api/agent/tasks/:id/approve", async (c) => {
 app.post("/api/agent/tasks/:id/dispute", async (c) => {
   const taskId = BigInt(c.req.param("id"));
 
-  const pay = await requirePayment(c, { priceUsdcAtomic: "1000", description: "Dispute task proof." });
+  const pay = await requirePayment(c, { priceAtomic: "1000", description: "Dispute task proof." });
   if (pay) return pay;
 
   try {
@@ -646,7 +703,7 @@ app.post("/api/agent/tasks/:id/rate", async (c) => {
   const { score } = body;
   if (!score || score < 1 || score > 5) return c.json({ error: "Score must be 1-5" }, 400);
 
-  const pay = await requirePayment(c, { priceUsdcAtomic: "1000", description: "Rate a worker 1-5 stars." });
+  const pay = await requirePayment(c, { priceAtomic: "1000", description: "Rate a worker 1-5 stars." });
   if (pay) return pay;
 
   try {
