@@ -5,9 +5,9 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { Wallet, LogOut } from "lucide-react";
-import { useUSDCBalance } from "@/hooks/useAgentHands";
+import { useStablecoinBalances } from "@/hooks/useAgentHands";
 import { useIsMiniPay } from "@/hooks/useIsMiniPay";
-import { formatUSDC, truncateAddress } from "@/lib/utils/format";
+import { truncateAddress } from "@/lib/utils/format";
 import { useState, useEffect } from "react";
 
 const navLinks = [
@@ -20,14 +20,22 @@ export default function Header() {
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
-  const { data: usdcBalance } = useUSDCBalance(address as `0x${string}` | undefined);
+  const { totalDollars, isLoading: balancesLoading } = useStablecoinBalances(
+    address as `0x${string}` | undefined
+  );
   const isMiniPay = useIsMiniPay();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
-  const usdcFormatted =
-    usdcBalance !== undefined ? formatUSDC(usdcBalance as bigint) : null;
+  // Show the combined $-pegged balance across all whitelisted stablecoins
+  // (USDC + USDT + USDm) without any per-token logo, since the account can
+  // hold any mix and the pill is meant to read as "total dollars".
+  const dollarsFormatted = !isConnected || balancesLoading
+    ? null
+    : totalDollars >= 1
+      ? totalDollars.toFixed(2)
+      : totalDollars.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
 
   const isActive = (href: string) => pathname === href;
 
@@ -52,10 +60,9 @@ export default function Header() {
             <span className="text-base font-bold text-[#5C2D0A]">AgentHands</span>
           </Link>
           <div className="flex items-center gap-2">
-            {isConnected && usdcFormatted && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[var(--card)] border border-[var(--border)] text-xs font-medium text-[#D4700A]">
-                <img src="/usdclogo.png" alt="" className="h-3.5 w-3.5" />
-                ${usdcFormatted}
+            {isConnected && dollarsFormatted !== null && (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[var(--card)] border border-[var(--border)] text-xs font-medium text-[#D4700A]">
+                ${dollarsFormatted}
               </span>
             )}
             {isConnected && address ? (
@@ -114,11 +121,10 @@ export default function Header() {
                   ))}
                 </div>
 
-                {/* USDC Balance */}
-                {isConnected && usdcFormatted && (
-                  <span className="text-xs bg-[var(--card)] text-[#D4700A] px-3 py-1.5 rounded-full border border-[var(--border)] font-label mr-1 inline-flex items-center gap-1.5">
-                    <img src="/usdclogo.png" alt="USDC" className="h-4 w-4" />
-                    ${usdcFormatted}
+                {/* Stablecoin balance — combined USD across USDC + USDT + USDm */}
+                {isConnected && dollarsFormatted !== null && (
+                  <span className="text-xs bg-[var(--card)] text-[#D4700A] px-3 py-1.5 rounded-full border border-[var(--border)] font-label mr-1 inline-flex items-center">
+                    ${dollarsFormatted}
                   </span>
                 )}
 

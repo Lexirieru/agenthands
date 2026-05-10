@@ -8,9 +8,28 @@ const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || "3fcc6b444f69e6b35d2630d
 export const AGENTHANDS_ADDRESS =
   "0xADA0466303441102cb16F8eC1594C744d603f746" as `0x${string}`;
 
-// USDC on Celo mainnet
+// Stablecoins on Celo mainnet that AgentHands accepts as the reward token.
+// USDC + USDT both support EIP-3009 (ride the x402 self-settle path);
+// USDm is whitelisted on the contract but only supports EIP-2612 permit
+// — the dashboard still surfaces its balance even though it bypasses x402.
 export const USDC_ADDRESS =
   "0xcebA9300f2b948710d2653dD7B07f33A8B32118C" as `0x${string}`;
+export const USDT_ADDRESS =
+  "0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e" as `0x${string}`;
+export const USDM_ADDRESS =
+  "0x765DE816845861e75A25fCA122bb6898B8B1282a" as `0x${string}`;
+
+export type StablecoinSymbol = "USDC" | "USDT" | "USDm";
+export const STABLECOINS: ReadonlyArray<{
+  symbol: StablecoinSymbol;
+  address: `0x${string}`;
+  decimals: number;
+  logo: string | null;
+}> = [
+  { symbol: "USDC", address: USDC_ADDRESS, decimals: 6, logo: "/usdclogo.png" },
+  { symbol: "USDT", address: USDT_ADDRESS, decimals: 6, logo: "/usdtlogo.png" },
+  { symbol: "USDm", address: USDM_ADDRESS, decimals: 18, logo: "/usdmlogo.png" },
+] as const;
 
 // USDC Fee Adapter for CIP-64 fee abstraction — lets users pay gas in USDC
 // instead of CELO. See https://docs.celo.org/build/fee-abstraction

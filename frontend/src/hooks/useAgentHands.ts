@@ -1,7 +1,8 @@
 "use client";
 
-import { useReadContract, useWriteContract } from "wagmi";
-import { AGENTHANDS_ADDRESS, USDC_ADDRESS } from "@/config";
+import { useMemo } from "react";
+import { useReadContracts, useReadContract, useWriteContract } from "wagmi";
+import { AGENTHANDS_ADDRESS, USDC_ADDRESS, STABLECOINS } from "@/config";
 import AgentHandsABI from "@/abi/AgentHands.json";
 
 const ERC20_ABI = [
@@ -84,6 +85,61 @@ export function useUSDCBalance(address: `0x${string}` | undefined) {
       staleTime: 4000,
     },
   });
+}
+
+export type StablecoinBalance = {
+  symbol: (typeof STABLECOINS)[number]["symbol"];
+  address: `0x${string}`;
+  decimals: number;
+  logo: string | null;
+  raw: bigint;
+  /** Floating-point dollars, normalized for the per-token decimals. */
+  dollars: number;
+};
+
+/**
+ * Multicall the wallet's balances for all whitelisted stablecoins
+ * (USDC, USDT, USDm) in one request. Returns the per-token balances
+ * and the dollar-denominated total for the header pill / dashboard
+ * "Dollars" card.
+ */
+export function useStablecoinBalances(address: `0x${string}` | undefined) {
+  const result = useReadContracts({
+    contracts: STABLECOINS.map((s) => ({
+      address: s.address,
+      abi: ERC20_ABI,
+      functionName: "balanceOf" as const,
+      args: address ? ([address] as const) : undefined,
+    })),
+    query: {
+      enabled: !!address,
+      refetchInterval: 8000,
+      refetchOnWindowFocus: true,
+      staleTime: 4000,
+    },
+  });
+
+  const balances: StablecoinBalance[] = useMemo(() => {
+    return STABLECOINS.map((s, i) => {
+      const r = result.data?.[i];
+      const raw = r?.status === "success" ? (r.result as bigint) : BigInt(0);
+      const dollars = Number(raw) / 10 ** s.decimals;
+      return { ...s, raw, dollars };
+    });
+  }, [result.data]);
+
+  const totalDollars = useMemo(
+    () => balances.reduce((sum, b) => sum + b.dollars, 0),
+    [balances]
+  );
+
+  return {
+    balances,
+    totalDollars,
+    isLoading: result.isLoading,
+    isError: result.isError,
+    refetch: result.refetch,
+  };
 }
 
 // ─── Write Hooks ─────────────────────────────────────────

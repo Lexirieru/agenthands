@@ -7,6 +7,7 @@ import { Briefcase, CheckCircle, Clock, Zap, Bot, HardHat } from 'lucide-react';
 import gsap from 'gsap';
 import TaskCard from '@/components/TaskCard';
 import ConnectPrompt from '@/components/ConnectPrompt';
+import DollarsCard from '@/components/DollarsCard';
 import { useAllTasks } from '@/hooks/useTasks';
 
 type Tab = 'agent' | 'worker';
@@ -73,6 +74,11 @@ export default function DashboardPage() {
             {address?.slice(0, 8)}...{address?.slice(-6)}
           </p>
         </div>
+      </div>
+
+      {/* Dollars total + per-token breakdown */}
+      <div className="mb-6 md:mb-8">
+        <DollarsCard address={address as `0x${string}` | undefined} />
       </div>
 
       {/* Stats */}
