@@ -19,6 +19,11 @@ const publicClient = createPublicClient({
   ]),
 });
 
+// Tasks we don't want to show on the public feed / dashboard. Internal smoke
+// tests, demos, things we'd rather not advertise. Direct URLs still work
+// (useTaskDetail doesn't filter), so anyone with the link can still see them.
+const HIDDEN_TASK_IDS = new Set<string>(["1", "2"]);
+
 export const taskQueryKeys = {
   all: ["tasks"] as const,
   list: () => [...taskQueryKeys.all, "list"] as const,
@@ -59,7 +64,7 @@ async function fetchAllTasks(): Promise<TaskData[]> {
         status: Number(task.status),
       } as TaskData;
     })
-    .filter((t): t is TaskData => t !== null);
+    .filter((t): t is TaskData => t !== null && !HIDDEN_TASK_IDS.has(t.id.toString()));
 }
 
 async function fetchTask(taskId: bigint): Promise<TaskData | null> {
