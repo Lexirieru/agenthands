@@ -5,7 +5,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { celo } from "viem/chains";
 import { createThirdwebClient } from "thirdweb";
 import { celo as twCelo } from "thirdweb/chains";
-import { facilitator, settlePayment } from "thirdweb/x402";
+import { facilitator, verifyPayment, decodePayment } from "thirdweb/x402";
 import "dotenv/config";
 
 // ─── Config ──────────────────────────────────────────────
@@ -112,6 +112,25 @@ const ERC20_ABI = [
     ],
     outputs: [{ type: "uint256" }],
   },
+  // EIP-3009 — used by x402 settle. Anyone can broadcast this on behalf of
+  // `from`; the contract verifies the EIP-712 signature internally.
+  {
+    name: "transferWithAuthorization",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "from", type: "address" },
+      { name: "to", type: "address" },
+      { name: "value", type: "uint256" },
+      { name: "validAfter", type: "uint256" },
+      { name: "validBefore", type: "uint256" },
+      { name: "nonce", type: "bytes32" },
+      { name: "v", type: "uint8" },
+      { name: "r", type: "bytes32" },
+      { name: "s", type: "bytes32" },
+    ],
+    outputs: [],
+  },
 ] as const;
 
 const AGENTHANDS_ABI = [
@@ -217,10 +236,17 @@ const REPUTATION_ABI = [
 ] as const;
 
 // ─── x402 helper: charge USDC on Celo mainnet per request ────
-// thirdweb's facilitator settles payment in a stablecoin on the specified
-// chain. We pass the USDC asset explicitly (not a "$0.01" dollar string) so
-// the facilitator never has to resolve the token via its registry — that
-// was causing accepts: [] on networks it hasn't indexed.
+// We split thirdweb's `settlePayment` into two pieces:
+//   1. `verifyPayment` (off-chain) — checks the EIP-3009 signature, expiry,
+//      pay-to, asset, etc. Doesn't touch a bundler, so it works on free-tier
+//      thirdweb projects on mainnet.
+//   2. Self-broadcast `transferWithAuthorization` from our own backend wallet
+//      — pays gas in CELO directly, no AA paymaster involved. This is what
+//      EIP-3009 is designed for: anyone can forward a signed authorization.
+//
+// This sidesteps thirdweb's `Mainnets not enabled for this account` error
+// without sacrificing x402 protocol compatibility — clients still see the
+// same 402 + accepts response and same X-PAYMENT shape.
 async function requirePayment(
   c: Context,
   opts: { priceUsdcAtomic: string; description?: string }
@@ -245,73 +271,135 @@ async function requirePayment(
     if (host) {
       const isLocal = host.includes("localhost") || host.startsWith("127.");
       const proto = forwardedProto || (isLocal ? "http" : "https");
-      // new URL() validates the result; if anything slips through as an
-      // invalid character the try/catch below falls back to c.req.url.
       resourceUrl = new URL(path, `${proto}://${host}`).toString();
     }
   } catch {
-    // fall through with c.req.url — thirdweb still accepts http:// urls
+    // fall through with c.req.url
   }
 
+  const verifyArgs = {
+    resourceUrl,
+    method: c.req.method as "GET" | "POST",
+    paymentData,
+    payTo: PAY_TO,
+    network: X402_NETWORK_CHAIN,
+    price: {
+      amount: opts.priceUsdcAtomic,
+      asset: { address: USDC_ADDRESS, decimals: 6 },
+    },
+    facilitator: twFacilitator,
+    routeConfig: {
+      description: opts.description ?? "",
+      mimeType: "application/json",
+    },
+  };
+
+  // ─── Step 1: verify (off-chain) ────────────────────────────
+  let verify;
   try {
-    // Debug: log everything we're about to hand the facilitator, so the
-    // next "Invalid character" breakage tells us *which* field carried
-    // the bad byte. JSON.stringify would explode on BigInt inside the
-    // chain object, so spell out the shape.
-    console.log("💳 settlePayment args:", {
+    console.log("💳 verifyPayment args:", {
       resourceUrl,
       method: c.req.method,
       payTo: PAY_TO,
       network: { id: X402_NETWORK_CHAIN.id, name: X402_NETWORK_CHAIN.name },
-      price: { amount: opts.priceUsdcAtomic, asset: USDC_ADDRESS, decimals: 6 },
+      price: { amount: opts.priceUsdcAtomic, asset: USDC_ADDRESS },
       paymentDataBytes: paymentData?.length ?? 0,
     });
-
-    const result = await settlePayment({
-      resourceUrl,
-      method: c.req.method as "GET" | "POST",
-      paymentData,
-      payTo: PAY_TO,
-      network: X402_NETWORK_CHAIN,
-      price: {
-        amount: opts.priceUsdcAtomic,
-        asset: {
-          address: USDC_ADDRESS,
-          decimals: 6,
-        },
-      },
-      facilitator: twFacilitator,
-      routeConfig: {
-        description: opts.description ?? "",
-        mimeType: "application/json",
-      },
-    });
-
-    if (result.status === 200) return null; // payment OK, let the handler run
-
-    // Log the 402 body so we can spot empty-accepts in Railway logs.
-    console.warn(
-      `💳 x402 gate returned ${result.status} for ${c.req.method} ${resourceUrl}`,
-      JSON.stringify(result.responseBody)
-    );
-
-    // Forward thirdweb's response (body + headers) verbatim so x402 clients
-    // can parse the payment requirements.
-    return new Response(JSON.stringify(result.responseBody), {
-      status: result.status,
-      headers: {
-        ...result.responseHeaders,
-        "content-type": "application/json",
-      },
-    });
+    verify = await verifyPayment(verifyArgs);
   } catch (err) {
-    // Without this, a throw inside settlePayment (facilitator error,
-    // network issue, schema mismatch, etc) turns into a bare Hono 500.
     const reason = err instanceof Error ? err.message : String(err);
-    console.error(`💳 x402 settlePayment threw on ${c.req.method} ${resourceUrl}:`, err);
+    console.error(`💳 x402 verifyPayment threw on ${c.req.method} ${resourceUrl}:`, err);
+    return c.json(
+      { error: "x402 verify failed", reason: reason.slice(0, 500), resource: resourceUrl },
+      500
+    );
+  }
+
+  if (verify.status !== 200) {
+    // No payment yet, or invalid payment. Forward the 402 + accepts so the
+    // client knows what to sign.
+    console.warn(
+      `💳 x402 verify returned ${verify.status} for ${c.req.method} ${resourceUrl}`,
+      JSON.stringify(verify.responseBody)
+    );
+    return new Response(JSON.stringify(verify.responseBody), {
+      status: verify.status,
+      headers: { ...verify.responseHeaders, "content-type": "application/json" },
+    });
+  }
+
+  // ─── Step 2: self-broadcast transferWithAuthorization ──────
+  // The signed authorization is forwardable by anyone — submit it from our
+  // backend wallet so we only need CELO for gas, no thirdweb paymaster.
+  if (!paymentData) {
+    // Should never hit this — verify would have failed.
+    return c.json({ error: "x402: missing payment after verify pass" }, 500);
+  }
+
+  try {
+    const decoded = decodePayment(paymentData);
+    // x402 v1 has the authorization at .payload.authorization with v/r/s
+    // already encoded into a single 65-byte `signature` blob. Split it.
+    const payload = decoded.payload as {
+      signature: `0x${string}`;
+      authorization: {
+        from: `0x${string}`;
+        to: `0x${string}`;
+        value: string | bigint;
+        validAfter: string | bigint;
+        validBefore: string | bigint;
+        nonce: `0x${string}`;
+      };
+    };
+    const auth = payload.authorization;
+    const sig = payload.signature;
+    if (!sig || !auth) {
+      return c.json({ error: "x402: malformed payload" }, 402);
+    }
+
+    const sigHex = sig.startsWith("0x") ? sig.slice(2) : sig;
+    if (sigHex.length !== 130) {
+      return c.json({ error: `x402: signature length ${sigHex.length}, want 130 (65 bytes hex)` }, 402);
+    }
+    const r = (`0x${sigHex.slice(0, 64)}`) as `0x${string}`;
+    const s = (`0x${sigHex.slice(64, 128)}`) as `0x${string}`;
+    const v = parseInt(sigHex.slice(128, 130), 16);
+
+    console.log("💳 self-settle: broadcasting transferWithAuthorization", {
+      from: auth.from,
+      to: auth.to,
+      value: String(auth.value),
+      validBefore: String(auth.validBefore),
+      v,
+    });
+
+    const tx = await withWriteLock(() =>
+      walletClient.writeContract({
+        address: USDC_ADDRESS,
+        abi: ERC20_ABI,
+        functionName: "transferWithAuthorization",
+        args: [
+          auth.from,
+          auth.to,
+          BigInt(auth.value),
+          BigInt(auth.validAfter),
+          BigInt(auth.validBefore),
+          auth.nonce,
+          v,
+          r,
+          s,
+        ],
+      })
+    );
+    const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
+    console.log(`✅ x402 self-settled in block ${receipt.blockNumber}, tx ${tx}`);
+    return null;
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    console.error(`💳 x402 self-settle threw on ${c.req.method} ${resourceUrl}:`, err);
     return c.json(
       {
-        error: "x402 gate failed",
+        error: "x402 self-settle failed",
         reason: reason.slice(0, 500),
         resource: resourceUrl,
       },
