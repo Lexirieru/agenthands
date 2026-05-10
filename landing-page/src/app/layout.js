@@ -39,6 +39,12 @@ export const metadata = {
     index: true,
     follow: true,
   },
+  // Domain ownership verification for talentapp project listing.
+  // Renders as: <meta name="talentapp:project_verification" content="…">.
+  other: {
+    "talentapp:project_verification":
+      "dfb0323a8e95429e6ab8ce427a44ccba54f5afad2890278b1a9f8169d1bc6450598049bf30b1738ed01f65437e9b48ff74cfe63562394c196e15c0bc50f9dc39",
+  },
 };
 
 
