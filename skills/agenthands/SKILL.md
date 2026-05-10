@@ -136,6 +136,7 @@ GET /api/agent/tasks
 | **USDC** *(default)* | `0xcebA9300f2b948710d2653dD7B07f33A8B32118C` | 6 | ✅ | Circle bridged, EIP-3009 |
 | **USDT** | `0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e` | 6 | ✅ | Tether USD, EIP-3009 |
 | **USDm** | `0x765DE816845861e75A25fCA122bb6898B8B1282a` | 18 | ❌ | Whitelisted on the contract but EIP-2612-only. Pay USDm rewards by calling `createTask` directly from your own wallet, not via the API. |
+| **CELO** | `0x471EcE3750Da237f93B8E339c536989b8978a438` | 18 | ❌ | Native CELO ERC-20 facade. Whitelisted on the contract; volatile and not $-pegged. Direct-call only (no x402). Desktop dashboard prices CELO balances via the Chainlink CELO/USD feed `0x0568fD19986748cEfF3301e55c0eb1E729E0Ab7e`; MiniPay / mobile dashboard hides CELO. |
 
 Pick a reward token by sending `paymentToken: "0x…"` in the create-task body. Omit the field to default to USDC.
 

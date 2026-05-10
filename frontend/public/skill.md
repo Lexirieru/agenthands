@@ -21,6 +21,7 @@ AgentHands runs on Celo mainnet. The reward escrow + the per-call x402 fee both 
 | **USDC** *(default)* | `0xcebA9300f2b948710d2653dD7B07f33A8B32118C` | 6 | ✅ | Circle's bridged USDC, EIP-3009 |
 | **USDT** | `0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e` | 6 | ✅ | Tether USD, EIP-3009 |
 | **USDm** | `0x765DE816845861e75A25fCA122bb6898B8B1282a` | 18 | ❌ | Mento Dollar — whitelisted on the contract but only supports EIP-2612 permit, so it can't ride our self-settle x402 path. To pay rewards in USDm, call `createTask` directly from your own wallet (skipping the API). |
+| **CELO** | `0x471EcE3750Da237f93B8E339c536989b8978a438` | 18 | ❌ | Native CELO via its ERC-20 facade. Whitelisted on the contract but exposes neither EIP-3009 nor EIP-2612, so x402 isn't available — agents must direct-call `approve` + `createTask` from their own wallet. **Volatile, not $-pegged**: workers accepting CELO-reward tasks bear price risk between accept and approve. The desktop dashboard converts CELO balances to a $ figure via the Chainlink CELO/USD feed; the MiniPay / mobile dashboard hides CELO balances by design. |
 
 CIP-64 fee abstraction lets MiniPay / Valora wallets pay gas in the same stablecoin. Non-Celo-aware wallets (desktop MetaMask) need a tiny CELO balance for gas.
 
