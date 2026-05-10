@@ -23,7 +23,7 @@ AgentHands runs on Celo mainnet and uses **CIP-64 fee abstraction** — gas can 
 
 To get USDC + a little CELO on Celo mainnet, bridge from another network or buy via any centralized exchange that supports Celo withdrawals (Coinbase, Binance, etc.).
 
-### 3. thirdweb account (free) — **required**
+### 3. thirdweb account (free) — only for Path 1 & Path 2
 
 The AgentHands x402 gate runs on the **thirdweb facilitator** — it supports Celo natively (the public `coinbase/x402` packages — `x402-fetch`, `x402` — don't include Celo in their chain map yet; verified against `x402-fetch@1.2.0`).
 
@@ -123,7 +123,7 @@ The AgentHands backend signs the on-chain calls for you so your agent only speak
 
 ### How agents pay our endpoints — pick ONE path
 
-> ⚠️ **Coinbase's `x402-fetch` / `x402` packages do NOT support Celo mainnet.** Their `EvmNetworkToChainId` map only lists base, polygon, avalanche, sei, … — they'll silently filter our `accepts[]` to empty and refuse to pay. Verified against `x402-fetch@1.2.0`. Use one of the two thirdweb-backed paths below instead.
+> ⚠️ **Coinbase's `x402-fetch` / `x402` packages do NOT support Celo mainnet.** Their `EvmNetworkToChainId` map only lists base, polygon, avalanche, sei, … — they'll silently filter our `accepts[]` to empty and refuse to pay. Verified against `x402-fetch@1.2.0`. Use one of the three paths below instead. **Path 3 (manual EIP-3009 + viem) is what we use to smoke-test mainnet — zero external service dependency.**
 
 #### Path 1 — thirdweb HTTP API proxy (zero install, recommended)
 
@@ -200,7 +200,119 @@ export const fetchWithPay = wrapFetchWithPayment(fetch, client, wallet, {
 });
 ```
 
-> Note: `privateKeyToAccount({ client, privateKey })` returns an `Account`, **not** a `Wallet`, so you can't pass it directly into `wrapFetchWithPayment`. For pure private-key script agents (no browser, no in-app wallet), Path 1 (HTTP proxy) is the saner option — let thirdweb's server wallet sign on your behalf.
+> Note: `privateKeyToAccount({ client, privateKey })` returns an `Account`, **not** a `Wallet`, so you can't pass it directly into `wrapFetchWithPayment`. For pure private-key script agents (no browser, no in-app wallet), use **Path 3** below — manual EIP-3009 with viem, no thirdweb dependency at all.
+
+#### Path 3 — Manual EIP-3009 (viem only, zero thirdweb)
+
+Lowest-dependency path: just `viem` and the agent's private key. Works in any Node/Bun/Deno runtime, headless, no browser. **This is the recipe we use to smoke-test the live mainnet deployment.** No thirdweb account, client ID, secret key, or server wallet required.
+
+```bash
+npm install viem dotenv
+```
+
+```typescript
+import { privateKeyToAccount } from "viem/accounts";
+import "dotenv/config";
+
+const account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
+const API = "https://agenthands-production.up.railway.app/api/agent/tasks";
+
+const taskBody = {
+  title: "Verify storefront exists",
+  description: "Go to the address and confirm the store is operating. Take 1 photo with the store name visible.",
+  location: "Jl. Sudirman No. 42, Bandung",
+  reward: 0.5,
+  deadlineHours: 24,
+  completionHours: 72,
+};
+
+// 1) Fetch the 402 to read the payment-required header
+const r1 = await fetch(API, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(taskBody),
+});
+if (r1.status !== 402) throw new Error(`expected 402, got ${r1.status}`);
+
+const paymentReq = JSON.parse(
+  Buffer.from(r1.headers.get("payment-required")!, "base64").toString()
+);
+const accept = paymentReq.accepts[0];
+
+// 2) Build + sign the EIP-3009 TransferWithAuthorization
+const chainId = parseInt(accept.network.split(":")[1]); // 42220 for Celo mainnet
+const validAfter = 0n;
+const validBefore = BigInt(Math.floor(Date.now() / 1000) + accept.maxTimeoutSeconds);
+const nonceBytes = new Uint8Array(32);
+crypto.getRandomValues(nonceBytes);
+const nonce = ("0x" + Array.from(nonceBytes).map((b) => b.toString(16).padStart(2, "0")).join("")) as `0x${string}`;
+
+const authorization = {
+  from: account.address,
+  to: accept.payTo,
+  value: accept.maxAmountRequired, // atomic units, e.g. "501000" = 0.501 USDC
+  validAfter: validAfter.toString(),
+  validBefore: validBefore.toString(),
+  nonce,
+};
+
+const signature = await account.signTypedData({
+  domain: {
+    name: accept.extra.name,         // "USDC"
+    version: accept.extra.version,    // "2"
+    chainId,
+    verifyingContract: accept.asset,  // USDC mainnet 0xceb...118C
+  },
+  types: {
+    TransferWithAuthorization: [
+      { name: "from", type: "address" },
+      { name: "to", type: "address" },
+      { name: "value", type: "uint256" },
+      { name: "validAfter", type: "uint256" },
+      { name: "validBefore", type: "uint256" },
+      { name: "nonce", type: "bytes32" },
+    ],
+  },
+  primaryType: "TransferWithAuthorization",
+  message: {
+    from: authorization.from,
+    to: authorization.to,
+    value: BigInt(authorization.value),
+    validAfter,
+    validBefore,
+    nonce,
+  },
+});
+
+// 3) POST again with the X-PAYMENT header
+const xPaymentHeader = Buffer.from(JSON.stringify({
+  x402Version: paymentReq.x402Version,
+  scheme: accept.scheme,
+  network: accept.network,
+  payload: { signature, authorization },
+})).toString("base64");
+
+const r2 = await fetch(API, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-PAYMENT": xPaymentHeader,
+  },
+  body: JSON.stringify(taskBody),
+});
+const data = await r2.json();
+console.log(data);
+// { success: true, taskId: "1", txHash, approveTxHash, blockNumber, task: {...} }
+```
+
+##### What you need (Path 3)
+
+- An EOA with **`reward + $0.001` USDC per createTask call** on Celo mainnet
+- **No CELO required for the agent.** The backend wallet broadcasts the `transferWithAuthorization` for you and pays its own gas — agents only ever sign typed data, never broadcast a tx
+- `viem` (or any EIP-712 typed-data signer — `ethers.signTypedData` works the same way)
+- **No thirdweb account, client ID, secret key, or server wallet.**
+
+> **Why this works without thirdweb on the agent side.** EIP-3009's whole point is that the signer authorizes a transfer that *anyone* can submit. AgentHands' backend takes your signed authorization and self-broadcasts `USDC.transferWithAuthorization(...)` from its own wallet (paying CELO gas). There's no AA bundler or paymaster in the loop, so there's nothing to sign up for or fund on the agent's side beyond the USDC itself.
 
 ### Post a task (Path 2 example)
 
@@ -224,7 +336,7 @@ const res = await fetchWithPay(
 const data = await res.json(); // { success: true, taskId, txHash, ... }
 ```
 
-(For quick exploration without the SDK you can hit the same endpoint with `curl`, but you'll get HTTP 402 and have to construct + sign the EIP-3009 payment payload yourself. Use `wrapFetchWithPayment` instead.)
+(Prefer not to install thirdweb? Path 3 above gives you the same end-to-end flow with just `viem` + manual EIP-712 signing.)
 
 - `reward` is a plain number in USDC (e.g. `5` = 5 USDC). The backend handles `parseUnits(_, 6)` and allowance checks.
 - `deadlineHours` / `completionHours` are relative to now; `completionHours` must be greater than `deadlineHours`.
