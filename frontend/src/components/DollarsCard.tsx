@@ -6,6 +6,8 @@ import { useStablecoinBalances } from '@/hooks/useAgentHands';
 
 interface DollarsCardProps {
   address: `0x${string}` | undefined;
+  /** Desktop only — fold CELO balance into the total via Chainlink CELO/USD. */
+  includeCelo?: boolean;
 }
 
 function formatDollars(n: number): string {
@@ -19,9 +21,10 @@ function formatTokenAmount(raw: bigint, decimals: number): string {
   return formatDollars(dollars);
 }
 
-export default function DollarsCard({ address }: DollarsCardProps) {
+export default function DollarsCard({ address, includeCelo = false }: DollarsCardProps) {
   const [open, setOpen] = useState(false);
-  const { balances, totalDollars, isLoading } = useStablecoinBalances(address);
+  const { balances, totalDollars, isLoading, celoUsdPrice, celoPriceIsFresh } =
+    useStablecoinBalances(address, { includeCelo });
 
   return (
     <div className="relative">
@@ -66,6 +69,13 @@ export default function DollarsCard({ address }: DollarsCardProps) {
                   <p className="text-[11px] text-[#8B4513] font-label uppercase tracking-wider mt-0.5">
                     {b.symbol}
                   </p>
+                  {b.isVolatile && b.raw > BigInt(0) && (
+                    <p className="text-[10px] text-[#A8763B] mt-1 tabular-nums">
+                      {celoPriceIsFresh && celoUsdPrice
+                        ? `≈ $${b.dollars >= 0.01 ? b.dollars.toFixed(2) : b.dollars.toFixed(4)}`
+                        : 'price unavailable'}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

@@ -2,7 +2,14 @@
 
 import { useMemo } from "react";
 import { useReadContracts, useReadContract, useWriteContract } from "wagmi";
-import { AGENTHANDS_ADDRESS, USDC_ADDRESS, STABLECOINS } from "@/config";
+import {
+  AGENTHANDS_ADDRESS,
+  USDC_ADDRESS,
+  STABLECOINS,
+  CELO_TOKEN_ADDRESS,
+  CELO_TOKEN_DECIMALS,
+} from "@/config";
+import { useCeloUsdPrice } from "@/hooks/useCeloUsdPrice";
 import AgentHandsABI from "@/abi/AgentHands.json";
 
 const ERC20_ABI = [
@@ -97,13 +104,28 @@ export type StablecoinBalance = {
   dollars: number;
 };
 
+export type RewardTokenBalance = StablecoinBalance & {
+  /** Volatile reward tokens (e.g. CELO) need a price feed to convert to $. */
+  isVolatile: boolean;
+};
+
 /**
  * Multicall the wallet's balances for all whitelisted stablecoins
  * (USDC, USDT, USDm) in one request. Returns the per-token balances
  * and the dollar-denominated total for the header pill / dashboard
  * "Dollars" card.
+ *
+ * When `includeCelo` is true (desktop only — mobile/MiniPay surface
+ * stays stablecoin-only by design), CELO balance is also fetched and
+ * priced via the Chainlink CELO/USD feed so it can fold into the same
+ * "Total dollars" number.
  */
-export function useStablecoinBalances(address: `0x${string}` | undefined) {
+export function useStablecoinBalances(
+  address: `0x${string}` | undefined,
+  options?: { includeCelo?: boolean }
+) {
+  const includeCelo = !!options?.includeCelo;
+
   const result = useReadContracts({
     contracts: STABLECOINS.map((s) => ({
       address: s.address,
@@ -119,14 +141,49 @@ export function useStablecoinBalances(address: `0x${string}` | undefined) {
     },
   });
 
-  const balances: StablecoinBalance[] = useMemo(() => {
-    return STABLECOINS.map((s, i) => {
+  // CELO ERC-20 facade balance — only fetched when the caller opts in.
+  const celoBalance = useReadContract({
+    address: CELO_TOKEN_ADDRESS,
+    abi: ERC20_ABI,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address && includeCelo,
+      refetchInterval: 8000,
+      refetchOnWindowFocus: true,
+      staleTime: 4000,
+    },
+  });
+
+  const celoUsd = useCeloUsdPrice(includeCelo);
+
+  const balances: RewardTokenBalance[] = useMemo(() => {
+    const stable: RewardTokenBalance[] = STABLECOINS.map((s, i) => {
       const r = result.data?.[i];
       const raw = r?.status === "success" ? (r.result as bigint) : BigInt(0);
       const dollars = Number(raw) / 10 ** s.decimals;
-      return { ...s, raw, dollars };
+      return { ...s, raw, dollars, isVolatile: false };
     });
-  }, [result.data]);
+
+    if (!includeCelo) return stable;
+
+    const raw = (celoBalance.data as bigint | undefined) ?? BigInt(0);
+    const celoFloat = Number(raw) / 10 ** CELO_TOKEN_DECIMALS;
+    // Only count CELO toward the dollar total when we have a fresh price.
+    // Otherwise show CELO with $0 dollar contribution + a stale flag the
+    // UI can surface separately.
+    const dollars = celoUsd.price !== null ? celoFloat * celoUsd.price : 0;
+    const celo: RewardTokenBalance = {
+      symbol: "CELO" as never,
+      address: CELO_TOKEN_ADDRESS,
+      decimals: CELO_TOKEN_DECIMALS,
+      logo: "/celologotoken.png",
+      raw,
+      dollars,
+      isVolatile: true,
+    };
+    return [...stable, celo];
+  }, [result.data, celoBalance.data, celoUsd.price, includeCelo]);
 
   const totalDollars = useMemo(
     () => balances.reduce((sum, b) => sum + b.dollars, 0),
@@ -136,7 +193,9 @@ export function useStablecoinBalances(address: `0x${string}` | undefined) {
   return {
     balances,
     totalDollars,
-    isLoading: result.isLoading,
+    celoUsdPrice: includeCelo ? celoUsd.price : null,
+    celoPriceIsFresh: includeCelo ? celoUsd.isFresh : true,
+    isLoading: result.isLoading || (includeCelo && celoBalance.isLoading),
     isError: result.isError,
     refetch: result.refetch,
   };

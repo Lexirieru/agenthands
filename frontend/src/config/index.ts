@@ -31,6 +31,21 @@ export const STABLECOINS: ReadonlyArray<{
   { symbol: "USDm", address: USDM_ADDRESS, decimals: 18, logo: "/usdmlogo.png" },
 ] as const;
 
+// Native CELO ERC-20 facade. Whitelisted on the contract as a reward token,
+// but it's volatile (not $-pegged) and doesn't expose EIP-3009 / EIP-2612,
+// so it can't ride x402 — agents have to direct-call createTask. We only
+// surface its balance + USD equivalent on desktop; MiniPay/mobile layouts
+// stay stablecoin-only because that matches MiniPay's product surface.
+export const CELO_TOKEN_ADDRESS =
+  "0x471EcE3750Da237f93B8E339c536989b8978a438" as `0x${string}`;
+export const CELO_TOKEN_DECIMALS = 18;
+
+// Chainlink CELO/USD price feed on Celo mainnet — used to convert the
+// volatile CELO balance into a $ equivalent for the desktop DollarsCard.
+// 8-decimal answer; reverts treated as "no price available".
+export const CELO_USD_FEED_ADDRESS =
+  "0x0568fD19986748cEfF3301e55c0eb1E729E0Ab7e" as `0x${string}`;
+
 // USDC Fee Adapter for CIP-64 fee abstraction — lets users pay gas in USDC
 // instead of CELO. See https://docs.celo.org/build/fee-abstraction
 export const USDC_FEE_ADAPTER =

@@ -7,6 +7,7 @@ import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { Wallet, LogOut } from "lucide-react";
 import { useStablecoinBalances } from "@/hooks/useAgentHands";
 import { useIsMiniPay } from "@/hooks/useIsMiniPay";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { truncateAddress } from "@/lib/utils/format";
 import { useState, useEffect } from "react";
 
@@ -20,10 +21,15 @@ export default function Header() {
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
-  const { totalDollars, isLoading: balancesLoading } = useStablecoinBalances(
-    address as `0x${string}` | undefined
-  );
   const isMiniPay = useIsMiniPay();
+  const isMobile = useIsMobile();
+  // Mirror the dashboard split: include CELO only on desktop browsers, not
+  // inside MiniPay or any narrow mobile layout.
+  const includeCelo = !isMobile && !isMiniPay;
+  const { totalDollars, isLoading: balancesLoading } = useStablecoinBalances(
+    address as `0x${string}` | undefined,
+    { includeCelo }
+  );
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
