@@ -6,17 +6,17 @@ This document covers the gas profile of AgentHands operations and the design dec
 
 These estimates are based on Foundry test measurements on a local fork. Actual costs on Celo mainnet may vary by a few percent depending on state and calldata size.
 
-| Function | Estimated Gas | Notes |
-|----------|--------------|-------|
-| `createTask()` | ~180,000 | Includes ERC20 transferFrom and Task struct write |
-| `acceptTask()` | ~50,000 | Single storage update + event |
-| `submitProof()` | ~60,000 | Stores proof URI string + status update |
-| `approveTask()` | ~80,000 | Two ERC20 transfers (worker + fee) + status update |
-| `cancelTask()` | ~55,000 | One ERC20 transfer + status update |
-| `disputeTask()` | ~35,000 | Status update + event only |
-| `resolveDispute()` | ~80,000 | Same as approveTask for fund release path |
-| `claimExpired()` | ~60,000–80,000 | Depends on which case is triggered |
-| `rateWorker()` / `rateAgent()` | ~45,000 | Two storage writes (total, count) |
+| Function                        | Estimated Gas   | Notes                                              |
+|---------------------------------|-----------------|----------------------------------------------------|
+| `createTask()`                  | ~180,000        | Includes ERC20 transferFrom and Task struct write  |
+| `acceptTask()`                  | ~50,000         | Single storage update + event                      |
+| `submitProof()`                 | ~60,000         | Stores proof URI string + status update            |
+| `approveTask()`                 | ~80,000         | Two ERC20 transfers (worker + fee) + status update |
+| `cancelTask()`                  | ~55,000         | One ERC20 transfer + status update                 |
+| `disputeTask()`                 | ~35,000         | Status update + event only                         |
+| `resolveDispute()`              | ~80,000         | Same as approveTask for fund release path          |
+| `claimExpired()`                | ~60,000–80,000  | Depends on which case is triggered                 |
+| `rateWorker()` / `rateAgent()`  | ~45,000         | Two storage writes (total, count)                  |
 
 Celo's gas price is typically 0.1-5 gwei. At 1 gwei, a `createTask()` costs approximately 0.00018 CELO.
 
