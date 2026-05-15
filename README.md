@@ -106,12 +106,12 @@ agenthands/
 
 ### Celo mainnet (chain id `42220`)
 
-| Component | Address |
-|-----------|---------|
-| **Proxy (AgentHands)** | [`0xADA0466303441102cb16F8eC1594C744d603f746`](https://celoscan.io/address/0xADA0466303441102cb16F8eC1594C744d603f746) |
-| Implementation | [`0x29faf6cAFA4BeA1dC7c232f0a1818d4da6b724DD`](https://celoscan.io/address/0x29faf6cAFA4BeA1dC7c232f0a1818d4da6b724DD) |
-| USDC | `0xcebA9300f2b948710d2653dD7B07f33A8B32118C` |
-| USDC Fee Adapter (CIP-64) | `0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B` |
+| Component                  | Address                                                                                                                   |
+|----------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| **Proxy (AgentHands)**     | [`0xADA0466303441102cb16F8eC1594C744d603f746`](https://celoscan.io/address/0xADA0466303441102cb16F8eC1594C744d603f746) |
+| Implementation             | [`0x29faf6cAFA4BeA1dC7c232f0a1818d4da6b724DD`](https://celoscan.io/address/0x29faf6cAFA4BeA1dC7c232f0a1818d4da6b724DD) |
+| USDC                       | `0xcebA9300f2b948710d2653dD7B07f33A8B32118C`                                                                              |
+| USDC Fee Adapter (CIP-64)  | `0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B`                                                                              |
 
 UUPS upgradeable. Future implementation upgrades keep the proxy address stable.
 
