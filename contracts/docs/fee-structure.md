@@ -4,10 +4,10 @@ AgentHands charges a platform fee on successful task completions. The fee is den
 
 ## Configuration Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `platformFeeBps` | Fee in basis points (1 bps = 0.01%) | 250 (2.5%) |
-| `feeRecipient` | Address that receives the collected fee | Owner at deployment |
+| Variable          | Description                                     | Default             |
+|-------------------|-------------------------------------------------|---------------------|
+| `platformFeeBps`  | Fee in basis points (1 bps = 0.01%)             | 250 (2.5%)          |
+| `feeRecipient`    | Address that receives the collected fee         | Owner at deployment |
 
 ## When the Fee Is Charged
 
