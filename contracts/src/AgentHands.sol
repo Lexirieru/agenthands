@@ -8,10 +8,15 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-/// @title AgentHands — Marketplace where AI agents hire humans for physical-world tasks
-/// @notice UUPS Upgradeable. Escrow and payouts are paid in an allowed ERC20 stablecoin
-///         (USDC on Celo). Owner whitelists tokens via setAllowedToken.
-/// @dev Tasks flow: Open → Accepted → Submitted → Completed/Disputed → Resolved
+/// @title  AgentHands
+/// @author Axel Urwawuska Atarubby
+/// @notice Decentralized marketplace where AI agents hire humans for physical-world tasks.
+///         Tasks are funded upfront via ERC-20 escrow and released on proof approval.
+///         Built on Celo mainnet using USDC as the primary payment token.
+/// @dev    UUPS upgradeable proxy pattern (OpenZeppelin v5).
+///         Task lifecycle: Open → Accepted → Submitted → Completed | Disputed → Resolved.
+///         The owner whitelists accepted payment tokens via `setAllowedToken`.
+///         A platform fee (in basis points) is deducted from every successful payout.
 contract AgentHands is
     Initializable,
     UUPSUpgradeable,
@@ -21,104 +26,220 @@ contract AgentHands is
     using SafeERC20 for IERC20;
 
     // ─── Enums ───────────────────────────────────────────────
+
+    /// @notice Represents the lifecycle state of a task.
+    /// @dev    State transitions are strictly enforced — no backwards movement allowed.
     enum TaskStatus {
-        Open,       // Agent posted, waiting for worker
-        Accepted,   // Worker accepted, in progress
-        Submitted,  // Worker submitted proof, pending approval
-        Completed,  // Agent approved, payment released
-        Disputed,   // Agent disputed the proof
-        Cancelled,  // Agent cancelled before acceptance
-        Expired     // Deadline passed, no acceptance
+        Open,       // Task posted by agent, waiting for a worker to accept
+        Accepted,   // Worker accepted the task and is working on it
+        Submitted,  // Worker uploaded proof of completion, pending agent review
+        Completed,  // Agent approved the proof; payment has been released
+        Disputed,   // Agent rejected the proof; awaiting owner arbitration
+        Cancelled,  // Agent cancelled before any worker accepted
+        Expired     // Deadline passed without acceptance or completion
     }
 
     // ─── Structs ─────────────────────────────────────────────
+
+    /// @notice Full on-chain representation of a task.
+    /// @dev    Stored in `tasks` mapping indexed by `taskId`.
     struct Task {
         uint256 id;
-        address agent;                  // AI agent's wallet (task poster)
-        address worker;                 // Human worker (task acceptor)
-        address paymentToken;           // ERC20 token address used for this task
-        uint256 reward;                 // Payment amount in token's native decimals
-        uint256 deadline;               // Unix timestamp — accept before this
-        uint256 completionDeadline;     // Unix timestamp — complete before this
+        address agent;              // Address of the AI agent that posted the task
+        address worker;             // Address of the human worker who accepted it
+        address paymentToken;       // ERC-20 token used for the reward (e.g. USDC)
+        uint256 reward;             // Reward amount in the token's native decimals
+        uint256 deadline;           // Unix timestamp — workers must accept before this
+        uint256 completionDeadline; // Unix timestamp — worker must submit proof before this
         string title;
         string description;
-        string location;                // Physical location for the task
-        string proofCID;                // IPFS CID of completion proof
+        string location;            // Physical location where the task must be performed
+        string proofCID;            // IPFS CID of the worker's completion proof
         TaskStatus status;
-        uint256 createdAt;
+        uint256 createdAt;          // Block timestamp at task creation
     }
 
     // ─── State ───────────────────────────────────────────────
+
+    /// @notice Total number of tasks ever created. Also used as the next task ID.
     uint256 public taskCount;
+
+    /// @notice Maps task ID to its Task struct.
     mapping(uint256 => Task) public tasks;
 
-    // Allowed payment tokens (USDC, USDT, cUSD, etc.)
+    /// @notice Whitelist of ERC-20 tokens accepted as payment.
+    /// @dev    Only the owner can add or remove tokens via `setAllowedToken`.
     mapping(address => bool) public allowedTokens;
 
-    // Platform fee (basis points, e.g. 250 = 2.5%)
+    /// @notice Platform fee charged on successful payouts, expressed in basis points.
+    /// @dev    e.g. 250 = 2.5%. Applied in `_releaseFunds`.
     uint256 public platformFeeBps;
+
+    /// @notice Address that receives the platform fee on every completed task.
     address public feeRecipient;
 
-    // Worker ratings
+    /// @notice Cumulative rating score per worker across all rated tasks.
     mapping(address => uint256) public workerTotalScore;
+
+    /// @notice Number of times a worker has been rated.
     mapping(address => uint256) public workerRatingCount;
 
-    // Agent ratings
+    /// @notice Cumulative rating score per agent across all rated tasks.
     mapping(address => uint256) public agentTotalScore;
+
+    /// @notice Number of times an agent has been rated.
     mapping(address => uint256) public agentRatingCount;
 
-    // Rating tracking
+    /// @notice Tracks whether the worker has already been rated for a given task.
     mapping(uint256 => bool) public workerRatedForTask;
+
+    /// @notice Tracks whether the agent has already been rated for a given task.
     mapping(uint256 => bool) public agentRatedForTask;
 
     // ─── Events ──────────────────────────────────────────────
+
+    /// @notice Emitted when a new task is created and funded.
+    /// @param taskId       The unique identifier of the created task.
+    /// @param agent        The address of the AI agent that posted the task.
+    /// @param reward       The reward amount locked in escrow.
+    /// @param paymentToken The ERC-20 token used for the reward.
     event TaskCreated(uint256 indexed taskId, address indexed agent, uint256 reward, address paymentToken);
+
+    /// @notice Emitted when a worker accepts an open task.
+    /// @param taskId The ID of the accepted task.
+    /// @param worker The address of the worker who accepted.
     event TaskAccepted(uint256 indexed taskId, address indexed worker);
+
+    /// @notice Emitted when a worker submits proof of completion.
+    /// @param taskId   The ID of the task.
+    /// @param proofCID The IPFS CID pointing to the uploaded proof.
     event ProofSubmitted(uint256 indexed taskId, string proofCID);
+
+    /// @notice Emitted when a task is completed and the reward is released to the worker.
+    /// @param taskId The ID of the completed task.
+    /// @param worker The worker who received the payout.
+    /// @param payout The net amount paid out after the platform fee.
     event TaskCompleted(uint256 indexed taskId, address indexed worker, uint256 payout);
+
+    /// @notice Emitted when an agent disputes the worker's submitted proof.
+    /// @param taskId The ID of the disputed task.
+    /// @param agent  The agent who raised the dispute.
     event TaskDisputed(uint256 indexed taskId, address indexed agent);
+
+    /// @notice Emitted when an agent cancels an open task.
+    /// @param taskId The ID of the cancelled task.
     event TaskCancelled(uint256 indexed taskId);
+
+    /// @notice Emitted when the owner resolves a disputed task.
+    /// @param taskId      The ID of the resolved task.
+    /// @param workerWins  True if the reward was sent to the worker; false if refunded to the agent.
     event DisputeResolved(uint256 indexed taskId, bool workerWins);
+
+    /// @notice Emitted when an agent rates the worker after task completion.
+    /// @param taskId The ID of the completed task.
+    /// @param worker The worker being rated.
+    /// @param score  Rating score between 1 and 5.
     event WorkerRated(uint256 indexed taskId, address indexed worker, uint8 score);
+
+    /// @notice Emitted when a worker rates the agent after task completion.
+    /// @param taskId The ID of the completed task.
+    /// @param agent  The agent being rated.
+    /// @param score  Rating score between 1 and 5.
     event AgentRated(uint256 indexed taskId, address indexed agent, uint8 score);
+
+    /// @notice Emitted when a token's whitelist status changes.
+    /// @param token   The ERC-20 token address.
+    /// @param allowed True if the token is now allowed; false if removed.
     event TokenAllowed(address token, bool allowed);
+
+    /// @notice Emitted when an expired task is refunded to the agent.
+    /// @param taskId The ID of the expired task.
+    /// @param agent  The agent who received the refund.
+    /// @param refund The amount refunded.
     event TaskExpired(uint256 indexed taskId, address indexed agent, uint256 refund);
+
+    /// @notice Emitted when a submitted task is auto-approved after the review window expires.
+    /// @param taskId The ID of the auto-completed task.
+    /// @param worker The worker who received the payout.
+    /// @param payout The net payout after fees.
     event TaskAutoCompleted(uint256 indexed taskId, address indexed worker, uint256 payout);
 
     // ─── Errors ──────────────────────────────────────────────
+
+    /// @notice Thrown when the payment token is not on the whitelist.
     error InvalidToken();
+
+    /// @notice Thrown when the reward amount is zero.
     error InvalidReward();
+
+    /// @notice Thrown when a deadline is in the past or logically inconsistent.
     error InvalidDeadline();
+
+    /// @notice Thrown when an action requires `TaskStatus.Open` but the task is not open.
     error TaskNotOpen();
+
+    /// @notice Thrown when an action requires `TaskStatus.Accepted` but the task is not accepted.
     error TaskNotAccepted();
+
+    /// @notice Thrown when an action requires `TaskStatus.Submitted` but proof has not been submitted.
     error TaskNotSubmitted();
+
+    /// @notice Thrown when resolving a dispute on a task that is not in `Disputed` status.
     error TaskNotDisputed();
+
+    /// @notice Thrown when the caller is not the agent who posted the task.
     error NotAgent();
+
+    /// @notice Thrown when the caller is not the worker assigned to the task.
     error NotWorker();
+
+    /// @notice Thrown when the acceptance deadline has already passed.
     error DeadlinePassed();
+
+    /// @notice Thrown when the completion deadline has already passed.
     error CompletionDeadlinePassed();
+
+    /// @notice Thrown when a rating score is outside the 1–5 range.
     error InvalidRating();
+
+    /// @notice Thrown when attempting to rate a task that has already been rated.
     error AlreadyRated();
+
+    /// @notice Thrown when rating is attempted on a task that is not yet completed.
     error TaskNotCompleted();
+
+    /// @notice Thrown when `claimExpired` is called on a task that has not expired.
     error NotExpired();
 
     // ─── Modifiers ───────────────────────────────────────────
+
+    /// @dev Reverts if `msg.sender` is not the agent of the given task.
     modifier onlyAgent(uint256 _taskId) {
         if (msg.sender != tasks[_taskId].agent) revert NotAgent();
         _;
     }
 
+    /// @dev Reverts if `msg.sender` is not the assigned worker of the given task.
     modifier onlyWorker(uint256 _taskId) {
         if (msg.sender != tasks[_taskId].worker) revert NotWorker();
         _;
     }
 
-    // ─── Initializer (replaces constructor) ──────────────────
+    // ─── Constructor ─────────────────────────────────────────
+
+    /// @dev Disables initializers on the implementation contract to prevent
+    ///      unintended initialization of the logic contract directly.
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
+    // ─── Initializer ─────────────────────────────────────────
+
+    /// @notice Initializes the proxy with fee configuration and owner.
+    /// @dev    Called once through the proxy during deployment. Replaces a constructor.
+    /// @param _feeRecipient   Address that will receive platform fees.
+    /// @param _platformFeeBps Fee in basis points (e.g. 250 = 2.5%).
     function initialize(address _feeRecipient, uint256 _platformFeeBps) external initializer {
         __Ownable_init(msg.sender);
 
@@ -127,22 +248,45 @@ contract AgentHands is
     }
 
     // ─── UUPS Authorization ──────────────────────────────────
+
+    /// @dev Only the owner may authorize an upgrade to a new implementation.
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // ─── Admin ───────────────────────────────────────────────
+
+    /// @notice Adds or removes a token from the payment whitelist.
+    /// @dev    Only callable by the owner.
+    /// @param _token   ERC-20 token address.
+    /// @param _allowed True to allow, false to disallow.
     function setAllowedToken(address _token, bool _allowed) external onlyOwner {
         allowedTokens[_token] = _allowed;
         emit TokenAllowed(_token, _allowed);
     }
 
+    /// @notice Updates the platform fee and the fee recipient address.
+    /// @dev    Only callable by the owner. Applies to future payouts only.
+    /// @param _feeBps    New fee in basis points.
+    /// @param _recipient New address to receive platform fees.
     function setFee(uint256 _feeBps, address _recipient) external onlyOwner {
         platformFeeBps = _feeBps;
         feeRecipient = _recipient;
     }
 
     // ─── Core: Create Task ───────────────────────────────────
-    /// @notice Agent creates a task and locks `_reward` of `_paymentToken` in escrow.
-    ///         Caller must `approve(AgentHands, _reward)` on the token beforehand.
+
+    /// @notice Creates a new task and locks the reward in escrow.
+    /// @dev    The caller must have approved this contract to transfer `_reward`
+    ///         of `_paymentToken` before calling. The reward is held until the task
+    ///         is completed, cancelled, or expired.
+    /// @param _paymentToken       ERC-20 token address for the reward (must be whitelisted).
+    /// @param _reward             Reward amount in the token's native decimals.
+    /// @param _deadline           Unix timestamp by which a worker must accept the task.
+    /// @param _completionDeadline Unix timestamp by which the worker must submit proof.
+    ///                            Must be strictly after `_deadline`.
+    /// @param _title              Short title describing the task.
+    /// @param _description        Full description of what needs to be done.
+    /// @param _location           Physical location where the task must be carried out.
+    /// @return taskId             The ID assigned to the newly created task.
     function createTask(
         address _paymentToken,
         uint256 _reward,
@@ -181,7 +325,11 @@ contract AgentHands is
     }
 
     // ─── Core: Accept Task ───────────────────────────────────
-    /// @notice Human worker accepts an open task
+
+    /// @notice Allows a human worker to accept an open task.
+    /// @dev    Any address may accept as long as the task is open and the deadline
+    ///         has not passed. Once accepted, the task is locked to this worker.
+    /// @param _taskId The ID of the task to accept.
     function acceptTask(uint256 _taskId) external {
         Task storage task = tasks[_taskId];
         if (task.status != TaskStatus.Open) revert TaskNotOpen();
@@ -194,7 +342,12 @@ contract AgentHands is
     }
 
     // ─── Core: Submit Proof ──────────────────────────────────
-    /// @notice Worker submits proof of completion (IPFS CID)
+
+    /// @notice Allows the assigned worker to submit an IPFS proof of task completion.
+    /// @dev    Only the worker assigned via `acceptTask` may call this.
+    ///         The proof CID is stored on-chain; the actual files live on IPFS.
+    /// @param _taskId   The ID of the accepted task.
+    /// @param _proofCID IPFS content identifier pointing to the completion proof.
     function submitProof(uint256 _taskId, string calldata _proofCID) external onlyWorker(_taskId) {
         Task storage task = tasks[_taskId];
         if (task.status != TaskStatus.Accepted) revert TaskNotAccepted();
@@ -207,7 +360,11 @@ contract AgentHands is
     }
 
     // ─── Core: Approve & Release Payment ─────────────────────
-    /// @notice Agent approves proof and releases payment to worker
+
+    /// @notice Agent approves the submitted proof and releases payment to the worker.
+    /// @dev    Deducts the platform fee and transfers the remainder to the worker.
+    ///         Uses `nonReentrant` because it performs two external token transfers.
+    /// @param _taskId The ID of the submitted task to approve.
     function approveTask(uint256 _taskId) external onlyAgent(_taskId) nonReentrant {
         Task storage task = tasks[_taskId];
         if (task.status != TaskStatus.Submitted) revert TaskNotSubmitted();
@@ -219,7 +376,11 @@ contract AgentHands is
     }
 
     // ─── Core: Dispute ───────────────────────────────────────
-    /// @notice Agent disputes the submitted proof
+
+    /// @notice Agent raises a dispute against the submitted proof.
+    /// @dev    Moves the task to `Disputed` status. The owner must then call
+    ///         `resolveDispute` to settle the outcome.
+    /// @param _taskId The ID of the submitted task to dispute.
     function disputeTask(uint256 _taskId) external onlyAgent(_taskId) {
         Task storage task = tasks[_taskId];
         if (task.status != TaskStatus.Submitted) revert TaskNotSubmitted();
@@ -229,7 +390,12 @@ contract AgentHands is
     }
 
     // ─── Core: Resolve Dispute ───────────────────────────────
-    /// @notice Owner resolves dispute (simple arbitration)
+
+    /// @notice Owner arbitrates a disputed task and decides the outcome.
+    /// @dev    If `_workerWins` is true, the reward (minus fee) is sent to the worker.
+    ///         If false, the full reward is refunded to the agent.
+    /// @param _taskId     The ID of the disputed task.
+    /// @param _workerWins True to pay the worker; false to refund the agent.
     function resolveDispute(uint256 _taskId, bool _workerWins) external onlyOwner nonReentrant {
         Task storage task = tasks[_taskId];
         if (task.status != TaskStatus.Disputed) revert TaskNotDisputed();
@@ -246,7 +412,11 @@ contract AgentHands is
     }
 
     // ─── Core: Cancel Task ───────────────────────────────────
-    /// @notice Agent cancels an open task (not yet accepted)
+
+    /// @notice Agent cancels an open task before any worker has accepted it.
+    /// @dev    The full reward is refunded to the agent. Cannot be called once
+    ///         a worker has accepted the task.
+    /// @param _taskId The ID of the open task to cancel.
     function cancelTask(uint256 _taskId) external onlyAgent(_taskId) nonReentrant {
         Task storage task = tasks[_taskId];
         if (task.status != TaskStatus.Open) revert TaskNotOpen();
@@ -257,11 +427,16 @@ contract AgentHands is
         emit TaskCancelled(_taskId);
     }
 
-    // ─── Core: Claim Expired ────────────────────────────────
-    /// @notice Anyone can trigger refund/auto-complete for expired tasks. Funds always go to rightful owner.
-    /// Case 1: Open + deadline passed → 100% refund to agent
-    /// Case 2: Accepted + completion deadline passed (worker never submitted) → 100% refund to agent
-    /// Case 3: Submitted + completion deadline + 7 days passed (agent never reviewed) → auto-approve to worker
+    // ─── Core: Claim Expired ─────────────────────────────────
+
+    /// @notice Permissionlessly triggers fund recovery for tasks in terminal expired states.
+    /// @dev    Three cases are handled:
+    ///         1. Open + acceptance deadline passed → full refund to agent.
+    ///         2. Accepted + completion deadline passed (worker never submitted) → full refund to agent.
+    ///         3. Submitted + completion deadline + 7-day review window passed (agent never reviewed)
+    ///            → auto-approve and pay the worker.
+    ///         Anyone may call this — funds always flow to the rightful owner.
+    /// @param _taskId The ID of the task to claim.
     function claimExpired(uint256 _taskId) external nonReentrant {
         Task storage task = tasks[_taskId];
 
@@ -290,6 +465,12 @@ contract AgentHands is
     }
 
     // ─── Ratings ─────────────────────────────────────────────
+
+    /// @notice Agent rates the worker after a task is completed.
+    /// @dev    Each task can only be rated once per party. Score must be between 1 and 5.
+    ///         Ratings are stored as cumulative totals; the average is computed in the view.
+    /// @param _taskId The ID of the completed task.
+    /// @param _score  Rating between 1 (lowest) and 5 (highest).
     function rateWorker(uint256 _taskId, uint8 _score) external onlyAgent(_taskId) {
         if (_score < 1 || _score > 5) revert InvalidRating();
         if (tasks[_taskId].status != TaskStatus.Completed) revert TaskNotCompleted();
@@ -303,6 +484,10 @@ contract AgentHands is
         emit WorkerRated(_taskId, worker, _score);
     }
 
+    /// @notice Worker rates the agent after a task is completed.
+    /// @dev    Each task can only be rated once per party. Score must be between 1 and 5.
+    /// @param _taskId The ID of the completed task.
+    /// @param _score  Rating between 1 (lowest) and 5 (highest).
     function rateAgent(uint256 _taskId, uint8 _score) external onlyWorker(_taskId) {
         if (_score < 1 || _score > 5) revert InvalidRating();
         if (tasks[_taskId].status != TaskStatus.Completed) revert TaskNotCompleted();
@@ -317,21 +502,42 @@ contract AgentHands is
     }
 
     // ─── View ────────────────────────────────────────────────
+
+    /// @notice Returns the full Task struct for a given task ID.
+    /// @param _taskId The ID of the task to retrieve.
+    /// @return        The Task struct stored at that ID.
     function getTask(uint256 _taskId) external view returns (Task memory) {
         return tasks[_taskId];
     }
 
+    /// @notice Returns the average rating and total rating count for a worker.
+    /// @dev    Average is computed as integer division; fractional parts are truncated.
+    ///         Returns (0, 0) if the worker has never been rated.
+    /// @param _worker The worker's address.
+    /// @return avg    Floor average of all scores (0 if unrated).
+    /// @return count  Total number of ratings received.
     function getWorkerRating(address _worker) external view returns (uint256 avg, uint256 count) {
         count = workerRatingCount[_worker];
         avg = count > 0 ? workerTotalScore[_worker] / count : 0;
     }
 
+    /// @notice Returns the average rating and total rating count for an agent.
+    /// @dev    Average is computed as integer division; fractional parts are truncated.
+    ///         Returns (0, 0) if the agent has never been rated.
+    /// @param _agent The agent's address.
+    /// @return avg   Floor average of all scores (0 if unrated).
+    /// @return count Total number of ratings received.
     function getAgentRating(address _agent) external view returns (uint256 avg, uint256 count) {
         count = agentRatingCount[_agent];
         avg = count > 0 ? agentTotalScore[_agent] / count : 0;
     }
 
     // ─── Internal ────────────────────────────────────────────
+
+    /// @notice Deducts the platform fee and transfers the net reward to the worker.
+    /// @dev    Called by `approveTask`, `resolveDispute` (worker wins), and `claimExpired`
+    ///         (auto-complete path). If `platformFeeBps` is zero, no fee transfer is made.
+    /// @param task Storage reference to the task being paid out.
     function _releaseFunds(Task storage task) internal {
         uint256 fee = (task.reward * platformFeeBps) / 10000;
         uint256 payout = task.reward - fee;
