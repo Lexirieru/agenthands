@@ -163,6 +163,7 @@ contract AgentHands is
     /// @param worker The worker who received the payout.
     /// @param payout The net payout after fees.
     event TaskAutoCompleted(uint256 indexed taskId, address indexed worker, uint256 payout);
+    event FeeUpdated(uint256 feeBps, address recipient);
 
     // ─── Errors ──────────────────────────────────────────────
 
@@ -270,6 +271,7 @@ contract AgentHands is
     function setFee(uint256 _feeBps, address _recipient) external onlyOwner {
         platformFeeBps = _feeBps;
         feeRecipient = _recipient;
+        emit FeeUpdated(_feeBps, _recipient);
     }
 
     // ─── Core: Create Task ───────────────────────────────────
@@ -502,6 +504,34 @@ contract AgentHands is
     }
 
     // ─── View ────────────────────────────────────────────────
+
+    /// @notice Returns the implementation version string.
+    function version() external pure returns (string memory) {
+        return "1.1.0";
+    }
+
+    /// @notice Returns true if `_token` is whitelisted as a payment token.
+    /// @param _token The ERC-20 token address to check.
+    function isTokenAllowed(address _token) external view returns (bool) {
+        return allowedTokens[_token];
+    }
+
+    /// @notice Returns IDs of all tasks that currently have `_status`.
+    /// @dev    O(taskCount) scan — intended for off-chain reads, not on-chain loops.
+    /// @param _status The TaskStatus to filter by.
+    /// @return ids    Array of task IDs whose current status matches `_status`.
+    function getTasksByStatus(TaskStatus _status) external view returns (uint256[] memory ids) {
+        uint256 total = taskCount;
+        uint256 count;
+        for (uint256 i = 1; i <= total; i++) {
+            if (tasks[i].status == _status) count++;
+        }
+        ids = new uint256[](count);
+        uint256 idx;
+        for (uint256 i = 1; i <= total; i++) {
+            if (tasks[i].status == _status) ids[idx++] = i;
+        }
+    }
 
     /// @notice Returns the full Task struct for a given task ID.
     /// @param _taskId The ID of the task to retrieve.
