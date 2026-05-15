@@ -40,8 +40,8 @@ The 7-day window for Case 3 is intentional. After submitting proof, the worker s
 
 ## Summary Table
 
-| Status | Condition | Caller | New Status | Fund Destination |
-|--------|-----------|--------|------------|------------------|
-| Open | deadline passed | Anyone | Expired | Agent (full refund) |
-| Accepted | completionDeadline passed | Anyone | Expired | Agent (full refund) |
-| Submitted | completionDeadline + 7d passed | Anyone | Completed | Worker (minus fee) |
+| Status    | Condition                       | Caller | New Status | Fund Destination     |
+|-----------|---------------------------------|--------|------------|----------------------|
+| Open      | deadline passed                 | Anyone | Expired    | Agent (full refund)  |
+| Accepted  | completionDeadline passed       | Anyone | Expired    | Agent (full refund)  |
+| Submitted | completionDeadline + 7d passed  | Anyone | Completed  | Worker (minus fee)   |
