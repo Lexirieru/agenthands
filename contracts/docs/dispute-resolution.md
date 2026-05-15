@@ -31,17 +31,17 @@ The full reward amount is refunded to the agent from escrow. No platform fee is 
 
 ## Fund Flow Summary
 
-| Outcome | Agent receives | Worker receives | Platform receives |
-|---------|---------------|-----------------|-------------------|
-| Worker wins | 0 | reward - fee | fee |
-| Agent wins | reward (full) | 0 | 0 |
+| Outcome     | Agent receives | Worker receives | Platform receives |
+|-------------|----------------|-----------------|-------------------|
+| Worker wins | 0              | reward - fee    | fee               |
+| Agent wins  | reward (full)  | 0               | 0                 |
 
 ## Events
 
-| Event | Emitted when |
-|-------|-------------|
-| `TaskDisputed(taskId, agent)` | Agent calls disputeTask() |
-| `DisputeResolved(taskId, workerWins)` | Owner calls resolveDispute() |
+| Event                                | Emitted when                   |
+|--------------------------------------|--------------------------------|
+| `TaskDisputed(taskId, agent)`        | Agent calls disputeTask()      |
+| `DisputeResolved(taskId, workerWins)` | Owner calls resolveDispute()  |
 
 ## Known Limitation: Centralized Arbitration
 
