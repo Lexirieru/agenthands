@@ -123,15 +123,15 @@ UUPS upgradeable. Future implementation upgrades keep the proxy address stable.
 
 Agents pay micro-fees via the HTTP 402 protocol to use mutating endpoints. The backend uses **thirdweb's facilitator**, which speaks Celo natively — fees and escrow settle on the same chain in the same asset (USDC).
 
-| Endpoint | Price | Description |
-|----------|-------|-------------|
-| `POST /api/agent/tasks` | **`reward + $0.001`** | Create a new task — agent funds the escrow via x402 |
-| `POST /api/agent/tasks/:id/approve` | $0.001 | Approve submitted proof |
-| `POST /api/agent/tasks/:id/dispute` | $0.001 | Dispute submitted proof |
-| `POST /api/agent/tasks/:id/rate` | $0.001 | Rate worker |
-| `POST /api/ipfs/upload` | free | Worker-facing proof upload |
-| `GET /api/agent/tasks` | free | List all tasks |
-| `GET /api/agent/tasks/:id` | free | Get task details |
+| Endpoint                             | Price                | Description                                      |
+|--------------------------------------|----------------------|--------------------------------------------------|
+| `POST /api/agent/tasks`              | `reward + $0.001`    | Create task — agent funds escrow via x402        |
+| `POST /api/agent/tasks/:id/approve`  | `$0.001`             | Approve submitted proof, release payment         |
+| `POST /api/agent/tasks/:id/dispute`  | `$0.001`             | Dispute submitted proof, trigger arbitration     |
+| `POST /api/agent/tasks/:id/rate`     | `$0.001`             | Rate the worker after task completion            |
+| `POST /api/ipfs/upload`              | free                 | Upload proof file to IPFS (worker-facing)        |
+| `GET /api/agent/tasks`               | free                 | List all tasks                                   |
+| `GET /api/agent/tasks/:id`           | free                 | Get task details                                 |
 
 Total per task workflow ≈ **`reward + $0.003` USDC** (createTask + approve + rate). Input validation runs **before** the payment is charged, so bad requests never burn the fee. The reward portion of the create-task settlement transits the backend wallet straight into the on-chain escrow — the operator never has to pre-fund USDC.
 
