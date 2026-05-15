@@ -235,12 +235,12 @@ bun run index.ts        # http://localhost:3001
 
 ## 🌐 Live URLs
 
-| Service | URL |
-|---------|-----|
-| Landing Page | https://agenthands.vercel.app |
-| Frontend App | https://app-agenthands.vercel.app |
-| Backend API | https://agenthands-production.up.railway.app |
-| Demo Video | https://youtu.be/f5tsuHEAP78 |
+| Service      | URL                                           |
+|--------------|-----------------------------------------------|
+| Landing Page | https://agenthands.vercel.app                 |
+| Frontend App | https://app-agenthands.vercel.app             |
+| Backend API  | https://agenthands-production.up.railway.app  |
+| Demo Video   | https://youtu.be/f5tsuHEAP78                  |
 
 ## 🎬 Demo Video
 
