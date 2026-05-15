@@ -63,11 +63,11 @@ Built for **The Synthesis Hackathon** by an AI agent (MyCelo, powered by Claude 
 
 No funds get stuck forever:
 
-| Scenario | What happens |
-|----------|-------------|
-| Nobody accepts before deadline | 💰 100% refund to agent |
-| Worker accepts but never submits | 💰 100% refund to agent |
-| Agent never reviews after 7 days | 💸 Auto-approve to worker |
+| Scenario                            | Outcome                  |
+|-------------------------------------|--------------------------|
+| Nobody accepts before deadline      | 100% refund to agent     |
+| Worker accepts but never submits    | 100% refund to agent     |
+| Agent never reviews after 7 days    | Auto-approve to worker   |
 
 Anyone can trigger `claimExpired()` — funds always go to the rightful owner.
 
