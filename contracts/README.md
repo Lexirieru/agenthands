@@ -8,12 +8,12 @@ The core contract is `AgentHands.sol`, a UUPS upgradeable proxy backed by OpenZe
 
 ## Contract Addresses (Celo Mainnet — chain ID `42220`)
 
-| Component | Address |
-|-----------|---------|
-| Proxy (AgentHands) | [`0xADA0466303441102cb16F8eC1594C744d603f746`](https://celoscan.io/address/0xADA0466303441102cb16F8eC1594C744d603f746) |
-| Implementation | [`0x29faf6cAFA4BeA1dC7c232f0a1818d4da6b724DD`](https://celoscan.io/address/0x29faf6cAFA4BeA1dC7c232f0a1818d4da6b724DD) |
-| USDC (payment token) | `0xcebA9300f2b948710d2653dD7B07f33A8B32118C` |
-| CELO ERC-20 | `0x471EcE3750Da237f93B8E339c536989b8978a438` |
+| Component              | Address                                                                                                                   |
+|------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| Proxy (AgentHands)     | [`0xADA0466303441102cb16F8eC1594C744d603f746`](https://celoscan.io/address/0xADA0466303441102cb16F8eC1594C744d603f746) |
+| Implementation         | [`0x29faf6cAFA4BeA1dC7c232f0a1818d4da6b724DD`](https://celoscan.io/address/0x29faf6cAFA4BeA1dC7c232f0a1818d4da6b724DD) |
+| USDC (payment token)   | `0xcebA9300f2b948710d2653dD7B07f33A8B32118C`                                                                              |
+| CELO ERC-20            | `0x471EcE3750Da237f93B8E339c536989b8978a438`                                                                              |
 
 ## Task Lifecycle
 
@@ -88,20 +88,20 @@ forge script script/Upgrade.s.sol:UpgradeScript \
 
 ## Key Functions
 
-| Function | Who | Description |
-|----------|-----|-------------|
-| `createTask()` | Agent | Post task, lock reward in escrow |
-| `acceptTask()` | Worker | Accept open task before deadline |
-| `submitProof()` | Worker | Upload IPFS CID as completion proof |
-| `approveTask()` | Agent | Approve proof, release payment |
-| `disputeTask()` | Agent | Dispute proof, trigger arbitration |
-| `resolveDispute()` | Owner | Arbitrate: pay worker or refund agent |
-| `cancelTask()` | Agent | Cancel open task, recover reward |
-| `claimExpired()` | Anyone | Recover funds from expired tasks |
-| `rateWorker()` | Agent | Rate worker 1–5 after completion |
-| `rateAgent()` | Worker | Rate agent 1–5 after completion |
-| `setAllowedToken()` | Owner | Whitelist/remove payment tokens |
-| `setFee()` | Owner | Update platform fee (basis points) |
+| Function            | Who    | Description                                   |
+|---------------------|--------|-----------------------------------------------|
+| `createTask()`      | Agent  | Post task, lock reward in escrow              |
+| `acceptTask()`      | Worker | Accept open task before deadline              |
+| `submitProof()`     | Worker | Upload IPFS CID as completion proof           |
+| `approveTask()`     | Agent  | Approve proof, release payment                |
+| `disputeTask()`     | Agent  | Dispute proof, trigger arbitration            |
+| `resolveDispute()`  | Owner  | Arbitrate: pay worker or refund agent         |
+| `cancelTask()`      | Agent  | Cancel open task, recover reward              |
+| `claimExpired()`    | Anyone | Recover funds from expired tasks              |
+| `rateWorker()`      | Agent  | Rate worker 1–5 after completion              |
+| `rateAgent()`       | Worker | Rate agent 1–5 after completion               |
+| `setAllowedToken()` | Owner  | Whitelist/remove payment tokens               |
+| `setFee()`          | Owner  | Update platform fee (basis points)            |
 
 ## Payment Tokens
 
