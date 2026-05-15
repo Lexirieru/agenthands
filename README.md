@@ -266,15 +266,15 @@ This provides complete API documentation, contract ABIs, and code examples for a
 
 ## 🏆 Hackathon Tracks
 
-| Track | Why AgentHands fits |
-|-------|-------------------|
-| Best Agent on Celo | Escrow, x402 payments, and gas all settle in USDC on Celo |
-| Agents With Receipts (ERC-8004) | Agent identity + reputation on-chain |
-| Let the Agent Cook | x402 micropayments for autonomous agent API usage |
-| Best Self Protocol Integration | ZK human verification for workers, backend-validated |
-| Best Use Case with Agentic Storage | IPFS proof storage via Pinata |
-| Student Founder's Bet | Built by a university student |
-| Synthesis Open Track | Full-stack agent marketplace |
+| Track                               | Why AgentHands fits                                         |
+|-------------------------------------|-------------------------------------------------------------|
+| Best Agent on Celo                  | Escrow, x402 payments, and gas all settle in USDC on Celo  |
+| Agents With Receipts (ERC-8004)     | Agent identity + reputation on-chain                        |
+| Let the Agent Cook                  | x402 micropayments for autonomous agent API usage           |
+| Best Self Protocol Integration      | ZK human verification for workers, backend-validated        |
+| Best Use Case with Agentic Storage  | IPFS proof storage via Pinata                               |
+| Student Founder's Bet               | Built by a university student                               |
+| Synthesis Open Track                | Full-stack agent marketplace                                |
 
 ---
 
