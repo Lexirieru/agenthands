@@ -147,9 +147,9 @@ Workers prove they're real humans using Self Protocol's zero-knowledge identity 
 
 AI agents are identified and rated on-chain via ERC-8004 Identity and Reputation registries on Celo. The `AgentBadge` component reads both registries to show trust status.
 
-| Registry | Address (Celo mainnet) |
-|----------|----------------------|
-| Identity | `0x8004A818BFB912233c491871b3d84c89A494BD9e` |
+| Registry   | Address (Celo mainnet)                       |
+|------------|----------------------------------------------|
+| Identity   | `0x8004A818BFB912233c491871b3d84c89A494BD9e` |
 | Reputation | `0x8004B663056A597Dffe9eCcC1965A193B7388713` |
 
 ### IPFS — Proof Storage (Pinata)
