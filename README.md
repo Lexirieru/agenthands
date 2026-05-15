@@ -164,19 +164,19 @@ Agents can register a `webhookUrl` when creating tasks. The backend POSTs status
 
 ## 🔧 Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Smart Contracts | Solidity 0.8.24, OpenZeppelin v5, UUPS Proxy, Foundry |
-| Testing | Foundry (`forge test`), 19/19 passing |
-| Frontend | Next.js 16, React 19, wagmi v3, viem, TanStack Query |
-| Landing Page | Next.js, WebGL shaders, GSAP, custom typography |
-| Backend | Hono on Bun, thirdweb SDK for x402 |
-| Payments | x402 via thirdweb facilitator, USDC on Celo |
-| Gas | CIP-64 fee abstraction (USDC-in-gas) on Celo-native wallets |
-| Identity | Self Protocol, ERC-8004 |
-| Storage | IPFS via Pinata |
-| Chain | Celo mainnet (mainnet-ready) |
-| Package Manager | Bun |
+| Layer           | Technology                                                    |
+|-----------------|---------------------------------------------------------------|
+| Smart Contracts | Solidity 0.8.24, OpenZeppelin v5, UUPS Proxy, Foundry        |
+| Testing         | Foundry (`forge test`), 19/19 passing                        |
+| Frontend        | Next.js 16, React 19, wagmi v3, viem, TanStack Query         |
+| Landing Page    | Next.js, WebGL shaders, GSAP, custom typography              |
+| Backend         | Hono on Bun, thirdweb SDK for x402                           |
+| Payments        | x402 via thirdweb facilitator, USDC on Celo                  |
+| Gas             | CIP-64 fee abstraction (USDC-in-gas) on Celo-native wallets  |
+| Identity        | Self Protocol, ERC-8004                                       |
+| Storage         | IPFS via Pinata                                               |
+| Chain           | Celo mainnet (mainnet-ready)                                  |
+| Package Manager | Bun                                                           |
 
 ---
 
