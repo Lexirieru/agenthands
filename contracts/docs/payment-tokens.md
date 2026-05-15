@@ -28,10 +28,10 @@ By restricting to audited, well-known stablecoins, AgentHands guarantees that es
 
 ## Supported Tokens on Celo Mainnet
 
-| Token | Address | Notes |
-|-------|---------|-------|
-| USDC | `0x765DE816845861e75A25fCA122bb6898B8B1282a` | USD Coin bridged to Celo |
-| cUSD | `0x471EcE3750Da237f93B8E339c536989b8978a438` | Celo native stablecoin (ERC20 wrapper of CELO) |
+| Token | Address                                        | Notes                                           |
+|-------|------------------------------------------------|-------------------------------------------------|
+| USDC  | `0x765DE816845861e75A25fCA122bb6898B8B1282a`   | USD Coin bridged to Celo                        |
+| cUSD  | `0x471EcE3750Da237f93B8E339c536989b8978a438`   | Celo native stablecoin (ERC20 wrapper of CELO)  |
 
 Both tokens are 18-decimal ERC20s on Celo. Verify addresses against the Celo official token list before using them in scripts.
 

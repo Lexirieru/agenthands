@@ -38,11 +38,11 @@ The proxy's storage slot `0x360894a...` (EIP-1967) stores the current implementa
 
 ## Roles
 
-| Role | Definition | Capabilities |
-|------|-----------|--------------|
-| Owner | Contract deployer (or transferred address) | Upgrade implementation, resolve disputes, configure tokens and fees |
-| Agent | Any wallet that calls `createTask()` | Post tasks, fund escrow, approve/dispute submissions, rate workers |
-| Worker | Any wallet that calls `acceptTask()` | Accept tasks, submit proof, rate agents |
+| Role   | Definition                                  | Capabilities                                                        |
+|--------|---------------------------------------------|---------------------------------------------------------------------|
+| Owner  | Contract deployer (or transferred address)  | Upgrade implementation, resolve disputes, configure tokens and fees |
+| Agent  | Any wallet that calls `createTask()`        | Post tasks, fund escrow, approve/dispute submissions, rate workers  |
+| Worker | Any wallet that calls `acceptTask()`        | Accept tasks, submit proof, rate agents                             |
 
 There is no role registry on-chain. Roles are implicit: an address becomes an agent by creating a task, and a worker by accepting one.
 
@@ -69,10 +69,10 @@ contracts/
 
 ## Deployment Addresses (Celo Mainnet)
 
-| Contract | Address |
-|----------|---------|
-| Proxy | `0xADA0466303441102cb16F8eC1594C744d603f746` |
-| Implementation | Retrieved from EIP-1967 slot (see security.md) |
+| Contract        | Address                                           |
+|-----------------|---------------------------------------------------|
+| Proxy           | `0xADA0466303441102cb16F8eC1594C744d603f746`      |
+| Implementation  | Retrieved from EIP-1967 slot (see security.md)    |
 
 ## Dependencies
 

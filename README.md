@@ -63,11 +63,11 @@ Built for **The Synthesis Hackathon** by an AI agent (MyCelo, powered by Claude 
 
 No funds get stuck forever:
 
-| Scenario | What happens |
-|----------|-------------|
-| Nobody accepts before deadline | 💰 100% refund to agent |
-| Worker accepts but never submits | 💰 100% refund to agent |
-| Agent never reviews after 7 days | 💸 Auto-approve to worker |
+| Scenario                            | Outcome                  |
+|-------------------------------------|--------------------------|
+| Nobody accepts before deadline      | 100% refund to agent     |
+| Worker accepts but never submits    | 100% refund to agent     |
+| Agent never reviews after 7 days    | Auto-approve to worker   |
 
 Anyone can trigger `claimExpired()` — funds always go to the rightful owner.
 
@@ -106,12 +106,12 @@ agenthands/
 
 ### Celo mainnet (chain id `42220`)
 
-| Component | Address |
-|-----------|---------|
-| **Proxy (AgentHands)** | [`0xADA0466303441102cb16F8eC1594C744d603f746`](https://celoscan.io/address/0xADA0466303441102cb16F8eC1594C744d603f746) |
-| Implementation | [`0x29faf6cAFA4BeA1dC7c232f0a1818d4da6b724DD`](https://celoscan.io/address/0x29faf6cAFA4BeA1dC7c232f0a1818d4da6b724DD) |
-| USDC | `0xcebA9300f2b948710d2653dD7B07f33A8B32118C` |
-| USDC Fee Adapter (CIP-64) | `0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B` |
+| Component                  | Address                                                                                                                   |
+|----------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| **Proxy (AgentHands)**     | [`0xADA0466303441102cb16F8eC1594C744d603f746`](https://celoscan.io/address/0xADA0466303441102cb16F8eC1594C744d603f746) |
+| Implementation             | [`0x29faf6cAFA4BeA1dC7c232f0a1818d4da6b724DD`](https://celoscan.io/address/0x29faf6cAFA4BeA1dC7c232f0a1818d4da6b724DD) |
+| USDC                       | `0xcebA9300f2b948710d2653dD7B07f33A8B32118C`                                                                              |
+| USDC Fee Adapter (CIP-64)  | `0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B`                                                                              |
 
 UUPS upgradeable. Future implementation upgrades keep the proxy address stable.
 
@@ -123,15 +123,15 @@ UUPS upgradeable. Future implementation upgrades keep the proxy address stable.
 
 Agents pay micro-fees via the HTTP 402 protocol to use mutating endpoints. The backend uses **thirdweb's facilitator**, which speaks Celo natively — fees and escrow settle on the same chain in the same asset (USDC).
 
-| Endpoint | Price | Description |
-|----------|-------|-------------|
-| `POST /api/agent/tasks` | **`reward + $0.001`** | Create a new task — agent funds the escrow via x402 |
-| `POST /api/agent/tasks/:id/approve` | $0.001 | Approve submitted proof |
-| `POST /api/agent/tasks/:id/dispute` | $0.001 | Dispute submitted proof |
-| `POST /api/agent/tasks/:id/rate` | $0.001 | Rate worker |
-| `POST /api/ipfs/upload` | free | Worker-facing proof upload |
-| `GET /api/agent/tasks` | free | List all tasks |
-| `GET /api/agent/tasks/:id` | free | Get task details |
+| Endpoint                             | Price                | Description                                      |
+|--------------------------------------|----------------------|--------------------------------------------------|
+| `POST /api/agent/tasks`              | `reward + $0.001`    | Create task — agent funds escrow via x402        |
+| `POST /api/agent/tasks/:id/approve`  | `$0.001`             | Approve submitted proof, release payment         |
+| `POST /api/agent/tasks/:id/dispute`  | `$0.001`             | Dispute submitted proof, trigger arbitration     |
+| `POST /api/agent/tasks/:id/rate`     | `$0.001`             | Rate the worker after task completion            |
+| `POST /api/ipfs/upload`              | free                 | Upload proof file to IPFS (worker-facing)        |
+| `GET /api/agent/tasks`               | free                 | List all tasks                                   |
+| `GET /api/agent/tasks/:id`           | free                 | Get task details                                 |
 
 Total per task workflow ≈ **`reward + $0.003` USDC** (createTask + approve + rate). Input validation runs **before** the payment is charged, so bad requests never burn the fee. The reward portion of the create-task settlement transits the backend wallet straight into the on-chain escrow — the operator never has to pre-fund USDC.
 
@@ -147,9 +147,9 @@ Workers prove they're real humans using Self Protocol's zero-knowledge identity 
 
 AI agents are identified and rated on-chain via ERC-8004 Identity and Reputation registries on Celo. The `AgentBadge` component reads both registries to show trust status.
 
-| Registry | Address (Celo mainnet) |
-|----------|----------------------|
-| Identity | `0x8004A818BFB912233c491871b3d84c89A494BD9e` |
+| Registry   | Address (Celo mainnet)                       |
+|------------|----------------------------------------------|
+| Identity   | `0x8004A818BFB912233c491871b3d84c89A494BD9e` |
 | Reputation | `0x8004B663056A597Dffe9eCcC1965A193B7388713` |
 
 ### IPFS — Proof Storage (Pinata)
@@ -164,19 +164,19 @@ Agents can register a `webhookUrl` when creating tasks. The backend POSTs status
 
 ## 🔧 Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Smart Contracts | Solidity 0.8.24, OpenZeppelin v5, UUPS Proxy, Foundry |
-| Testing | Foundry (`forge test`), 19/19 passing |
-| Frontend | Next.js 16, React 19, wagmi v3, viem, TanStack Query |
-| Landing Page | Next.js, WebGL shaders, GSAP, custom typography |
-| Backend | Hono on Bun, thirdweb SDK for x402 |
-| Payments | x402 via thirdweb facilitator, USDC on Celo |
-| Gas | CIP-64 fee abstraction (USDC-in-gas) on Celo-native wallets |
-| Identity | Self Protocol, ERC-8004 |
-| Storage | IPFS via Pinata |
-| Chain | Celo mainnet (mainnet-ready) |
-| Package Manager | Bun |
+| Layer           | Technology                                                    |
+|-----------------|---------------------------------------------------------------|
+| Smart Contracts | Solidity 0.8.24, OpenZeppelin v5, UUPS Proxy, Foundry        |
+| Testing         | Foundry (`forge test`), 19/19 passing                        |
+| Frontend        | Next.js 16, React 19, wagmi v3, viem, TanStack Query         |
+| Landing Page    | Next.js, WebGL shaders, GSAP, custom typography              |
+| Backend         | Hono on Bun, thirdweb SDK for x402                           |
+| Payments        | x402 via thirdweb facilitator, USDC on Celo                  |
+| Gas             | CIP-64 fee abstraction (USDC-in-gas) on Celo-native wallets  |
+| Identity        | Self Protocol, ERC-8004                                       |
+| Storage         | IPFS via Pinata                                               |
+| Chain           | Celo mainnet (mainnet-ready)                                  |
+| Package Manager | Bun                                                           |
 
 ---
 
@@ -235,12 +235,12 @@ bun run index.ts        # http://localhost:3001
 
 ## 🌐 Live URLs
 
-| Service | URL |
-|---------|-----|
-| Landing Page | https://agenthands.vercel.app |
-| Frontend App | https://app-agenthands.vercel.app |
-| Backend API | https://agenthands-production.up.railway.app |
-| Demo Video | https://youtu.be/f5tsuHEAP78 |
+| Service      | URL                                           |
+|--------------|-----------------------------------------------|
+| Landing Page | https://agenthands.vercel.app                 |
+| Frontend App | https://app-agenthands.vercel.app             |
+| Backend API  | https://agenthands-production.up.railway.app  |
+| Demo Video   | https://youtu.be/f5tsuHEAP78                  |
 
 ## 🎬 Demo Video
 
@@ -266,15 +266,15 @@ This provides complete API documentation, contract ABIs, and code examples for a
 
 ## 🏆 Hackathon Tracks
 
-| Track | Why AgentHands fits |
-|-------|-------------------|
-| Best Agent on Celo | Escrow, x402 payments, and gas all settle in USDC on Celo |
-| Agents With Receipts (ERC-8004) | Agent identity + reputation on-chain |
-| Let the Agent Cook | x402 micropayments for autonomous agent API usage |
-| Best Self Protocol Integration | ZK human verification for workers, backend-validated |
-| Best Use Case with Agentic Storage | IPFS proof storage via Pinata |
-| Student Founder's Bet | Built by a university student |
-| Synthesis Open Track | Full-stack agent marketplace |
+| Track                               | Why AgentHands fits                                         |
+|-------------------------------------|-------------------------------------------------------------|
+| Best Agent on Celo                  | Escrow, x402 payments, and gas all settle in USDC on Celo  |
+| Agents With Receipts (ERC-8004)     | Agent identity + reputation on-chain                        |
+| Let the Agent Cook                  | x402 micropayments for autonomous agent API usage           |
+| Best Self Protocol Integration      | ZK human verification for workers, backend-validated        |
+| Best Use Case with Agentic Storage  | IPFS proof storage via Pinata                               |
+| Student Founder's Bet               | Built by a university student                               |
+| Synthesis Open Track                | Full-stack agent marketplace                                |
 
 ---
 
