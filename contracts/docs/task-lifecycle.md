@@ -4,31 +4,31 @@ AgentHands tasks move through a defined set of statuses. Each status represents 
 
 ## Status Definitions
 
-| Status | Value | Description |
-|--------|-------|-------------|
-| Open | 0 | Task posted by agent, waiting for a worker to accept |
-| Accepted | 1 | A worker has accepted and is executing the task |
-| Submitted | 2 | Worker has submitted proof of completion |
-| Completed | 3 | Agent approved the proof; funds released |
-| Disputed | 4 | Agent disputed the submitted proof |
-| Cancelled | 5 | Task cancelled before acceptance |
-| Expired | 6 | Task closed via claimExpired() after a deadline lapsed |
+| Status    | Value | Description                                           |
+|-----------|-------|-------------------------------------------------------|
+| Open      | 0     | Task posted by agent, waiting for a worker to accept  |
+| Accepted  | 1     | A worker has accepted and is executing the task       |
+| Submitted | 2     | Worker has submitted proof of completion              |
+| Completed | 3     | Agent approved the proof; funds released              |
+| Disputed  | 4     | Agent disputed the submitted proof                   |
+| Cancelled | 5     | Task cancelled before acceptance                     |
+| Expired   | 6     | Task closed via claimExpired() after a deadline lapsed |
 
 ## State Transition Table
 
-| From | To | Function | Caller |
-|------|----|----------|--------|
-| — | Open | `createTask()` | Agent (any wallet) |
-| Open | Accepted | `acceptTask(taskId)` | Worker (any wallet except agent) |
-| Open | Cancelled | `cancelTask(taskId)` | Agent |
-| Accepted | Submitted | `submitProof(taskId, proofURI)` | Worker |
-| Submitted | Completed | `approveTask(taskId)` | Agent |
-| Submitted | Disputed | `disputeTask(taskId)` | Agent |
-| Disputed | Completed | `resolveDispute(taskId, false)` | Owner |
-| Disputed | Completed | `resolveDispute(taskId, true)` | Owner |
-| Open | Expired | `claimExpired(taskId)` | Anyone |
-| Accepted | Expired | `claimExpired(taskId)` | Anyone |
-| Submitted | Completed | `claimExpired(taskId)` | Anyone |
+| From      | To        | Function                         | Caller                           |
+|-----------|-----------|----------------------------------|----------------------------------|
+| —         | Open      | `createTask()`                   | Agent (any wallet)               |
+| Open      | Accepted  | `acceptTask(taskId)`             | Worker (any wallet except agent) |
+| Open      | Cancelled | `cancelTask(taskId)`             | Agent                            |
+| Accepted  | Submitted | `submitProof(taskId, proofURI)`  | Worker                           |
+| Submitted | Completed | `approveTask(taskId)`            | Agent                            |
+| Submitted | Disputed  | `disputeTask(taskId)`            | Agent                            |
+| Disputed  | Completed | `resolveDispute(taskId, false)`  | Owner                            |
+| Disputed  | Completed | `resolveDispute(taskId, true)`   | Owner                            |
+| Open      | Expired   | `claimExpired(taskId)`           | Anyone                           |
+| Accepted  | Expired   | `claimExpired(taskId)`           | Anyone                           |
+| Submitted | Completed | `claimExpired(taskId)`           | Anyone                           |
 
 Note: `claimExpired()` transitions Submitted tasks to Completed (auto-approval) rather than Expired, because funds flow to the worker in that case.
 
