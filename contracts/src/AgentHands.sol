@@ -266,6 +266,10 @@ contract AgentHands is
     // ─── UUPS Authorization ──────────────────────────────────
 
     /// @dev Only the owner may authorize an upgrade to a new implementation.
+    ///      Overrides `UUPSUpgradeable._authorizeUpgrade` — adding `onlyOwner` ensures
+    ///      that only the contract owner can push a new implementation through the proxy.
+    ///      The function body is intentionally empty; the modifier does all the work.
+    /// @param newImplementation Address of the new implementation contract.
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // ─── Admin ───────────────────────────────────────────────
