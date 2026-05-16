@@ -38,6 +38,11 @@ export default function TasksPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const gridRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const nowSec = useNowSeconds();
@@ -237,9 +242,9 @@ export default function TasksPage() {
       <PaginationBar
         currentPage={currentPage}
         totalPages={totalPages}
-        onPrev={() => setCurrentPage(p => Math.max(1, p - 1))}
-        onNext={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-        onPageSelect={(p) => setCurrentPage(p)}
+        onPrev={() => goToPage(Math.max(1, currentPage - 1))}
+        onNext={() => goToPage(Math.min(totalPages, currentPage + 1))}
+        onPageSelect={(p) => goToPage(p)}
       />
     </div>
   );
