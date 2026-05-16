@@ -220,9 +220,18 @@ export default function TasksPage() {
           ))}
         </div>
       ) : filteredTasks.length === 0 ? (
-        <div className="text-center py-20 text-[#8B4513]">
-          <p className="text-lg font-heading">No tasks found</p>
-          <p className="text-sm mt-2">Try adjusting your filters or check back later.</p>
+        <div className="text-center py-24 text-[#8B4513]">
+          <div className="text-5xl mb-4">🔍</div>
+          <p className="text-xl font-heading text-[#5C2D0A]">No tasks found</p>
+          <p className="text-sm mt-2 text-[#8B4513]">
+            {search ? `No results for "${search}"` : 'No tasks match the selected filter.'}
+          </p>
+          <button
+            onClick={() => { setFilter('all'); setSearch(''); }}
+            className="mt-4 px-4 py-2 rounded-lg text-sm font-medium bg-[#5C2D0A] text-white hover:bg-[#7A3D0F] transition-colors"
+          >
+            Clear filters
+          </button>
         </div>
       ) : (
         <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
