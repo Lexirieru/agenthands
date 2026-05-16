@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Search, X } from "lucide-react";
 import SwipeStack from "@/components/SwipeStack";
 import TaskGrid from "@/components/TaskGrid";
@@ -43,6 +43,11 @@ export default function TasksPage() {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const onFilterChange = useCallback((value: number | 'all') => setFilter(value), []);
+  const onSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
+  const onClearSearch = useCallback(() => setSearch(''), []);
+  const onClearFilters = useCallback(() => { setFilter('all'); setSearch(''); }, []);
 
   const filteredTasks = tasks
     .filter((t) => filter === "all" || Number(t.status) === filter)
@@ -133,12 +138,12 @@ export default function TasksPage() {
             type="text"
             placeholder="Search tasks..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={onSearchChange}
             className="w-full bg-[var(--card-solid)] border border-[var(--border)] rounded-lg pl-10 pr-10 py-2.5 text-sm text-[#5C2D0A] placeholder-[#8B4513] focus:outline-none focus:border-[#D4700A] font-label"
           />
           {search && (
             <button
-              onClick={() => setSearch("")}
+              onClick={onClearSearch}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8B4513] hover:text-[#5C2D0A] transition-colors"
               aria-label="Clear search"
             >
@@ -150,7 +155,7 @@ export default function TasksPage() {
           {statusFilters.map((f) => (
             <button
               key={String(f.value)}
-              onClick={() => setFilter(f.value)}
+              onClick={() => onFilterChange(f.value)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium font-label transition-colors ${
                 filter === f.value
                   ? "bg-[#5C2D0A] text-white"
@@ -169,7 +174,7 @@ export default function TasksPage() {
         <TaskGrid
           tasks={filteredTasks}
           search={search}
-          onClearFilters={() => { setFilter("all"); setSearch(""); }}
+          onClearFilters={onClearFilters}
         />
       )}
     </div>
