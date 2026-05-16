@@ -8,8 +8,11 @@ import PaginationBar from "@/components/PaginationBar";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useAllTasks } from "@/hooks/useTasks";
 
-// ── Pagination ──────────────────────────────────────────
-const ITEMS_PER_PAGE = 12; // 3 cols × 4 rows
+// ── Pagination constants ────────────────────────────────
+// Desktop grid renders GRID_COLS columns × GRID_ROWS rows = ITEMS_PER_PAGE cards per page.
+const GRID_COLS = 3;
+const GRID_ROWS = 4;
+const ITEMS_PER_PAGE = GRID_COLS * GRID_ROWS; // 12
 
 function useNowSeconds(intervalMs = 30000) {
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
