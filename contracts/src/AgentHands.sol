@@ -30,6 +30,14 @@ contract AgentHands is
 
     /// @notice Represents the lifecycle state of a task.
     /// @dev    State transitions are strictly enforced — no backwards movement allowed.
+    ///         Numeric values are stable on-chain (ABI-encoded) and must not be reordered.
+    ///         - 0 Open:      task posted by agent, waiting for a worker to accept.
+    ///         - 1 Accepted:  worker accepted the task and is actively working on it.
+    ///         - 2 Submitted: worker uploaded proof of completion; pending agent review.
+    ///         - 3 Completed: agent approved the proof; reward released to worker.
+    ///         - 4 Disputed:  agent rejected the proof; awaiting owner arbitration via resolveDispute().
+    ///         - 5 Cancelled: agent cancelled before any worker accepted; reward refunded.
+    ///         - 6 Expired:   claimExpired() triggered after a deadline lapsed; reward refunded.
     enum TaskStatus {
         Open,       // Task posted by agent, waiting for a worker to accept
         Accepted,   // Worker accepted the task and is working on it
