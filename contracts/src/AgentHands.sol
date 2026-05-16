@@ -287,6 +287,9 @@ contract AgentHands is
     /// @dev    The caller must have approved this contract to transfer `_reward`
     ///         of `_paymentToken` before calling. The reward is held until the task
     ///         is completed, cancelled, or expired.
+    ///         Reentrancy: guarded by `nonReentrant` because `safeTransferFrom` on
+    ///         certain ERC-20 tokens (e.g. ERC-777 hooks or fee-on-transfer tokens)
+    ///         can re-enter. State is written after the transfer to preserve CEI order.
     /// @param _paymentToken       ERC-20 token address for the reward (must be whitelisted).
     /// @param _reward             Reward amount in the token's native decimals.
     /// @param _deadline           Unix timestamp by which a worker must accept the task.
