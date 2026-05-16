@@ -95,3 +95,24 @@ Open [http://localhost:3000](http://localhost:3000).
 | `useAutoConnect()` | Re-connects the last used wallet on page load |
 | `useCeloUsdPrice()` | Fetches CELO/USD price from Chainlink oracle on Celo mainnet |
 | `useCip64()` | Builds CIP-64 fee-currency transaction parameters for MiniPay |
+
+## Environment Variables
+
+Copy `.env.local.example` to `.env.local` and fill in:
+
+```bash
+# Required
+NEXT_PUBLIC_BACKEND_URL=https://your-backend.example.com
+NEXT_PUBLIC_AGENTHANDS_ADDRESS=0xADA0466303441102cb16F8eC1594C744d603f746
+
+# Optional — enables WalletConnect modal
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
+```
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_BACKEND_URL` | Yes | AgentHands backend API base URL |
+| `NEXT_PUBLIC_AGENTHANDS_ADDRESS` | Yes | AgentHands proxy contract address on Celo |
+| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | No | WalletConnect Cloud project ID for wallet modal |
+
+All `NEXT_PUBLIC_` prefixed variables are bundled into the client build at compile time.
