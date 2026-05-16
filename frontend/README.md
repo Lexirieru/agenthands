@@ -159,3 +159,29 @@ The `useIsMobile()` hook (breakpoint: 768 px) drives a hard split between two re
 - `PaginationBar` component provides prev/next, page number buttons (max 5 visible), and keyboard ← / → navigation.
 - GSAP fade-in animation plays on load and on every page change.
 - A "Showing X–Y of Z tasks" range indicator keeps the user oriented.
+
+## Development Workflow
+
+```bash
+bun install          # install dependencies
+bun dev              # start dev server at http://localhost:3000 with hot reload
+bun build            # production build (runs Next.js compiler + type check)
+bun start            # start production server
+bun lint             # run ESLint across the project
+```
+
+### Adding a New Page
+
+1. Create `src/app/<route>/page.tsx` — Next.js App Router picks it up automatically.
+2. Export a default `async` Server Component or `'use client'` Client Component.
+3. Use `useIsMobile()` if the page needs separate mobile/desktop render paths.
+
+### Adding a New Component
+
+1. Create `src/components/MyComponent.tsx`.
+2. Mark with `'use client'` only if it uses browser APIs or React state/effects.
+3. Follow the existing Tailwind colour palette (`#5C2D0A`, `#8B4513`, `#D4700A`, `var(--card)`, `var(--border)`).
+
+## Deployment
+
+The frontend is deployed on [Vercel](https://vercel.com) at `talentapp.vercel.app`. Push to `main` triggers an automatic deployment. Set all `NEXT_PUBLIC_` environment variables in the Vercel project settings.
