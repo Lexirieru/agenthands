@@ -384,6 +384,13 @@ contract AgentHands is
     /// @notice Agent approves the submitted proof and releases payment to the worker.
     /// @dev    Deducts the platform fee and transfers the remainder to the worker.
     ///         Uses `nonReentrant` because it performs two external token transfers.
+    ///         Escrow release breakdown (via `_releaseFunds`):
+    ///           fee    = reward × platformFeeBps / 10 000
+    ///           payout = reward − fee
+    ///         Transfer 1: fee → feeRecipient  (skipped if platformFeeBps == 0)
+    ///         Transfer 2: payout → task.worker
+    ///         The emitted `TaskCompleted` event carries `task.reward` (gross), not the
+    ///         net payout, for easier off-chain accounting.
     /// @param _taskId The ID of the submitted task to approve.
     function approveTask(uint256 _taskId) external onlyAgent(_taskId) nonReentrant {
         Task storage task = tasks[_taskId];
