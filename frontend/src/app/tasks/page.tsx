@@ -50,6 +50,9 @@ export default function TasksPage() {
     setIsMounted(true);
   }, []);
 
+  useEffect(() => { setCurrentPage(1); }, [filter]);
+  useEffect(() => { setCurrentPage(1); }, [search]);
+
   // Desktop GSAP animation
   useEffect(() => {
     if (isMounted && !isMobile && !isLoading && gridRef.current && tasks.length > 0) {
