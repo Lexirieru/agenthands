@@ -53,6 +53,16 @@ export default function TasksPage() {
   useEffect(() => { setCurrentPage(1); }, [filter]);
   useEffect(() => { setCurrentPage(1); }, [search]);
 
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (isMobile) return;
+      if (e.key === 'ArrowLeft') setCurrentPage(p => Math.max(1, p - 1));
+      if (e.key === 'ArrowRight') setCurrentPage(p => Math.min(totalPages, p + 1));
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isMobile, totalPages]);
+
   // Desktop GSAP animation
   useEffect(() => {
     if (isMounted && !isMobile && !isLoading && gridRef.current && tasks.length > 0) {
