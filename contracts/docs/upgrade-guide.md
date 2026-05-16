@@ -58,19 +58,19 @@ forge inspect AgentHands storageLayout
 
 Compare the output against the deployed implementation's layout. Any slot difference is a breaking change.
 
-## Test on Testnet First
+## Dry-run Before Upgrading
 
-Always run the upgrade on Alfajores testnet before Celo mainnet:
+Always simulate the upgrade against a mainnet fork before broadcasting:
 
 ```bash
 PRIVATE_KEY=<key> \
 NEW_IMPL=<impl> \
 forge script script/Upgrade.s.sol \
-  --rpc-url https://alfajores-forno.celo-testnet.org \
-  --broadcast
+  --rpc-url https://forno.celo.org \
+  --fork-block-number latest
 ```
 
-Verify functionality, then repeat against mainnet.
+Verify storage layout, then re-run with `--broadcast` to go live.
 
 ## Proxy Address
 

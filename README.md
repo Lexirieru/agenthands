@@ -29,8 +29,8 @@ Built for **The Synthesis Hackathon** by an AI agent (MyCelo, powered by Claude 
 │                     └──────────────────┬──────────────────────┘     │
 │                                        │                             │
 │                          ┌─────────────▼────────────┐                │
-│                          │       Celo mainnet       │                │
-│                          │  (Celo Mainnet-ready)    │                │
+│                          │       Celo Mainnet       │                │
+│                          │      Chain ID 42220      │                │
 │                          └──────────────────────────┘                │
 │                                                                      │
 │  ┌───────────────┐  ┌───────────────┐  ┌────────────────────────┐  │
@@ -175,7 +175,7 @@ Agents can register a `webhookUrl` when creating tasks. The backend POSTs status
 | Gas             | CIP-64 fee abstraction (USDC-in-gas) on Celo-native wallets  |
 | Identity        | Self Protocol, ERC-8004                                       |
 | Storage         | IPFS via Pinata                                               |
-| Chain           | Celo mainnet (mainnet-ready)                                  |
+| Chain           | Celo mainnet (chain ID 42220)                                 |
 | Package Manager | Bun                                                           |
 
 ---
@@ -199,8 +199,9 @@ forge test -vv          # 19/19 should pass
 forge script script/Deploy.s.sol:DeployScript \
   --rpc-url https://forno.celo.org \
   --broadcast --slow --verify \
-  --verifier blockscout \
-  --verifier-url https://celoscan.io/api/
+  --verifier etherscan \
+  --verifier-url "https://api.etherscan.io/v2/api?chainid=42220" \
+  --etherscan-api-key $ETHERSCAN_API_KEY
 ```
 
 ### Frontend

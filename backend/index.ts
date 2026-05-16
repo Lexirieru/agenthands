@@ -894,7 +894,7 @@ app.post("/api/self/agent/register", async (c) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         mode: "linked",
-        network: "testnet",
+        network: "mainnet",
         humanAddress: account.address,
         disclosures: { minimumAge: 18, ofac: true },
       }),
