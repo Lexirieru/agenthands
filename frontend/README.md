@@ -116,3 +116,29 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | No | WalletConnect Cloud project ID for wallet modal |
 
 All `NEXT_PUBLIC_` prefixed variables are bundled into the client build at compile time.
+
+## Wallet Connection and Web3 Stack
+
+AgentHands uses **wagmi v3** with **viem** for all blockchain interactions. The chain is configured to **Celo mainnet** (chain ID `42220`).
+
+### Supported Wallets
+
+- MetaMask (and any EIP-1193 injected wallet)
+- Valora (Celo's native mobile wallet)
+- MiniPay (Opera mini wallet — detected via `useIsMiniPay`)
+- Any WalletConnect-compatible wallet via WalletConnect v2 modal
+
+### Chain Configuration
+
+The Celo chain config is defined in `src/config/index.ts`. It includes two RPC transports with automatic fallback:
+
+1. Primary: `NEXT_PUBLIC_RPC_URL` (if set)
+2. Fallback: Forno (`https://forno.celo.org`) — Celo's public RPC
+
+### Contract Reads
+
+All contract reads use a standalone `createPublicClient` (not the wagmi client) with `multicall` batching in `useTasks.ts`. This avoids coupling the read layer to the connected wallet.
+
+### Contract Writes
+
+Write functions are invoked via `useAgentHands()` which returns wagmi `useWriteContract` hooks pre-configured with the `AgentHands` ABI and proxy address. MiniPay users automatically get CIP-64 fee-currency parameters injected via `useCip64()`.
