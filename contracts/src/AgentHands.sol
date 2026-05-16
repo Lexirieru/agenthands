@@ -464,13 +464,18 @@ contract AgentHands is
 
     // ─── Core: Claim Expired ─────────────────────────────────
 
-    /// @notice Permissionlessly triggers fund recovery for tasks in terminal expired states.
-    /// @dev    Three cases are handled:
-    ///         1. Open + acceptance deadline passed → full refund to agent.
-    ///         2. Accepted + completion deadline passed (worker never submitted) → full refund to agent.
-    ///         3. Submitted + completion deadline + 7-day review window passed (agent never reviewed)
-    ///            → auto-approve and pay the worker.
-    ///         Anyone may call this — funds always flow to the rightful owner.
+    /// @notice Permissionlessly triggers fund recovery for tasks stuck past their deadlines.
+    ///         Handles three distinct expiry paths to ensure no funds are ever locked:
+    ///         Path A — Open task, acceptance deadline passed:
+    ///           No worker accepted in time → full reward refunded to agent, status → Expired.
+    ///         Path B — Accepted task, completion deadline passed:
+    ///           Worker accepted but never submitted proof → full reward refunded to agent, status → Expired.
+    ///         Path C — Submitted task, completion deadline + 7-day grace period passed:
+    ///           Agent never reviewed the submitted proof → auto-approved, payout sent to worker,
+    ///           status → Completed. This protects workers from agents who refuse to review.
+    /// @dev    Anyone may call this function — no access control needed because funds always
+    ///         flow to the rightful owner regardless of who triggers it.
+    ///         Reverts with `NotExpired` if none of the three conditions are met.
     /// @param _taskId The ID of the task to claim.
     function claimExpired(uint256 _taskId) external nonReentrant {
         Task storage task = tasks[_taskId];
