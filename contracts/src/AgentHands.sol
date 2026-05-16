@@ -17,6 +17,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 ///         Task lifecycle: Open → Accepted → Submitted → Completed | Disputed → Resolved.
 ///         The owner whitelists accepted payment tokens via `setAllowedToken`.
 ///         A platform fee (in basis points) is deducted from every successful payout.
+/// @custom:security-contact security@agenthands.xyz
 contract AgentHands is
     Initializable,
     UUPSUpgradeable,
@@ -29,6 +30,14 @@ contract AgentHands is
 
     /// @notice Represents the lifecycle state of a task.
     /// @dev    State transitions are strictly enforced — no backwards movement allowed.
+    ///         Numeric values are stable on-chain (ABI-encoded) and must not be reordered.
+    ///         - 0 Open:      task posted by agent, waiting for a worker to accept.
+    ///         - 1 Accepted:  worker accepted the task and is actively working on it.
+    ///         - 2 Submitted: worker uploaded proof of completion; pending agent review.
+    ///         - 3 Completed: agent approved the proof; reward released to worker.
+    ///         - 4 Disputed:  agent rejected the proof; awaiting owner arbitration via resolveDispute().
+    ///         - 5 Cancelled: agent cancelled before any worker accepted; reward refunded.
+    ///         - 6 Expired:   claimExpired() triggered after a deadline lapsed; reward refunded.
     enum TaskStatus {
         Open,       // Task posted by agent, waiting for a worker to accept
         Accepted,   // Worker accepted the task and is working on it
@@ -237,8 +246,14 @@ contract AgentHands is
 
     // ─── Initializer ─────────────────────────────────────────
 
-    /// @notice Initializes the proxy with fee configuration and owner.
-    /// @dev    Called once through the proxy during deployment. Replaces a constructor.
+    /// @notice Initializes the UUPS proxy: sets the deployer as owner, configures
+    ///         the platform fee recipient and fee rate, and arms all OZ upgradeable
+    ///         initializers (`Ownable`, `UUPSUpgradeable`).
+    /// @dev    Called exactly once through the proxy during deployment — the
+    ///         `initializer` modifier from OpenZeppelin enforces single-call semantics.
+    ///         Replaces a constructor in the upgradeable pattern.
+    ///         The deployer (`msg.sender`) becomes the initial owner and is the only
+    ///         address that can call `_authorizeUpgrade` or admin functions thereafter.
     /// @param _feeRecipient   Address that will receive platform fees.
     /// @param _platformFeeBps Fee in basis points (e.g. 250 = 2.5%).
     function initialize(address _feeRecipient, uint256 _platformFeeBps) external initializer {
@@ -251,6 +266,10 @@ contract AgentHands is
     // ─── UUPS Authorization ──────────────────────────────────
 
     /// @dev Only the owner may authorize an upgrade to a new implementation.
+    ///      Overrides `UUPSUpgradeable._authorizeUpgrade` — adding `onlyOwner` ensures
+    ///      that only the contract owner can push a new implementation through the proxy.
+    ///      The function body is intentionally empty; the modifier does all the work.
+    /// @param newImplementation Address of the new implementation contract.
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // ─── Admin ───────────────────────────────────────────────
@@ -265,8 +284,13 @@ contract AgentHands is
     }
 
     /// @notice Updates the platform fee and the fee recipient address.
-    /// @dev    Only callable by the owner. Applies to future payouts only.
-    /// @param _feeBps    New fee in basis points.
+    /// @dev    Only callable by the owner. Applies to future payouts only —
+    ///         tasks already in flight are unaffected.
+    ///         Basis-point cap: 10 000 bps = 100% — callers should keep the fee
+    ///         well below this (current deployment: 250 bps = 2.5%).
+    ///         There is intentionally no on-chain cap enforcement, relying instead
+    ///         on owner key security and the `FeeUpdated` event for off-chain monitoring.
+    /// @param _feeBps    New fee in basis points (1 bps = 0.01%).
     /// @param _recipient New address to receive platform fees.
     function setFee(uint256 _feeBps, address _recipient) external onlyOwner {
         platformFeeBps = _feeBps;
@@ -280,6 +304,9 @@ contract AgentHands is
     /// @dev    The caller must have approved this contract to transfer `_reward`
     ///         of `_paymentToken` before calling. The reward is held until the task
     ///         is completed, cancelled, or expired.
+    ///         Reentrancy: guarded by `nonReentrant` because `safeTransferFrom` on
+    ///         certain ERC-20 tokens (e.g. ERC-777 hooks or fee-on-transfer tokens)
+    ///         can re-enter. State is written after the transfer to preserve CEI order.
     /// @param _paymentToken       ERC-20 token address for the reward (must be whitelisted).
     /// @param _reward             Reward amount in the token's native decimals.
     /// @param _deadline           Unix timestamp by which a worker must accept the task.
@@ -366,6 +393,13 @@ contract AgentHands is
     /// @notice Agent approves the submitted proof and releases payment to the worker.
     /// @dev    Deducts the platform fee and transfers the remainder to the worker.
     ///         Uses `nonReentrant` because it performs two external token transfers.
+    ///         Escrow release breakdown (via `_releaseFunds`):
+    ///           fee    = reward × platformFeeBps / 10 000
+    ///           payout = reward − fee
+    ///         Transfer 1: fee → feeRecipient  (skipped if platformFeeBps == 0)
+    ///         Transfer 2: payout → task.worker
+    ///         The emitted `TaskCompleted` event carries `task.reward` (gross), not the
+    ///         net payout, for easier off-chain accounting.
     /// @param _taskId The ID of the submitted task to approve.
     function approveTask(uint256 _taskId) external onlyAgent(_taskId) nonReentrant {
         Task storage task = tasks[_taskId];
@@ -396,6 +430,14 @@ contract AgentHands is
     /// @notice Owner arbitrates a disputed task and decides the outcome.
     /// @dev    If `_workerWins` is true, the reward (minus fee) is sent to the worker.
     ///         If false, the full reward is refunded to the agent.
+    ///         Arbitration notes:
+    ///         - This is centralised arbitration by the contract owner; future versions
+    ///           may integrate decentralised dispute resolution (e.g. Kleros).
+    ///         - When the agent wins, the full `task.reward` (no fee deducted) is
+    ///           returned to the agent because the platform should not profit from
+    ///           invalid proof disputes.
+    ///         - The `DisputeResolved` event is emitted after fund transfer completes,
+    ///           not before — follow the Checks-Effects-Interactions pattern downstream.
     /// @param _taskId     The ID of the disputed task.
     /// @param _workerWins True to pay the worker; false to refund the agent.
     function resolveDispute(uint256 _taskId, bool _workerWins) external onlyOwner nonReentrant {
@@ -431,13 +473,18 @@ contract AgentHands is
 
     // ─── Core: Claim Expired ─────────────────────────────────
 
-    /// @notice Permissionlessly triggers fund recovery for tasks in terminal expired states.
-    /// @dev    Three cases are handled:
-    ///         1. Open + acceptance deadline passed → full refund to agent.
-    ///         2. Accepted + completion deadline passed (worker never submitted) → full refund to agent.
-    ///         3. Submitted + completion deadline + 7-day review window passed (agent never reviewed)
-    ///            → auto-approve and pay the worker.
-    ///         Anyone may call this — funds always flow to the rightful owner.
+    /// @notice Permissionlessly triggers fund recovery for tasks stuck past their deadlines.
+    ///         Handles three distinct expiry paths to ensure no funds are ever locked:
+    ///         Path A — Open task, acceptance deadline passed:
+    ///           No worker accepted in time → full reward refunded to agent, status → Expired.
+    ///         Path B — Accepted task, completion deadline passed:
+    ///           Worker accepted but never submitted proof → full reward refunded to agent, status → Expired.
+    ///         Path C — Submitted task, completion deadline + 7-day grace period passed:
+    ///           Agent never reviewed the submitted proof → auto-approved, payout sent to worker,
+    ///           status → Completed. This protects workers from agents who refuse to review.
+    /// @dev    Anyone may call this function — no access control needed because funds always
+    ///         flow to the rightful owner regardless of who triggers it.
+    ///         Reverts with `NotExpired` if none of the three conditions are met.
     /// @param _taskId The ID of the task to claim.
     function claimExpired(uint256 _taskId) external nonReentrant {
         Task storage task = tasks[_taskId];
@@ -506,12 +553,14 @@ contract AgentHands is
     // ─── View ────────────────────────────────────────────────
 
     /// @notice Returns the implementation version string.
+    /// @return The semver version string of this implementation (e.g. "1.1.0").
     function version() external pure returns (string memory) {
         return "1.1.0";
     }
 
     /// @notice Returns true if `_token` is whitelisted as a payment token.
-    /// @param _token The ERC-20 token address to check.
+    /// @param _token  The ERC-20 token address to check.
+    /// @return        True if the token is on the whitelist; false otherwise.
     function isTokenAllowed(address _token) external view returns (bool) {
         return allowedTokens[_token];
     }
@@ -534,8 +583,8 @@ contract AgentHands is
     }
 
     /// @notice Returns the full Task struct for a given task ID.
-    /// @param _taskId The ID of the task to retrieve.
-    /// @return        The Task struct stored at that ID.
+    /// @param _taskId  The ID of the task to retrieve.
+    /// @return task    The Task struct stored at that ID (zero-value struct if ID does not exist).
     function getTask(uint256 _taskId) external view returns (Task memory) {
         return tasks[_taskId];
     }
