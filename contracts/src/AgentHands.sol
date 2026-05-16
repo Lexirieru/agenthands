@@ -238,8 +238,14 @@ contract AgentHands is
 
     // ─── Initializer ─────────────────────────────────────────
 
-    /// @notice Initializes the proxy with fee configuration and owner.
-    /// @dev    Called once through the proxy during deployment. Replaces a constructor.
+    /// @notice Initializes the UUPS proxy: sets the deployer as owner, configures
+    ///         the platform fee recipient and fee rate, and arms all OZ upgradeable
+    ///         initializers (`Ownable`, `UUPSUpgradeable`).
+    /// @dev    Called exactly once through the proxy during deployment — the
+    ///         `initializer` modifier from OpenZeppelin enforces single-call semantics.
+    ///         Replaces a constructor in the upgradeable pattern.
+    ///         The deployer (`msg.sender`) becomes the initial owner and is the only
+    ///         address that can call `_authorizeUpgrade` or admin functions thereafter.
     /// @param _feeRecipient   Address that will receive platform fees.
     /// @param _platformFeeBps Fee in basis points (e.g. 250 = 2.5%).
     function initialize(address _feeRecipient, uint256 _platformFeeBps) external initializer {
