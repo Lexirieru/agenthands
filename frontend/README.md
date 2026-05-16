@@ -142,3 +142,20 @@ All contract reads use a standalone `createPublicClient` (not the wagmi client) 
 ### Contract Writes
 
 Write functions are invoked via `useAgentHands()` which returns wagmi `useWriteContract` hooks pre-configured with the `AgentHands` ABI and proxy address. MiniPay users automatically get CIP-64 fee-currency parameters injected via `useCip64()`.
+
+## Mobile vs Desktop UX
+
+The `useIsMobile()` hook (breakpoint: 768 px) drives a hard split between two rendering paths in `tasks/page.tsx`:
+
+### Mobile — SwipeStack
+- Only `Open` tasks that have not yet expired are shown.
+- Tasks are rendered as a draggable stack (`SwipeStack` + `SwipeCard` via Framer Motion).
+- Swiping right or tapping "Accept" calls `acceptTask()` on-chain.
+- Filter panel slides up from the bottom as a modal sheet.
+
+### Desktop — Paginated Grid
+- All task statuses shown, filterable by status badge buttons and a search input.
+- Tasks rendered in a `grid-cols-3` layout, 12 cards per page (3 columns × 4 rows).
+- `PaginationBar` component provides prev/next, page number buttons (max 5 visible), and keyboard ← / → navigation.
+- GSAP fade-in animation plays on load and on every page change.
+- A "Showing X–Y of Z tasks" range indicator keeps the user oriented.
