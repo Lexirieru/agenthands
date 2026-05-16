@@ -179,19 +179,20 @@ export default function TasksPage() {
           />
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {statusFilters.map((f) => (
-            <button
-              key={String(f.value)}
-              onClick={() => setFilter(f.value)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium font-label transition-colors ${
-                filter === f.value
-                  ? "bg-[#5C2D0A] text-white"
-                  : "bg-[var(--card)] text-[#8B4513] hover:text-[#5C2D0A]"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+          {statusFilters.map((f) => {
+            const count = f.value === 'all'
+              ? tasks.length
+              : tasks.filter(t => Number(t.status) === f.value).length;
+            return (
+              <button key={String(f.value)} onClick={() => setFilter(f.value)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium font-label transition-colors ${
+                  filter === f.value ? 'bg-[#5C2D0A] text-white' : 'bg-[var(--card)] text-[#8B4513] hover:text-[#5C2D0A]'
+                }`}
+              >
+                {f.label} <span className="opacity-60">({count})</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
