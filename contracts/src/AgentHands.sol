@@ -17,6 +17,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 ///         Task lifecycle: Open → Accepted → Submitted → Completed | Disputed → Resolved.
 ///         The owner whitelists accepted payment tokens via `setAllowedToken`.
 ///         A platform fee (in basis points) is deducted from every successful payout.
+/// @custom:security-contact security@agenthands.xyz
 contract AgentHands is
     Initializable,
     UUPSUpgradeable,
