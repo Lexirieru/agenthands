@@ -549,12 +549,14 @@ contract AgentHands is
     // ─── View ────────────────────────────────────────────────
 
     /// @notice Returns the implementation version string.
+    /// @return The semver version string of this implementation (e.g. "1.1.0").
     function version() external pure returns (string memory) {
         return "1.1.0";
     }
 
     /// @notice Returns true if `_token` is whitelisted as a payment token.
-    /// @param _token The ERC-20 token address to check.
+    /// @param _token  The ERC-20 token address to check.
+    /// @return        True if the token is on the whitelist; false otherwise.
     function isTokenAllowed(address _token) external view returns (bool) {
         return allowedTokens[_token];
     }
@@ -577,8 +579,8 @@ contract AgentHands is
     }
 
     /// @notice Returns the full Task struct for a given task ID.
-    /// @param _taskId The ID of the task to retrieve.
-    /// @return        The Task struct stored at that ID.
+    /// @param _taskId  The ID of the task to retrieve.
+    /// @return task    The Task struct stored at that ID (zero-value struct if ID does not exist).
     function getTask(uint256 _taskId) external view returns (Task memory) {
         return tasks[_taskId];
     }
