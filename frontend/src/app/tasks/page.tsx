@@ -4,8 +4,12 @@ import { Search, X } from "lucide-react";
 import gsap from "gsap";
 import TaskCard from "@/components/TaskCard";
 import SwipeStack from "@/components/SwipeStack";
+import PaginationBar from "@/components/PaginationBar";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useAllTasks } from "@/hooks/useTasks";
+
+// ── Pagination ──────────────────────────────────────────
+const ITEMS_PER_PAGE = 12; // 3 cols × 4 rows
 
 function useNowSeconds(intervalMs = 30000) {
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
@@ -29,6 +33,7 @@ export default function TasksPage() {
   const [search, setSearch] = useState("");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const gridRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -70,6 +75,12 @@ export default function TasksPage() {
         t.description.toLowerCase().includes(search.toLowerCase()) ||
         t.location.toLowerCase().includes(search.toLowerCase())
     );
+
+  const totalPages = Math.max(1, Math.ceil(filteredTasks.length / ITEMS_PER_PAGE));
+  const paginatedTasks = filteredTasks.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   if (!isMounted) return null;
 
@@ -184,7 +195,7 @@ export default function TasksPage() {
         </div>
       ) : (
         <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredTasks.map((task, i) => (
+          {paginatedTasks.map((task, i) => (
             <div key={task.id?.toString() || i} className="task-card">
               <TaskCard
                 id={task.id || BigInt(i + 1)}
@@ -201,6 +212,12 @@ export default function TasksPage() {
           ))}
         </div>
       )}
+      <PaginationBar
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPrev={() => setCurrentPage(p => Math.max(1, p - 1))}
+        onNext={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+      />
     </div>
   );
 }
