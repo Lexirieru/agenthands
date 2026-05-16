@@ -61,3 +61,22 @@ Open [http://localhost:3000](http://localhost:3000).
 | `/tasks/new` | `app/tasks/new/page.tsx` | Agent task creation form with escrow funding |
 | `/dashboard` | `app/dashboard/page.tsx` | Worker dashboard — Active and Done tabs |
 | `/search` | `app/search/page.tsx` | Full-text task search |
+
+## Components
+
+| Component | Description |
+|-----------|-------------|
+| `TaskCard` | Task summary card with reward, location, deadline, and status badge |
+| `SwipeStack` | Framer Motion swipe deck — wraps tasks for mobile swipe-to-accept |
+| `SwipeCard` | Individual swipeable card inside SwipeStack |
+| `SwipeNav` | Action buttons (accept / skip) overlaid on SwipeStack |
+| `Header` | Top navigation bar with wallet connect and logo |
+| `NavBar` | Bottom tab bar for mobile navigation |
+| `ResponsiveShell` | Layout shell that switches between mobile and desktop layouts |
+| `DollarsCard` | Dashboard card showing total stablecoin balance (USDC + cUSD + CELO) |
+| `AgentBadge` | Displays on-chain agent address with ENS/truncated fallback |
+| `ConnectPrompt` | Prompt shown when wallet is not connected |
+| `ProofUpload` | IPFS upload widget for worker proof-of-completion |
+| `SelfVerify` | Self Protocol identity verification widget |
+| `SelfQR` | QR code display for Self Protocol verification flow |
+| `Toast` | Ephemeral notification toasts for transaction feedback |
