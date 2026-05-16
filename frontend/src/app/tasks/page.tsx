@@ -62,6 +62,10 @@ export default function TasksPage() {
   useEffect(() => { setCurrentPage(1); }, [search]);
 
   useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [totalPages, currentPage]);
+
+  useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (isMobile) return;
       if (e.key === 'ArrowLeft') setCurrentPage(p => Math.max(1, p - 1));
