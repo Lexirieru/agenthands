@@ -63,21 +63,15 @@ export default function TasksPage() {
     return () => window.removeEventListener('keydown', handleKey);
   }, [isMobile, totalPages]);
 
-  // Desktop GSAP animation
+  // Desktop GSAP animation — re-triggers on page change
   useEffect(() => {
-    if (isMounted && !isMobile && !isLoading && gridRef.current && tasks.length > 0) {
+    if (isMounted && !isMobile && !isLoading && gridRef.current && paginatedTasks.length > 0) {
       const ctx = gsap.context(() => {
-        gsap.from(".task-card", {
-          opacity: 0,
-          y: 20,
-          duration: 0.4,
-          stagger: 0.05,
-          ease: "power2.out",
-        });
+        gsap.from('.task-card', { opacity: 0, y: 20, duration: 0.4, stagger: 0.05, ease: 'power2.out' });
       }, gridRef);
       return () => ctx.revert();
     }
-  }, [isMounted, isMobile, isLoading, tasks]);
+  }, [isMounted, isMobile, isLoading, paginatedTasks, currentPage]);
 
   const filteredTasks = tasks
     .filter((t) => filter === "all" || Number(t.status) === filter)
