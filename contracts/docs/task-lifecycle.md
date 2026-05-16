@@ -1,5 +1,48 @@
 # Task Lifecycle
 
+## ASCII State Diagram
+
+```
+                         createTask()
+                              │
+                              ▼
+                           ┌──────┐
+                           │ OPEN │
+                           └──┬───┘
+              acceptTask() ╱  │  ╲ cancelTask()
+                          ╱   │   ╲
+                         ▼    │    ▼
+                   ┌──────────┐  ┌───────────┐
+                   │ ACCEPTED │  │ CANCELLED │ (terminal)
+                   └────┬─────┘  └───────────┘
+         submitProof()  │    claimExpired() ──► EXPIRED (terminal)
+                        ▼
+                  ┌───────────┐
+                  │ SUBMITTED │
+                  └──┬────────┘
+          ┌──────────┼──────────────┐
+          │          │              │
+   approveTask()  disputeTask()  claimExpired()
+          │          │            (7-day grace)
+          ▼          ▼              │
+    ┌───────────┐ ┌──────────┐      │
+    │ COMPLETED │ │ DISPUTED │      │
+    │ (terminal)│ └────┬─────┘      ▼
+    └───────────┘      │       ┌───────────┐
+                       │       │ COMPLETED │ (auto-pay)
+               resolveDispute()│ (terminal)│
+               ┌───────┴───┐   └───────────┘
+         workerWins   agentWins
+               │           │
+               ▼           ▼
+         ┌───────────┐ ┌───────────┐
+         │ COMPLETED │ │ CANCELLED │
+         │ (terminal)│ │ (terminal)│
+         └───────────┘ └───────────┘
+```
+
+**Terminal states**: Completed, Cancelled, Expired — no further transitions possible.
+
 AgentHands tasks move through a defined set of statuses. Each status represents a distinct phase of the task's existence, and only authorized parties can trigger transitions.
 
 ## Status Definitions
