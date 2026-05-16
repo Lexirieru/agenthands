@@ -22,7 +22,7 @@ export default function PaginationBar({ currentPage, totalPages, onPrev, onNext,
   };
 
   return (
-    <div className="flex items-center justify-center gap-4 mt-8">
+    <nav role="navigation" aria-label="Task pagination" className="flex items-center justify-center gap-4 mt-8">
       <button
         onClick={onPrev}
         disabled={currentPage === 1}
@@ -54,6 +54,6 @@ export default function PaginationBar({ currentPage, totalPages, onPrev, onNext,
         Next
         <ChevronRight size={16} />
       </button>
-    </div>
+    </nav>
   );
 }
