@@ -80,3 +80,18 @@ Open [http://localhost:3000](http://localhost:3000).
 | `SelfVerify` | Self Protocol identity verification widget |
 | `SelfQR` | QR code display for Self Protocol verification flow |
 | `Toast` | Ephemeral notification toasts for transaction feedback |
+
+## Custom Hooks
+
+| Hook | Description |
+|------|-------------|
+| `useAllTasks()` | Fetches all on-chain tasks via multicall, polls every 8 s |
+| `useTaskDetail(id)` | Fetches a single task by ID, polls every 6 s |
+| `useInvalidateTasks()` | Returns helpers to invalidate or optimistically patch the task cache |
+| `useAgentHands()` | Returns wagmi write hooks for all contract write functions |
+| `useTaskEventWatcher()` | Subscribes to contract events and invalidates cache on new blocks |
+| `useIsMobile(breakpoint?)` | Returns `true` when viewport width is below `breakpoint` (default 768 px) |
+| `useIsMiniPay()` | Detects if the app is running inside MiniPay wallet |
+| `useAutoConnect()` | Re-connects the last used wallet on page load |
+| `useCeloUsdPrice()` | Fetches CELO/USD price from Chainlink oracle on Celo mainnet |
+| `useCip64()` | Builds CIP-64 fee-currency transaction parameters for MiniPay |
