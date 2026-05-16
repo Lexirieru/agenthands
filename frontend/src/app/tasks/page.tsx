@@ -134,8 +134,17 @@ export default function TasksPage() {
             placeholder="Search tasks..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-[var(--card-solid)] border border-[var(--border)] rounded-lg pl-10 pr-4 py-2.5 text-sm text-[#5C2D0A] placeholder-[#8B4513] focus:outline-none focus:border-[#D4700A] font-label"
+            className="w-full bg-[var(--card-solid)] border border-[var(--border)] rounded-lg pl-10 pr-10 py-2.5 text-sm text-[#5C2D0A] placeholder-[#8B4513] focus:outline-none focus:border-[#D4700A] font-label"
           />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8B4513] hover:text-[#5C2D0A] transition-colors"
+              aria-label="Clear search"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {statusFilters.map((f) => (
