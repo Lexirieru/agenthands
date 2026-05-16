@@ -280,8 +280,13 @@ contract AgentHands is
     }
 
     /// @notice Updates the platform fee and the fee recipient address.
-    /// @dev    Only callable by the owner. Applies to future payouts only.
-    /// @param _feeBps    New fee in basis points.
+    /// @dev    Only callable by the owner. Applies to future payouts only —
+    ///         tasks already in flight are unaffected.
+    ///         Basis-point cap: 10 000 bps = 100% — callers should keep the fee
+    ///         well below this (current deployment: 250 bps = 2.5%).
+    ///         There is intentionally no on-chain cap enforcement, relying instead
+    ///         on owner key security and the `FeeUpdated` event for off-chain monitoring.
+    /// @param _feeBps    New fee in basis points (1 bps = 0.01%).
     /// @param _recipient New address to receive platform fees.
     function setFee(uint256 _feeBps, address _recipient) external onlyOwner {
         platformFeeBps = _feeBps;
