@@ -4,8 +4,11 @@ import { Search, X } from "lucide-react";
 import SwipeStack from "@/components/SwipeStack";
 import TaskGrid from "@/components/TaskGrid";
 import TaskGridSkeleton from "@/components/TaskGridSkeleton";
+import PaginationBar from "@/components/PaginationBar";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useAllTasks } from "@/hooks/useTasks";
+
+const ITEMS_PER_PAGE = 12;
 
 function useNowSeconds(intervalMs = 30000) {
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
@@ -28,6 +31,7 @@ const statusFilters: { label: string; value: number | "all" }[] = [
 export default function TasksPage() {
   const [filter, setFilter] = useState<number | "all">("all");
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -45,12 +49,12 @@ export default function TasksPage() {
     setIsMounted(true);
   }, []);
 
-  const onFilterChange = useCallback((value: number | 'all') => setFilter(value), []);
-  const onSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
-  const onClearSearch = useCallback(() => setSearch(''), []);
-  const onClearFilters = useCallback(() => { setFilter('all'); setSearch(''); }, []);
+  const onFilterChange = useCallback((value: number | 'all') => { setFilter(value); setCurrentPage(1); }, []);
+  const onSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => { setSearch(e.target.value); setCurrentPage(1); }, []);
+  const onClearSearch = useCallback(() => { setSearch(''); setCurrentPage(1); }, []);
+  const onClearFilters = useCallback(() => { setFilter('all'); setSearch(''); setCurrentPage(1); }, []);
 
-  const filteredTasks = tasks
+  const filteredTasks = useMemo(() => tasks
     .filter((t) => filter === "all" || Number(t.status) === filter)
     .filter(
       (t) =>
@@ -58,7 +62,24 @@ export default function TasksPage() {
         t.title.toLowerCase().includes(search.toLowerCase()) ||
         t.description.toLowerCase().includes(search.toLowerCase()) ||
         t.location.toLowerCase().includes(search.toLowerCase())
-    );
+    ), [tasks, filter, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTasks.length / ITEMS_PER_PAGE));
+  const paginatedTasks = filteredTasks.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  const goToPage = useCallback((page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') goToPage(Math.max(1, currentPage - 1));
+      if (e.key === 'ArrowRight') goToPage(Math.min(totalPages, currentPage + 1));
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [currentPage, totalPages, goToPage]);
 
   if (!isMounted) return null;
 
@@ -169,15 +190,29 @@ export default function TasksPage() {
         </div>
       </div>
 
+      {filteredTasks.length > 0 && !isLoading && (
+        <p className="text-xs text-[#8B4513] font-label mb-4">
+          Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredTasks.length)} of {filteredTasks.length} tasks
+        </p>
+      )}
+
       {isLoading ? (
-        <TaskGridSkeleton count={6} />
+        <TaskGridSkeleton count={12} />
       ) : (
         <TaskGrid
-          tasks={filteredTasks}
+          tasks={paginatedTasks}
           search={search}
           onClearFilters={onClearFilters}
         />
       )}
+
+      <PaginationBar
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPrev={() => goToPage(currentPage - 1)}
+        onNext={() => goToPage(currentPage + 1)}
+        onPageSelect={goToPage}
+      />
     </div>
   );
 }
