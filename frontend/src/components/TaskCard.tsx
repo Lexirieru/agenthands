@@ -22,6 +22,20 @@ interface TaskCardProps {
   paymentToken?: string;
 }
 
+/** Returns Tailwind bg+text classes for each task status badge. */
+function statusBadgeClass(status: number): string {
+  switch (status) {
+    case 0: return 'bg-green-100 text-green-700';    // Open
+    case 1: return 'bg-blue-100 text-blue-700';     // Accepted
+    case 2: return 'bg-orange-100 text-orange-700'; // Submitted
+    case 3: return 'bg-gray-100 text-gray-600';     // Completed
+    case 4: return 'bg-red-100 text-red-700';       // Disputed
+    case 5: return 'bg-gray-100 text-gray-500';     // Cancelled
+    case 6: return 'bg-gray-100 text-gray-500';     // Expired
+    default: return 'bg-gray-100 text-gray-500';
+  }
+}
+
 export default function TaskCard({
   id,
   title,
@@ -47,8 +61,10 @@ export default function TaskCard({
           <h3 className="text-[#5C2D0A] font-semibold text-base md:text-lg font-heading group-hover:text-[#D4700A] transition-colors line-clamp-1">
             {title}
           </h3>
-          <span className={`text-xs font-medium font-label px-2 py-1 rounded-full bg-[var(--card)] whitespace-nowrap ${
-            isExpired ? "text-gray-500" : statusInfo.color
+          <span className={`text-xs font-medium font-label px-2 py-1 rounded-full whitespace-nowrap ${
+            isExpired
+              ? 'bg-gray-100 text-gray-500'
+              : statusBadgeClass(Number(status))
           }`}>
             {isExpired ? "Expired" : statusInfo.label}
           </span>
