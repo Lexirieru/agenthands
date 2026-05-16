@@ -103,6 +103,21 @@ forge script script/Upgrade.s.sol:UpgradeScript \
 | `setAllowedToken()` | Owner  | Whitelist/remove payment tokens               |
 | `setFee()`          | Owner  | Update platform fee (basis points)            |
 
+## View Helpers
+
+These read-only functions are gas-free when called off-chain and are the primary data source for the frontend:
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| `getTask(taskId)` | `Task` struct | Full task data by ID |
+| `getTasksByStatus(status)` | `uint256[]` | All task IDs with the given status (O(n) scan) |
+| `getWorkerRating(worker)` | `(avg, count)` | Floor-average rating and total count for a worker |
+| `getAgentRating(agent)` | `(avg, count)` | Floor-average rating and total count for an agent |
+| `isTokenAllowed(token)` | `bool` | Whether the token is whitelisted for payment |
+| `version()` | `string` | Semver implementation version string |
+
+> **Note:** `getTasksByStatus` performs an O(taskCount) scan. It is intended for off-chain reads only — never call it from another on-chain contract.
+
 ## Payment Tokens
 
 Only tokens whitelisted via `setAllowedToken()` are accepted. Current whitelist on mainnet:
