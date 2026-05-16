@@ -4,8 +4,15 @@ import { Search, X } from "lucide-react";
 import gsap from "gsap";
 import TaskCard from "@/components/TaskCard";
 import SwipeStack from "@/components/SwipeStack";
+import PaginationBar from "@/components/PaginationBar";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useAllTasks } from "@/hooks/useTasks";
+
+// ── Pagination constants ────────────────────────────────
+// Desktop grid renders GRID_COLS columns × GRID_ROWS rows = ITEMS_PER_PAGE cards per page.
+const GRID_COLS = 3;
+const GRID_ROWS = 4;
+const ITEMS_PER_PAGE = GRID_COLS * GRID_ROWS; // 12
 
 function useNowSeconds(intervalMs = 30000) {
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
@@ -29,6 +36,12 @@ export default function TasksPage() {
   const [search, setSearch] = useState("");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const gridRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -45,21 +58,32 @@ export default function TasksPage() {
     setIsMounted(true);
   }, []);
 
-  // Desktop GSAP animation
+  useEffect(() => { setCurrentPage(1); }, [filter]);
+  useEffect(() => { setCurrentPage(1); }, [search]);
+
   useEffect(() => {
-    if (isMounted && !isMobile && !isLoading && gridRef.current && tasks.length > 0) {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [totalPages, currentPage]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (isMobile) return;
+      if (e.key === 'ArrowLeft') setCurrentPage(p => Math.max(1, p - 1));
+      if (e.key === 'ArrowRight') setCurrentPage(p => Math.min(totalPages, p + 1));
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isMobile, totalPages]);
+
+  // Desktop GSAP animation — re-triggers on page change
+  useEffect(() => {
+    if (isMounted && !isMobile && !isLoading && gridRef.current && paginatedTasks.length > 0) {
       const ctx = gsap.context(() => {
-        gsap.from(".task-card", {
-          opacity: 0,
-          y: 20,
-          duration: 0.4,
-          stagger: 0.05,
-          ease: "power2.out",
-        });
+        gsap.from('.task-card', { opacity: 0, y: 20, duration: 0.4, stagger: 0.05, ease: 'power2.out' });
       }, gridRef);
       return () => ctx.revert();
     }
-  }, [isMounted, isMobile, isLoading, tasks]);
+  }, [isMounted, isMobile, isLoading, paginatedTasks, currentPage]);
 
   const filteredTasks = tasks
     .filter((t) => filter === "all" || Number(t.status) === filter)
@@ -70,6 +94,12 @@ export default function TasksPage() {
         t.description.toLowerCase().includes(search.toLowerCase()) ||
         t.location.toLowerCase().includes(search.toLowerCase())
     );
+
+  const totalPages = Math.max(1, Math.ceil(filteredTasks.length / ITEMS_PER_PAGE));
+  const paginatedTasks = filteredTasks.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   if (!isMounted) return null;
 
@@ -155,36 +185,57 @@ export default function TasksPage() {
           />
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {statusFilters.map((f) => (
-            <button
-              key={String(f.value)}
-              onClick={() => setFilter(f.value)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium font-label transition-colors ${
-                filter === f.value
-                  ? "bg-[#5C2D0A] text-white"
-                  : "bg-[var(--card)] text-[#8B4513] hover:text-[#5C2D0A]"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+          {statusFilters.map((f) => {
+            const count = f.value === 'all'
+              ? tasks.length
+              : tasks.filter(t => Number(t.status) === f.value).length;
+            return (
+              <button key={String(f.value)} onClick={() => setFilter(f.value)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium font-label transition-colors ${
+                  filter === f.value ? 'bg-[#5C2D0A] text-white' : 'bg-[var(--card)] text-[#8B4513] hover:text-[#5C2D0A]'
+                }`}
+              >
+                {f.label} <span className="opacity-60">({count})</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
+      {!isLoading && filteredTasks.length > 0 && (
+        <p className="text-xs font-label text-[#8B4513] mb-4">
+          Showing{' '}
+          <span className="font-semibold text-[#5C2D0A]">
+            {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
+            {Math.min(currentPage * ITEMS_PER_PAGE, filteredTasks.length)}
+          </span>{' '}
+          of <span className="font-semibold text-[#5C2D0A]">{filteredTasks.length}</span> tasks
+        </p>
+      )}
+
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
             <div key={i} className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 animate-pulse h-40" />
           ))}
         </div>
       ) : filteredTasks.length === 0 ? (
-        <div className="text-center py-20 text-[#8B4513]">
-          <p className="text-lg font-heading">No tasks found</p>
-          <p className="text-sm mt-2">Try adjusting your filters or check back later.</p>
+        <div className="text-center py-24 text-[#8B4513]">
+          <div className="text-5xl mb-4">🔍</div>
+          <p className="text-xl font-heading text-[#5C2D0A]">No tasks found</p>
+          <p className="text-sm mt-2 text-[#8B4513]">
+            {search ? `No results for "${search}"` : 'No tasks match the selected filter.'}
+          </p>
+          <button
+            onClick={() => { setFilter('all'); setSearch(''); }}
+            className="mt-4 px-4 py-2 rounded-lg text-sm font-medium bg-[#5C2D0A] text-white hover:bg-[#7A3D0F] transition-colors"
+          >
+            Clear filters
+          </button>
         </div>
       ) : (
         <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredTasks.map((task, i) => (
+          {paginatedTasks.map((task, i) => (
             <div key={task.id?.toString() || i} className="task-card">
               <TaskCard
                 id={task.id || BigInt(i + 1)}
@@ -201,6 +252,13 @@ export default function TasksPage() {
           ))}
         </div>
       )}
+      <PaginationBar
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPrev={() => goToPage(Math.max(1, currentPage - 1))}
+        onNext={() => goToPage(Math.min(totalPages, currentPage + 1))}
+        onPageSelect={(p) => goToPage(p)}
+      />
     </div>
   );
 }

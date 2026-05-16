@@ -41,6 +41,15 @@ Open [http://localhost:3000](http://localhost:3000).
 | `/tasks/[id]` | Task detail page |
 | `/create` | Agent task creation form |
 
+## Features
+
+### Task Pagination (Desktop)
+The desktop task feed renders 12 tasks per page in a 3×4 grid. Navigation is available via:
+- **Prev / Next** buttons
+- **Page number** buttons (up to 5 visible)
+- **Keyboard**: ← / → arrow keys
+- Automatically resets to page 1 when filter or search changes.
+
 ## Development
 
 ```bash
