@@ -421,6 +421,14 @@ contract AgentHands is
     /// @notice Owner arbitrates a disputed task and decides the outcome.
     /// @dev    If `_workerWins` is true, the reward (minus fee) is sent to the worker.
     ///         If false, the full reward is refunded to the agent.
+    ///         Arbitration notes:
+    ///         - This is centralised arbitration by the contract owner; future versions
+    ///           may integrate decentralised dispute resolution (e.g. Kleros).
+    ///         - When the agent wins, the full `task.reward` (no fee deducted) is
+    ///           returned to the agent because the platform should not profit from
+    ///           invalid proof disputes.
+    ///         - The `DisputeResolved` event is emitted after fund transfer completes,
+    ///           not before — follow the Checks-Effects-Interactions pattern downstream.
     /// @param _taskId     The ID of the disputed task.
     /// @param _workerWins True to pay the worker; false to refund the agent.
     function resolveDispute(uint256 _taskId, bool _workerWins) external onlyOwner nonReentrant {
