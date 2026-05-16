@@ -41,7 +41,7 @@ export default function TaskCard({
 
   return (
     <Link href={`/tasks/${id.toString()}`}>
-      <div className="bg-[var(--card-solid)] border border-[var(--border)] rounded-xl p-4 md:p-5 hover:border-[#D4700A] active:scale-[0.98] transition-all duration-200 cursor-pointer group">
+      <div className="bg-[var(--card-solid)] border border-[var(--border)] rounded-xl p-4 md:p-5 hover:border-[#D4700A] hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 cursor-pointer group">
         {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-2">
           <h3 className="text-[#5C2D0A] font-semibold text-base md:text-lg font-heading group-hover:text-[#D4700A] transition-colors line-clamp-1">
