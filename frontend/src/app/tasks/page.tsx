@@ -24,6 +24,7 @@ const statusFilters: { label: string; value: number | "all" }[] = [
   { label: "Completed", value: 3 },
 ];
 
+/** Browse Tasks page. Mobile renders a swipe stack; desktop renders a paginated grid. */
 export default function TasksPage() {
   const [filter, setFilter] = useState<number | "all">("all");
   const [search, setSearch] = useState("");
