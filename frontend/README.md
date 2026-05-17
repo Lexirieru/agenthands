@@ -160,6 +160,28 @@ The `useIsMobile()` hook (breakpoint: 768 px) drives a hard split between two re
 - GSAP fade-in animation plays on load and on every page change.
 - A "Showing X–Y of Z tasks" range indicator keeps the user oriented.
 
+## Pagination
+
+The desktop grid uses client-side pagination implemented entirely in `tasks/page.tsx`.
+
+| Constant | Value | Purpose |
+|----------|-------|---------|
+| `ITEMS_PER_PAGE` | `12` | Cards shown per page (3 columns × 4 rows) |
+
+**State:**
+- `currentPage` — resets to `1` on every filter or search change
+- `totalPages` — `Math.ceil(filteredTasks.length / 12)`
+- `paginatedTasks` — slice of `filteredTasks` for the current page
+
+**`PaginationBar` component** (`src/components/PaginationBar.tsx`):
+- Renders prev/next buttons and up to 5 page number buttons (window centres on active page)
+- Returns `null` when `totalPages <= 1` — no bar rendered for single-page results
+- Keyboard navigation: `ArrowLeft` / `ArrowRight` keys page through results
+- Active page highlighted with `bg-[#5C2D0A] text-white`
+- ARIA `role="navigation"` and `aria-label` on all interactive elements
+
+**`TaskGridSkeleton`** renders exactly 12 placeholder cards during initial load to prevent layout shift.
+
 ## Development Workflow
 
 ```bash
