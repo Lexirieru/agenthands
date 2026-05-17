@@ -176,6 +176,20 @@ Agents can register a `webhookUrl` when creating tasks. The backend POSTs status
 
 ---
 
+## 🔒 Security
+
+| Layer              | Measure                                                                           |
+|--------------------|-----------------------------------------------------------------------------------|
+| Reentrancy         | `nonReentrant` on all functions that perform external token transfers              |
+| Token safety       | `SafeERC20` for all transfers — handles non-standard ERC-20 return values          |
+| Token whitelist    | Only owner-approved tokens accepted via `setAllowedToken()`                       |
+| Upgrade auth       | UUPS — only proxy owner can authorize implementation upgrades                     |
+| Status guards      | Strict status checks before every state transition; no backwards movement         |
+| Fund recovery      | `claimExpired()` permissionlessly ensures no funds are ever locked permanently    |
+| Input validation   | Backend validates all inputs before charging x402 fees — bad requests never burn  |
+
+---
+
 ## 🔧 Tech Stack
 
 | Layer           | Technology                                                    |
