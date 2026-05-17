@@ -16,14 +16,19 @@ interface IAgentHandsEvents {
     /// @param paymentToken ERC-20 token used for the reward.
     event TaskCreated(uint256 indexed taskId, address indexed agent, uint256 reward, address paymentToken);
 
-    /// @notice Emitted when a worker accepts an open task.
+    /// @notice Emitted when a human worker accepts an open task on Celo.
+    /// @dev    After this event the task is locked to `worker` — no other address
+    ///         can accept it. The task moves to `Accepted` status.
     /// @param taskId Task identifier.
-    /// @param worker Address of the worker who accepted.
+    /// @param worker Address of the Celo wallet that accepted the task.
     event TaskAccepted(uint256 indexed taskId, address indexed worker);
 
-    /// @notice Emitted when a worker submits proof of task completion.
+    /// @notice Emitted when a worker submits an IPFS proof of task completion.
+    /// @dev    The actual proof files live on IPFS (pinned via Pinata); only the
+    ///         CID is stored on-chain. The task moves to `Submitted` status after
+    ///         this event. `proofCID` is not indexed — retrieve it from the log data.
     /// @param taskId   Task identifier.
-    /// @param proofCID IPFS content identifier of the uploaded proof.
+    /// @param proofCID IPFS content identifier of the uploaded completion proof.
     event ProofSubmitted(uint256 indexed taskId, string proofCID);
 
     /// @notice Emitted when a task is approved and payment released to the worker.
