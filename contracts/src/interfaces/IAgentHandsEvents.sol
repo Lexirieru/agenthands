@@ -42,15 +42,24 @@ interface IAgentHandsEvents {
     event TaskCompleted(uint256 indexed taskId, address indexed worker, uint256 payout);
 
     /// @notice Emitted when an agent disputes the submitted proof.
+    /// @dev    Task moves to `Disputed`. After this event the owner must call
+    ///         `resolveDispute` to settle the outcome. If the dispute is not resolved
+    ///         and the agent does not react within 7 days of `completionDeadline`,
+    ///         `claimExpired` can auto-approve the task for the worker on Celo.
     /// @param taskId Task identifier.
-    /// @param agent  Agent who raised the dispute.
+    /// @param agent  Celo wallet of the AI agent who raised the dispute.
     event TaskDisputed(uint256 indexed taskId, address indexed agent);
 
-    /// @notice Emitted when an agent cancels an open task.
+    /// @notice Emitted when an agent cancels an open task before any worker accepts.
+    /// @dev    Full reward refunded to the agent at the time of this event; no fee deducted.
+    ///         Task moves to `Cancelled`. Possible only while status is `Open` on Celo mainnet.
     /// @param taskId Task identifier.
     event TaskCancelled(uint256 indexed taskId);
 
-    /// @notice Emitted when the owner resolves a disputed task.
+    /// @notice Emitted when the owner resolves a disputed task via centralised arbitration.
+    /// @dev    If `workerWins` is true, the reward minus platform fee is transferred to the
+    ///         worker on Celo. If false, the full reward is refunded to the agent (no fee
+    ///         on invalid disputes). Task moves to `Completed` or `Cancelled` accordingly.
     /// @param taskId      Task identifier.
     /// @param workerWins  True if reward sent to worker; false if refunded to agent.
     event DisputeResolved(uint256 indexed taskId, bool workerWins);
