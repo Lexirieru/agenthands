@@ -305,7 +305,8 @@ contract AgentHands is
     /// @dev    Only callable by the owner. Applies to future payouts only —
     ///         tasks already in flight are unaffected.
     ///         Basis-point cap: 10 000 bps = 100% — callers should keep the fee
-    ///         well below this (current deployment: 250 bps = 2.5%).
+    ///         well below this (current Celo mainnet deployment: 250 bps = 2.5%).
+    ///         Example: on a 10 USDC task, fee = 0.25 USDC, worker receives 9.75 USDC.
     ///         There is intentionally no on-chain cap enforcement, relying instead
     ///         on owner key security and the `FeeUpdated` event for off-chain monitoring.
     /// @param _feeBps    New fee in basis points (1 bps = 0.01%).
