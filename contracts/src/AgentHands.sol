@@ -381,6 +381,10 @@ contract AgentHands is
     /// @notice Allows a human worker to accept an open task.
     /// @dev    Any address may accept as long as the task is open and the deadline
     ///         has not passed. Once accepted, the task is locked to this worker.
+    ///         Celo wallets (MiniPay, Valora) can pay the gas for this call in USDC
+    ///         via CIP-64 fee abstraction, so workers do not need a native CELO balance.
+    ///         Identity verification (Self Protocol ZK proof) is enforced at the backend
+    ///         API layer, not in this function — the contract accepts any EOA address.
     /// @param _taskId The ID of the task to accept.
     function acceptTask(uint256 _taskId) external {
         Task storage task = tasks[_taskId];
