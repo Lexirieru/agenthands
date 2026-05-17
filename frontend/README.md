@@ -80,6 +80,9 @@ Open [http://localhost:3000](http://localhost:3000).
 | `SelfVerify` | Self Protocol identity verification widget |
 | `SelfQR` | QR code display for Self Protocol verification flow |
 | `Toast` | Ephemeral notification toasts for transaction feedback |
+| `PaginationBar` | Prev/next + page number buttons for the desktop task grid |
+| `TaskGrid` | Desktop 3-column grid with GSAP fade-in animation and empty state |
+| `TaskGridSkeleton` | 12 skeleton placeholder cards shown while tasks are loading |
 
 ## Custom Hooks
 
