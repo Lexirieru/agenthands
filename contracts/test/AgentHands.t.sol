@@ -6,6 +6,11 @@ import {AgentHands} from "../src/AgentHands.sol";
 import {MockERC20} from "../src/mocks/MockERC20.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
+/// @title  AgentHandsTest
+/// @notice Foundry test suite for the AgentHands marketplace contract.
+/// @dev    Tests run against a local Anvil fork with a MockERC20 that mirrors
+///         Celo mainnet USDC (6 decimals, symbol "USDC"). The UUPS proxy is
+///         deployed fresh for each test via `setUp`. Run with `forge test -vv`.
 contract AgentHandsTest is Test {
     AgentHands public hands;
     MockERC20 public usdc;
