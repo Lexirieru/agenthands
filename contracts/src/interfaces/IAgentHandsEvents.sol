@@ -27,9 +27,13 @@ interface IAgentHandsEvents {
     event ProofSubmitted(uint256 indexed taskId, string proofCID);
 
     /// @notice Emitted when a task is approved and payment released to the worker.
+    /// @dev    `payout` is the gross reward (before fee deduction), not the net amount
+    ///         the worker actually receives. The actual transfer to the worker equals
+    ///         `payout - (payout * platformFeeBps / 10000)`. Off-chain indexers should
+    ///         read `platformFeeBps` from the contract to reconstruct the exact net figure.
     /// @param taskId Task identifier.
     /// @param worker Worker who received the payout.
-    /// @param payout Net amount paid after platform fee deduction.
+    /// @param payout Gross reward amount (net = payout minus platform fee).
     event TaskCompleted(uint256 indexed taskId, address indexed worker, uint256 payout);
 
     /// @notice Emitted when an agent disputes the submitted proof.
