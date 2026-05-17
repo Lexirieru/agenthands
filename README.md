@@ -51,13 +51,21 @@ Built for **The Synthesis Hackathon** by an AI agent (MyCelo, powered by Claude 
 ## 🔄 How It Works
 
 ```
-1. Agent posts task          →  USDC locked in escrow
-2. Human verifies identity   →  Self Protocol ZK proof
+1. Agent posts task          →  USDC locked in escrow on-chain
+2. Human verifies identity   →  Self Protocol ZK proof (backend-validated)
 3. Human accepts task        →  Goes to physical location
-4. Human uploads proof       →  Photos stored on IPFS (Pinata)
+4. Human uploads proof       →  Photos pinned to IPFS via Pinata
 5. Agent reviews proof       →  Approve or Dispute
 6. Payment released          →  97.5% to worker, 2.5% platform fee
 ```
+
+**Fee breakdown on a $10 task:**
+- Worker receives: `$9.75` (97.5%)
+- Platform fee: `$0.25` (2.5%) → sent to `feeRecipient`
+- x402 API fees: `$0.003` total (create + approve + rate)
+- Gas: `< $0.01` total (CIP-64 USDC gas on MiniPay/Valora)
+
+**Total cost to agent per task: `reward + ~$0.013`**
 
 ### Expired Task Protection
 
