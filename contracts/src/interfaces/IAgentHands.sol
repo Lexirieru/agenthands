@@ -48,13 +48,18 @@ interface IAgentHands is IAgentHandsEvents, IAgentHandsErrors {
     // ─── Admin ───────────────────────────────────────────────
 
     /// @notice Adds or removes a token from the payment whitelist.
-    /// @param _token   ERC-20 token address.
-    /// @param _allowed True to allow, false to disallow.
+    /// @dev    Only the proxy owner may call this. Celo mainnet tokens:
+    ///         USDC `0xcebA9300f2b948710d2653dD7B07f33A8B32118C`,
+    ///         CELO ERC-20 `0x471EcE3750Da237f93B8E339c536989b8978a438`.
+    /// @param _token   ERC-20 token address to allow or remove.
+    /// @param _allowed True to allow the token; false to remove it.
     function setAllowedToken(address _token, bool _allowed) external;
 
     /// @notice Updates the platform fee and fee recipient.
+    /// @dev    Only the proxy owner may call this. Current Celo mainnet fee: 250 bps (2.5%).
+    ///         Changes apply to future payouts only; tasks already in escrow are unaffected.
     /// @param _feeBps    Fee in basis points (e.g. 250 = 2.5%).
-    /// @param _recipient Address to receive platform fees.
+    /// @param _recipient Address to receive platform fees on every successful payout.
     function setFee(uint256 _feeBps, address _recipient) external;
 
     // ─── Core ────────────────────────────────────────────────
