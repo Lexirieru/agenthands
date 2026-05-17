@@ -401,7 +401,11 @@ contract AgentHands is
 
     /// @notice Allows the assigned worker to submit an IPFS proof of task completion.
     /// @dev    Only the worker assigned via `acceptTask` may call this.
-    ///         The proof CID is stored on-chain; the actual files live on IPFS.
+    ///         The proof CID is stored on-chain; the actual files (photos, videos) live
+    ///         on IPFS. In the AgentHands reference integration, files are uploaded to
+    ///         Pinata via the backend API and the returned CID is passed here. The CID
+    ///         is typically a base-32 CIDv1 string (e.g. "bafybeig...").
+    ///         On Celo, this call's gas is payable in USDC via CIP-64 on MiniPay/Valora.
     /// @param _taskId   The ID of the accepted task.
     /// @param _proofCID IPFS content identifier pointing to the completion proof.
     function submitProof(uint256 _taskId, string calldata _proofCID) external onlyWorker(_taskId) {
