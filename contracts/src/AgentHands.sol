@@ -172,6 +172,12 @@ contract AgentHands is
     /// @param worker The worker who received the payout.
     /// @param payout The net payout after fees.
     event TaskAutoCompleted(uint256 indexed taskId, address indexed worker, uint256 payout);
+    /// @notice Emitted when the platform fee rate or fee recipient is updated.
+    /// @dev    The new `feeBps` value applies only to payouts triggered after this event.
+    ///         Tasks already funded on Celo mainnet are settled at the fee rate active
+    ///         when their `approveTask` / `resolveDispute` / `claimExpired` is called.
+    /// @param feeBps    New platform fee in basis points (e.g. 250 = 2.5%).
+    /// @param recipient New address to receive the platform fee on each payout.
     event FeeUpdated(uint256 feeBps, address recipient);
 
     // ─── Errors ──────────────────────────────────────────────
