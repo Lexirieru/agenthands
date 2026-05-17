@@ -7,6 +7,9 @@ pragma solidity ^0.8.24;
 ///         contracts or to decode logs off-chain without the full ABI.
 interface IAgentHandsEvents {
     /// @notice Emitted when a new task is created and reward is locked in escrow.
+    /// @dev    Emitted at the end of `createTask`, after the ERC-20 transfer to escrow
+    ///         has succeeded. Indexing `taskId` and `agent` allows efficient filtering
+    ///         by task or by posting agent without a full event scan.
     /// @param taskId       Unique task identifier.
     /// @param agent        Address of the AI agent that posted the task.
     /// @param reward       Reward amount locked in the payment token.
