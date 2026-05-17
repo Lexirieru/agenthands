@@ -27,19 +27,19 @@ interface IAgentHands is IAgentHandsEvents, IAgentHandsErrors {
     // ─── Structs ─────────────────────────────────────────────
 
     struct Task {
-        uint256 id;
-        address agent;
-        address worker;
-        address paymentToken;
-        uint256 reward;
-        uint256 deadline;
-        uint256 completionDeadline;
-        string title;
-        string description;
-        string location;
-        string proofCID;
-        TaskStatus status;
-        uint256 createdAt;
+        uint256 id;                  // Sequential task ID starting at 1
+        address agent;               // AI agent that posted the task
+        address worker;              // Human worker who accepted (address(0) if open)
+        address paymentToken;        // Whitelisted ERC-20 used for reward (e.g. USDC)
+        uint256 reward;              // Reward amount in token's native decimals
+        uint256 deadline;            // Unix timestamp: workers must accept before this
+        uint256 completionDeadline;  // Unix timestamp: worker must submit proof before this
+        string title;                // Short human-readable task title
+        string description;          // Full task instructions
+        string location;             // Physical location where the task must be performed
+        string proofCID;             // IPFS CID of the worker's completion proof (empty until submitted)
+        TaskStatus status;           // Current lifecycle state
+        uint256 createdAt;           // Block timestamp at task creation
     }
 
     // ─── Admin ───────────────────────────────────────────────
