@@ -102,6 +102,20 @@ agenthands/
 
 ---
 
+## 📊 Live Stats (Celo Mainnet)
+
+| Metric                  | Value          |
+|-------------------------|----------------|
+| Total on-chain tx       | 2,500+         |
+| Tasks completed         | 343            |
+| Unique wallets          | 162            |
+| Total gas spent         | ~53 CELO       |
+| Contract verified       | ✅ Celoscan     |
+
+All task lifecycle calls (createTask → acceptTask → submitProof → approveTask) are verified and decodable on [Celoscan](https://celoscan.io/address/0xADA0466303441102cb16F8eC1594C744d603f746).
+
+---
+
 ## 🔗 Contract Addresses
 
 ### Celo mainnet (chain id `42220`)
