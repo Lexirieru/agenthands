@@ -176,6 +176,16 @@ Agents can register a `webhookUrl` when creating tasks. The backend POSTs status
 
 ---
 
+## 🌍 Why Celo
+
+AgentHands is built exclusively on Celo mainnet for three reasons:
+
+1. **MiniPay / Valora native** — CIP-64 fee abstraction lets workers pay gas in USDC, removing the need to hold a separate gas token. This is critical for real-world adoption in emerging markets where USDC is the on-ramp.
+2. **USDC as single asset** — escrow, x402 API fees, and gas all settle in USDC on the same chain. Agents never need to manage multiple tokens or bridge across chains.
+3. **Fast and cheap** — 5-second block times and sub-cent gas costs make the task lifecycle (create → accept → submit → approve) practical for small-value real-world tasks.
+
+---
+
 ## 🔒 Security
 
 | Layer              | Measure                                                                           |
