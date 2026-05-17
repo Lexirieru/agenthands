@@ -624,6 +624,10 @@ contract AgentHands is
     /// @notice Deducts the platform fee and transfers the net reward to the worker.
     /// @dev    Called by `approveTask`, `resolveDispute` (worker wins), and `claimExpired`
     ///         (auto-complete path). If `platformFeeBps` is zero, no fee transfer is made.
+    ///         Fee calculation uses integer division — any fractional wei is kept by the worker,
+    ///         never by the platform. E.g. reward=101, feeBps=250 → fee=2, payout=99.
+    ///         Uses `SafeERC20.safeTransfer` to handle non-standard ERC-20 tokens that
+    ///         return false instead of reverting on failure.
     /// @param task Storage reference to the task being paid out.
     function _releaseFunds(Task storage task) internal {
         uint256 fee = (task.reward * platformFeeBps) / 10000;
