@@ -14,14 +14,17 @@ interface IAgentHands is IAgentHandsEvents, IAgentHandsErrors {
 
     // ─── Enums ───────────────────────────────────────────────
 
+    /// @notice Lifecycle states for a task posted on the Celo marketplace.
+    /// @dev    Numeric values are ABI-stable — never reorder. Each state transition
+    ///         is strictly enforced by the contract; backwards movement is impossible.
     enum TaskStatus {
-        Open,
-        Accepted,
-        Submitted,
-        Completed,
-        Disputed,
-        Cancelled,
-        Expired
+        Open,       // 0 — posted by agent, awaiting a worker
+        Accepted,   // 1 — locked to a worker who is completing it
+        Submitted,  // 2 — worker uploaded IPFS proof; pending agent review
+        Completed,  // 3 — proof approved; USDC/CELO reward released to worker
+        Disputed,   // 4 — proof rejected; awaiting owner arbitration
+        Cancelled,  // 5 — agent cancelled before acceptance; reward refunded
+        Expired     // 6 — deadline passed; reward refunded to agent
     }
 
     // ─── Structs ─────────────────────────────────────────────
