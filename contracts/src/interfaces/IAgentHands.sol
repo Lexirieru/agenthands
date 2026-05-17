@@ -84,32 +84,45 @@ interface IAgentHands is IAgentHandsEvents, IAgentHandsErrors {
     ) external returns (uint256 taskId);
 
     /// @notice Worker accepts an open task.
+    /// @dev    Locks the task to `msg.sender`. On Celo, gas can be paid in USDC
+    ///         via CIP-64 on MiniPay/Valora — no native CELO balance required.
     /// @param _taskId Task to accept.
     function acceptTask(uint256 _taskId) external;
 
     /// @notice Worker submits IPFS proof of completion.
+    /// @dev    The CID is stored on-chain; files live on IPFS (Pinata in the reference integration).
+    ///         On Celo, gas for this call is payable in USDC via CIP-64.
     /// @param _taskId   Task identifier.
-    /// @param _proofCID IPFS CID of the proof.
+    /// @param _proofCID IPFS content identifier of the completion proof.
     function submitProof(uint256 _taskId, string calldata _proofCID) external;
 
-    /// @notice Agent approves proof and releases payment to the worker.
+    /// @notice Agent approves proof and releases the USDC/CELO reward to the worker.
+    /// @dev    Deducts the platform fee (currently 250 bps on Celo mainnet) and transfers
+    ///         the remainder to the worker. Emits `TaskCompleted` with the gross reward.
     /// @param _taskId Task identifier.
     function approveTask(uint256 _taskId) external;
 
     /// @notice Agent disputes the submitted proof.
+    /// @dev    Moves task to `Disputed`. If the agent neither approves nor disputes within
+    ///         7 days of `completionDeadline`, `claimExpired` auto-approves for the worker.
     /// @param _taskId Task identifier.
     function disputeTask(uint256 _taskId) external;
 
-    /// @notice Owner resolves a disputed task.
+    /// @notice Owner resolves a disputed task via centralised arbitration.
+    /// @dev    Worker wins → reward minus fee sent to worker.
+    ///         Agent wins → full reward refunded (no fee on failed disputes).
     /// @param _taskId     Task identifier.
     /// @param _workerWins True to pay worker; false to refund agent.
     function resolveDispute(uint256 _taskId, bool _workerWins) external;
 
-    /// @notice Agent cancels an open task before acceptance.
+    /// @notice Agent cancels an open task before any worker accepts.
+    /// @dev    Full reward refunded to agent with no fee. Reverts if a worker has already accepted.
     /// @param _taskId Task identifier.
     function cancelTask(uint256 _taskId) external;
 
-    /// @notice Triggers fund recovery for expired tasks. Callable by anyone.
+    /// @notice Permissionlessly triggers fund recovery for expired tasks on Celo.
+    /// @dev    Three paths: Open+deadline passed → refund agent; Accepted+completionDeadline passed
+    ///         → refund agent; Submitted+completionDeadline+7d passed → auto-approve to worker.
     /// @param _taskId Task identifier.
     function claimExpired(uint256 _taskId) external;
 
