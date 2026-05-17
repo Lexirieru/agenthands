@@ -6,15 +6,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased]
+## [1.2.0] — 2026-05-17
 
 ### Added
-- Foundry scripts: `Upgrade.s.sol`, `SetAllowedToken.s.sol`, `SetFee.s.sol`, `GetTask.s.sol`
-- GitHub Actions CI: `contracts-test.yml` and `contracts-lint.yml`
-- Contract reference guides in `contracts/docs/`
-- Standalone interfaces: `IAgentHandsErrors`, `IAgentHandsEvents`, `IAgentHands`
-- Full NatSpec documentation on all public functions, events, errors, and state variables
-- Unit test suite: `CreateTask`, `AcceptSubmit`, `ApproveDispute`, `CancelExpired`, `Ratings`, `Admin`
+- **343 tasks completed on Celo mainnet** — full lifecycle (createTask → acceptTask → submitProof → approveTask) across 162 unique wallets, 2,500+ on-chain transactions
+- **Contract verification** — proxy, AgentHands implementation, and Settlement implementation all verified on Celoscan with decodable ABI
+- **Live Stats sections** — added to root README and contracts README with mainnet tx count, task count, and unique wallet count
+- **Security section** in root README documenting reentrancy guards, SafeERC20, whitelist, UUPS auth, and input validation
+- **Why Celo section** in root README explaining MiniPay CIP-64, single-asset UX, and chain rationale
+- **Fee breakdown example** in How It Works section
+
+### Improved
+- **NatSpec**: CEI pattern note on `cancelTask`; gas warning on `getTasksByStatus`; fee rounding example in `_releaseFunds`; immutability note on `rateWorker`/`rateAgent`; 7-day auto-approve interaction in `disputeTask`; upgrade/feature-detection note on `version()`
+- **IAgentHands**: inline field comments on Task struct; `@param`/`@return` on all view stubs
+- **IAgentHandsEvents**: timing note on `TaskCreated`; gross-vs-net clarification on `TaskCompleted`
+- **IAgentHandsErrors**: `@dev` caller-site context added to every custom error
+- **Frontend README**: pagination section; PaginationBar/TaskGrid/TaskGridSkeleton in components table; useTaskFilter in hooks table
+
+### Removed
+- `CONVERSATION_LOG.md` — development log removed from public repo
+- All testnet and Base Sepolia references replaced with mainnet equivalents
 
 ---
 
