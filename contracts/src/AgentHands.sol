@@ -416,6 +416,10 @@ contract AgentHands is
     /// @notice Agent raises a dispute against the submitted proof.
     /// @dev    Moves the task to `Disputed` status. The owner must then call
     ///         `resolveDispute` to settle the outcome.
+    ///         Important: if the agent neither approves nor disputes within 7 days of
+    ///         `completionDeadline`, anyone can call `claimExpired` to auto-approve the
+    ///         task and pay the worker — preventing agents from stalling indefinitely.
+    ///         Disputing resets this countdown; the owner must then arbitrate via `resolveDispute`.
     /// @param _taskId The ID of the submitted task to dispute.
     function disputeTask(uint256 _taskId) external onlyAgent(_taskId) {
         Task storage task = tasks[_taskId];
