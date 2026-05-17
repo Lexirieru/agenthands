@@ -520,8 +520,11 @@ contract AgentHands is
     // ─── Ratings ─────────────────────────────────────────────
 
     /// @notice Agent rates the worker after a task is completed.
-    /// @dev    Each task can only be rated once per party. Score must be between 1 and 5.
-    ///         Ratings are stored as cumulative totals; the average is computed in the view.
+    /// @dev    Each task can only be rated once per party (`AlreadyRated` on second attempt).
+    ///         Ratings are permanent and immutable — there is no update or delete path.
+    ///         Scores are accumulated in `workerTotalScore` and the per-task count in
+    ///         `workerRatingCount`; the floor average is derived off-chain via `getWorkerRating`.
+    ///         Rating is independent of payment — it can be submitted any time after completion.
     /// @param _taskId The ID of the completed task.
     /// @param _score  Rating between 1 (lowest) and 5 (highest).
     function rateWorker(uint256 _taskId, uint8 _score) external onlyAgent(_taskId) {
@@ -538,7 +541,9 @@ contract AgentHands is
     }
 
     /// @notice Worker rates the agent after a task is completed.
-    /// @dev    Each task can only be rated once per party. Score must be between 1 and 5.
+    /// @dev    Symmetric to `rateWorker` but for the agent side. Rating is permanent —
+    ///         no update path exists. Reverts with `AlreadyRated` if called twice for the
+    ///         same task, and `TaskNotCompleted` if the task is still in progress.
     /// @param _taskId The ID of the completed task.
     /// @param _score  Rating between 1 (lowest) and 5 (highest).
     function rateAgent(uint256 _taskId, uint8 _score) external onlyWorker(_taskId) {
