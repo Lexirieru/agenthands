@@ -323,6 +323,10 @@ contract AgentHands is
     /// @dev    The caller must have approved this contract to transfer `_reward`
     ///         of `_paymentToken` before calling. The reward is held until the task
     ///         is completed, cancelled, or expired.
+    ///         Celo note: USDC on Celo (`0xcebA9300f2b948710d2653dD7B07f33A8B32118C`) uses
+    ///         6 decimals — pass `_reward` in micro-USDC (e.g. `1_000_000` = $1.00).
+    ///         Agents using CIP-64 fee abstraction can pay this transaction's gas in USDC,
+    ///         eliminating the need to hold a separate native CELO balance.
     ///         Reentrancy: guarded by `nonReentrant` because `safeTransferFrom` on
     ///         certain ERC-20 tokens (e.g. ERC-777 hooks or fee-on-transfer tokens)
     ///         can re-enter. State is written after the transfer to preserve CEI order.
