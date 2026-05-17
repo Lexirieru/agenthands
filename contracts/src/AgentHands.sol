@@ -429,6 +429,8 @@ contract AgentHands is
     ///           payout = reward − fee
     ///         Transfer 1: fee → feeRecipient  (skipped if platformFeeBps == 0)
     ///         Transfer 2: payout → task.worker
+    ///         Celo USDC example (6 decimals, reward = 10 USDC = 10_000_000):
+    ///           fee = 250_000 (2.5%), worker receives 9_750_000 ($9.75 USDC).
     ///         The emitted `TaskCompleted` event carries `task.reward` (gross), not the
     ///         net payout, for easier off-chain accounting.
     /// @param _taskId The ID of the submitted task to approve.
