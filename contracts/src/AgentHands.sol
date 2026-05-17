@@ -570,7 +570,11 @@ contract AgentHands is
     }
 
     /// @notice Returns IDs of all tasks that currently have `_status`.
-    /// @dev    O(taskCount) scan — intended for off-chain reads, not on-chain loops.
+    /// @dev    Performs an O(taskCount) linear scan over the full task ID range [1, taskCount].
+    ///         Designed exclusively for off-chain reads (ethers.js, viem, subgraphs).
+    ///         Never call this from another on-chain contract — gas cost grows unboundedly
+    ///         as more tasks are created and will eventually exceed block gas limits.
+    ///         The function allocates the result array in two passes to avoid dynamic resizing.
     /// @param _status The TaskStatus to filter by.
     /// @return ids    Array of task IDs whose current status matches `_status`.
     function getTasksByStatus(TaskStatus _status) external view returns (uint256[] memory ids) {
