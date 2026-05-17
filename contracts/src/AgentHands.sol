@@ -566,6 +566,9 @@ contract AgentHands is
     // ─── View ────────────────────────────────────────────────
 
     /// @notice Returns the implementation version string.
+    /// @dev    Hardcoded in the implementation bytecode — upgrade to a new implementation
+    ///         to bump this value. Useful for clients to detect which feature set is active
+    ///         without inspecting the EIP-1967 implementation slot directly.
     /// @return The semver version string of this implementation (e.g. "1.1.0").
     function version() external pure returns (string memory) {
         return "1.1.0";
