@@ -141,36 +141,46 @@ interface IAgentHands is IAgentHandsEvents, IAgentHandsErrors {
     // ─── View ────────────────────────────────────────────────
 
     /// @notice Returns the full Task struct for a given task ID.
-    /// @param _taskId Task identifier (1-indexed).
-    /// @return        Task struct; all fields zero-valued if the ID does not exist.
+    /// @dev    Safe to call on any Celo RPC (forno.celo.org); returns a zero-valued
+    ///         struct (not a revert) for IDs that do not yet exist.
+    /// @param _taskId Task identifier (1-indexed; 0 is invalid).
+    /// @return        Task struct with all 13 fields populated.
     function getTask(uint256 _taskId) external view returns (Task memory);
 
     /// @notice Returns the floor average rating and rating count for a worker.
+    /// @dev    Average is integer division — fractional parts are truncated.
+    ///         Returns (0, 0) for workers who have never been rated on Celo mainnet.
     /// @param _worker Worker address to query.
-    /// @return avg    Floor-averaged score (0 if never rated).
-    /// @return count  Total number of ratings received.
+    /// @return avg    Floor-averaged score across all rated tasks (0 if unrated).
+    /// @return count  Total number of ratings received by this worker.
     function getWorkerRating(address _worker) external view returns (uint256 avg, uint256 count);
 
     /// @notice Returns the floor average rating and rating count for an agent.
+    /// @dev    Symmetric to `getWorkerRating` for the AI agent side.
+    ///         Returns (0, 0) for agents who have not been rated on Celo mainnet.
     /// @param _agent Agent address to query.
-    /// @return avg   Floor-averaged score (0 if never rated).
-    /// @return count Total number of ratings received.
+    /// @return avg   Floor-averaged score across all rated tasks (0 if unrated).
+    /// @return count Total number of ratings received by this agent.
     function getAgentRating(address _agent) external view returns (uint256 avg, uint256 count);
 
     /// @notice Total number of tasks ever created. Also equals the highest valid task ID.
-    /// @return Total task count.
+    /// @dev    Monotonically increasing — never decremented. Use as upper bound for ID scans.
+    /// @return Total task count across all Celo mainnet interactions.
     function taskCount() external view returns (uint256);
 
     /// @notice Platform fee charged on each successful payout, in basis points.
+    /// @dev    Current Celo mainnet value: 250 (= 2.5%). Settable by the owner via `setFee`.
     /// @return Fee in bps (e.g. 250 = 2.5%).
     function platformFeeBps() external view returns (uint256);
 
     /// @notice Address that receives the platform fee on every completed task.
-    /// @return Fee recipient address.
+    /// @dev    Updatable by the owner via `setFee`. Receives USDC or CELO depending on task token.
+    /// @return Fee recipient address on Celo mainnet.
     function feeRecipient() external view returns (address);
 
-    /// @notice Returns true if the given token is whitelisted for use as a reward.
+    /// @notice Returns true if the given token is whitelisted for use as a task reward.
+    /// @dev    Celo mainnet whitelist: USDC and CELO ERC-20. Check before calling `createTask`.
     /// @param token ERC-20 token address to check.
-    /// @return      True if allowed; false otherwise.
+    /// @return      True if the token is allowed; false otherwise.
     function allowedTokens(address token) external view returns (bool);
 }
