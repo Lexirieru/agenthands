@@ -243,8 +243,11 @@ contract AgentHands is
 
     // ─── Constructor ─────────────────────────────────────────
 
-    /// @dev Disables initializers on the implementation contract to prevent
-    ///      unintended initialization of the logic contract directly.
+    /// @notice Locks the implementation contract to prevent direct initialization.
+    /// @dev    Calls `_disableInitializers()` so the implementation bytecode itself
+    ///         cannot be initialized — only the ERC-1967 proxy deployed on Celo mainnet
+    ///         (`0xADA0466303441102cb16F8eC1594C744d603f746`) runs the `initialize` path.
+    ///         Required by OpenZeppelin's UUPS upgradeable pattern (v5).
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
