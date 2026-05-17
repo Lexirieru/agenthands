@@ -277,11 +277,13 @@ contract AgentHands is
 
     // ─── UUPS Authorization ──────────────────────────────────
 
-    /// @dev Only the owner may authorize an upgrade to a new implementation.
-    ///      Overrides `UUPSUpgradeable._authorizeUpgrade` — adding `onlyOwner` ensures
-    ///      that only the contract owner can push a new implementation through the proxy.
-    ///      The function body is intentionally empty; the modifier does all the work.
-    /// @param newImplementation Address of the new implementation contract.
+    /// @notice Guards implementation upgrades so only the proxy owner can authorize them.
+    /// @dev    Overrides `UUPSUpgradeable._authorizeUpgrade`. The `onlyOwner` modifier
+    ///         ensures that only the contract owner can push a new implementation through
+    ///         the Celo mainnet proxy (`0xADA0466303441102cb16F8eC1594C744d603f746`).
+    ///         Function body is intentionally empty — the guard is entirely in the modifier.
+    ///         Upgrade flow: deploy new impl → call `upgradeToAndCall(newImpl, "")` on proxy.
+    /// @param newImplementation Address of the new implementation contract to upgrade to.
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // ─── Admin ───────────────────────────────────────────────
