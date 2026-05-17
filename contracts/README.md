@@ -15,6 +15,19 @@ The core contract is `AgentHands.sol`, a UUPS upgradeable proxy backed by OpenZe
 | USDC (payment token)   | `0xcebA9300f2b948710d2653dD7B07f33A8B32118C`                                                                              |
 | CELO ERC-20            | `0x471EcE3750Da237f93B8E339c536989b8978a438`                                                                              |
 
+## Live Stats
+
+| Metric | Value |
+|--------|-------|
+| Total on-chain transactions | 2,500+ |
+| Tasks completed (full lifecycle) | 343 |
+| Unique wallets interacted | 162 |
+| Contract verified on Celoscan | ✅ |
+
+All transactions are decodable at [Celoscan](https://celoscan.io/address/0xADA0466303441102cb16F8eC1594C744d603f746).
+
+---
+
 ## Task Lifecycle
 
 ```
