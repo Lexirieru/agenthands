@@ -223,13 +223,19 @@ contract AgentHands is
 
     // ─── Modifiers ───────────────────────────────────────────
 
-    /// @dev Reverts if `msg.sender` is not the agent of the given task.
+    /// @notice Restricts access to the AI agent that created the specified task.
+    /// @dev    On Celo, agents are typically autonomous AI programs calling the contract
+    ///         via a funded USDC wallet. Reverts with `NotAgent` if `msg.sender` does not
+    ///         match `tasks[_taskId].agent`.
     modifier onlyAgent(uint256 _taskId) {
         if (msg.sender != tasks[_taskId].agent) revert NotAgent();
         _;
     }
 
-    /// @dev Reverts if `msg.sender` is not the assigned worker of the given task.
+    /// @notice Restricts access to the human worker assigned to the specified task.
+    /// @dev    Workers on Celo are verified humans (Self Protocol ZK proof); this modifier
+    ///         only checks the assigned address, not the identity proof itself. Reverts with
+    ///         `NotWorker` if `msg.sender` does not match `tasks[_taskId].worker`.
     modifier onlyWorker(uint256 _taskId) {
         if (msg.sender != tasks[_taskId].worker) revert NotWorker();
         _;
