@@ -289,9 +289,13 @@ contract AgentHands is
     // ─── Admin ───────────────────────────────────────────────
 
     /// @notice Adds or removes a token from the payment whitelist.
-    /// @dev    Only callable by the owner.
-    /// @param _token   ERC-20 token address.
-    /// @param _allowed True to allow, false to disallow.
+    /// @dev    Only callable by the owner. Current whitelist on Celo mainnet:
+    ///         - USDC: `0xcebA9300f2b948710d2653dD7B07f33A8B32118C`
+    ///         - CELO ERC-20: `0x471EcE3750Da237f93B8E339c536989b8978a438`
+    ///         Removing a token does not affect tasks already funded with it — active
+    ///         escrow settles in the original token regardless of whitelist changes.
+    /// @param _token   ERC-20 token address to whitelist or remove.
+    /// @param _allowed True to allow the token; false to remove it.
     function setAllowedToken(address _token, bool _allowed) external onlyOwner {
         allowedTokens[_token] = _allowed;
         emit TokenAllowed(_token, _allowed);
