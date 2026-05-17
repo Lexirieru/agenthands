@@ -98,6 +98,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `useAutoConnect()` | Re-connects the last used wallet on page load |
 | `useCeloUsdPrice()` | Fetches CELO/USD price from Chainlink oracle on Celo mainnet |
 | `useCip64()` | Builds CIP-64 fee-currency transaction parameters for MiniPay |
+| `useTaskFilter(tasks, filter, search)` | Memoised filter+search logic extracted from the tasks page; returns `filteredTasks` |
 
 ## Environment Variables
 
