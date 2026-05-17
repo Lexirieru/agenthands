@@ -81,15 +81,24 @@ interface IAgentHandsEvents {
     /// @param allowed True if now allowed; false if removed.
     event TokenAllowed(address token, bool allowed);
 
-    /// @notice Emitted when an expired task is refunded to the agent.
+    /// @notice Emitted when an expired task is refunded to the agent on Celo.
+    /// @dev    Triggered by `claimExpired` for two cases:
+    ///         1. `Open` task whose acceptance deadline passed — no worker accepted.
+    ///         2. `Accepted` task whose completion deadline passed — worker never submitted proof.
+    ///         In both cases the full `refund` amount (no fee) is returned to `agent`.
+    ///         Anyone may call `claimExpired` — the caller receives no reward.
     /// @param taskId Task identifier.
-    /// @param agent  Agent who received the refund.
-    /// @param refund Amount refunded.
+    /// @param agent  Celo wallet of the agent who received the refund.
+    /// @param refund Amount refunded in the task's payment token (USDC or CELO).
     event TaskExpired(uint256 indexed taskId, address indexed agent, uint256 refund);
 
-    /// @notice Emitted when a submitted task is auto-approved after the review window expires.
+    /// @notice Emitted when a submitted task is auto-approved after the 7-day review window.
+    /// @dev    Triggered by `claimExpired` when a `Submitted` task's `completionDeadline + 7 days`
+    ///         has elapsed without the agent calling `approveTask` or `disputeTask`.
+    ///         Protects Celo workers from agents who deliberately delay review.
+    ///         `payout` is the net amount after the platform fee.
     /// @param taskId Task identifier.
-    /// @param worker Worker who received the auto-payout.
-    /// @param payout Net payout after fees.
+    /// @param worker Celo wallet of the worker who received the auto-payout.
+    /// @param payout Net payout after platform fee (gross reward minus 2.5% on Celo mainnet).
     event TaskAutoCompleted(uint256 indexed taskId, address indexed worker, uint256 payout);
 }
