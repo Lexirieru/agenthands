@@ -263,6 +263,9 @@ contract AgentHands is
     ///         Replaces a constructor in the upgradeable pattern.
     ///         The deployer (`msg.sender`) becomes the initial owner and is the only
     ///         address that can call `_authorizeUpgrade` or admin functions thereafter.
+    ///         On Celo mainnet this was called with `_feeRecipient = deployer` and
+    ///         `_platformFeeBps = 250` (2.5%). USDC (`0xcebA9300f2b948710d2653dD7B07f33A8B32118C`)
+    ///         was whitelisted via `setAllowedToken` in the same deploy broadcast.
     /// @param _feeRecipient   Address that will receive platform fees.
     /// @param _platformFeeBps Fee in basis points (e.g. 250 = 2.5%).
     function initialize(address _feeRecipient, uint256 _platformFeeBps) external initializer {
