@@ -458,8 +458,12 @@ contract AgentHands is
     // ─── Core: Cancel Task ───────────────────────────────────
 
     /// @notice Agent cancels an open task before any worker has accepted it.
-    /// @dev    The full reward is refunded to the agent. Cannot be called once
-    ///         a worker has accepted the task.
+    /// @dev    The full reward is refunded to the agent with no platform fee deducted —
+    ///         the platform only earns a fee on successful task completion.
+    ///         Cannot be called once a worker has accepted the task (`TaskNotOpen` revert).
+    ///         Follows Checks-Effects-Interactions: status is set to `Cancelled` before
+    ///         the token transfer to prevent reentrancy even without `nonReentrant`.
+    ///         `nonReentrant` is applied regardless as a defence-in-depth measure.
     /// @param _taskId The ID of the open task to cancel.
     function cancelTask(uint256 _taskId) external onlyAgent(_taskId) nonReentrant {
         Task storage task = tasks[_taskId];
