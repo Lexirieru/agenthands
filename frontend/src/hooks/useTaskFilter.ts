@@ -3,9 +3,17 @@ import { useState, useMemo } from 'react';
 import type { TaskData } from '@/types/task';
 
 /**
- * Encapsulates filter + search state for the task list.
- * Returns the filtered slice of `tasks` together with the current filter values
- * and setter functions.
+ * Encapsulate filter + search state for the Celo AgentHands task list.
+ *
+ * The `filter` value maps directly to the on-chain `TaskStatus` enum:
+ *   0 = Open, 1 = Accepted, 2 = Submitted, 3 = Completed,
+ *   4 = Disputed, 5 = Cancelled, 6 = Expired, `'all'` = no filter.
+ *
+ * The `search` string matches against `title`, `description`, and
+ * `location` fields stored on-chain, enabling keyword search across
+ * physical task locations posted by Celo AI agents.
+ *
+ * Returns the filtered task slice together with setters and `clearFilters`.
  */
 export function useTaskFilter(tasks: TaskData[]) {
   const [filter, setFilter] = useState<number | 'all'>('all');
