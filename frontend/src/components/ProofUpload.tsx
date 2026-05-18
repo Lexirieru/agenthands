@@ -6,6 +6,24 @@ import { Upload, CheckCircle, Camera, X, Loader2, FileText, Paperclip } from 'lu
 type Mode = 'image' | 'text';
 type Kind = 'image' | 'text' | 'text+image';
 
+/**
+ * Proof-of-work upload widget for AgentHands tasks on Celo.
+ *
+ * Workers submit proof by either:
+ *   - **Image mode**: drag-and-drop / file picker → pinned to Pinata IPFS
+ *     via the `/api/ipfs/upload` Railway backend endpoint.
+ *   - **Text / Code mode**: plain-text textarea, optionally with an attached
+ *     image. On submit, text is pinned as `proof.txt`; text + image produces
+ *     a JSON manifest `{ v:1, kind:'text+image', text, imageCID }` pinned as
+ *     `proof.json`. The manifest CID is the value stored on-chain.
+ *
+ * The resulting IPFS CID is passed to `onCIDReady` and persisted in
+ * `localStorage` so the draft survives a page refresh before the worker
+ * submits the on-chain `submitProof(taskId, cid)` transaction on Celo.
+ *
+ * `ProofUploadHandle.ensureUploaded()` is the imperative API called by the
+ * parent's Submit button to flush any pending text before the tx fires.
+ */
 export interface ProofUploadHandle {
   /**
    * Called by the parent's Submit button. Returns the CID — uploading
