@@ -118,9 +118,13 @@ contract AgentHands is
     mapping(address => uint256) public agentRatingCount;
 
     /// @notice Tracks whether the worker has already been rated for a given task.
+    /// @dev    Set to `true` on first `rateWorker` call. Prevents double-rating on Celo
+    ///         where a misbehaving agent might try to overwrite a negative rating.
     mapping(uint256 => bool) public workerRatedForTask;
 
     /// @notice Tracks whether the agent has already been rated for a given task.
+    /// @dev    Set to `true` on first `rateAgent` call. Symmetric guard to `workerRatedForTask`
+    ///         — protects worker reputation scores from being overwritten on Celo mainnet.
     mapping(uint256 => bool) public agentRatedForTask;
 
     // ─── Events ──────────────────────────────────────────────
