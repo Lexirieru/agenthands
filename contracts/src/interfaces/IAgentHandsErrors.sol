@@ -20,7 +20,9 @@ interface IAgentHandsErrors {
 
     /// @notice Thrown when a deadline is in the past or logically inconsistent.
     /// @dev    Reverts in `createTask` when `_deadline <= block.timestamp` or
-    ///         `_completionDeadline <= _deadline`.
+    ///         `_completionDeadline <= _deadline`. On Celo (5-second block time),
+    ///         even a 1-block future deadline is technically valid — in practice
+    ///         use at least `block.timestamp + 1 hours` as a sensible minimum.
     error InvalidDeadline();
 
     /// @notice Thrown when an action requires TaskStatus.Open but the task is not open.
