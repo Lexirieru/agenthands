@@ -68,7 +68,9 @@ interface IAgentHandsErrors {
 
     /// @notice Thrown when attempting to rate a task that has already been rated by the same party.
     /// @dev    Reverts in `rateWorker` (if `workerRatedForTask[_taskId]`) or
-    ///         `rateAgent` (if `agentRatedForTask[_taskId]`).
+    ///         `rateAgent` (if `agentRatedForTask[_taskId]`). Ratings on Celo are permanent
+    ///         and immutable — there is no update or delete path. This prevents reputation
+    ///         manipulation by re-submitting a higher score after a negative review.
     error AlreadyRated();
 
     /// @notice Thrown when rating is attempted on a task that is not yet completed.
