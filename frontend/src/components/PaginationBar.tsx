@@ -9,7 +9,17 @@ interface PaginationBarProps {
   onPageSelect: (page: number) => void;
 }
 
-/** Reusable pagination bar with prev/next, page number buttons, and page indicator. */
+/**
+ * Reusable pagination bar for the Celo AgentHands desktop task grid.
+ *
+ * Shows prev/next buttons and up to 5 page-number buttons centered on the
+ * current page (window: `[currentPage-2 … currentPage+2]`, clamped to
+ * `[1…totalPages]`). Returns `null` when there is only one page, so it
+ * can be placed unconditionally in the layout without an extra guard.
+ *
+ * Fully keyboard and screen-reader accessible: `role="navigation"`,
+ * `aria-label`, `aria-current="page"`, and `disabled` on edge buttons.
+ */
 export default function PaginationBar({ currentPage, totalPages, onPrev, onNext, onPageSelect }: PaginationBarProps) {
   if (totalPages <= 1) return null;
 
