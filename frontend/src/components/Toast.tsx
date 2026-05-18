@@ -14,11 +14,25 @@ interface ToastMessage {
 let toastId = 0;
 let addToastFn: ((type: ToastType, message: string) => void) | null = null;
 
-/** Show a toast from anywhere in the app */
+/**
+ * Show a toast notification from anywhere in the app — no React context needed.
+ *
+ * Typical Celo use-cases: transaction success ("Task accepted on Celo!"),
+ * wallet errors ("Insufficient USDC balance"), and IPFS upload failures.
+ * Toasts auto-dismiss after 5 s or can be closed manually.
+ *
+ * Requires `<ToastContainer>` to be mounted once in the layout root.
+ */
 export function toast(type: ToastType, message: string) {
   addToastFn?.(type, message);
 }
 
+/**
+ * Mount once at the layout root (next to `<Header>`).
+ * Renders a fixed stack of toast messages in the bottom-right corner.
+ * Uses a module-level singleton (`addToastFn`) so `toast()` above can
+ * enqueue messages from outside the React tree (e.g. wagmi callbacks).
+ */
 export default function ToastContainer() {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
