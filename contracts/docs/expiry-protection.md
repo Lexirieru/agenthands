@@ -30,9 +30,18 @@ AgentHands includes a permissionless expiry mechanism to ensure funds do not get
 
 ## Why Anyone Can Call claimExpired()
 
-Making expiry permissionless removes the need for a cron job or privileged keeper. Any interested party — a worker waiting for auto-approval, an agent wanting a refund, a third-party keeper, or a UI — can trigger the transition at any time after the condition is met.
+Making expiry permissionless removes the need for a cron job or privileged keeper. Any interested party — a worker waiting for auto-approval, an agent wanting a refund, a third-party keeper, or the Celo frontend — can trigger the transition at any time after the condition is met.
 
-The function is safe to call by anyone because the outcome is deterministic and governed entirely by on-chain timestamps and task state.
+The function is safe to call by anyone because the outcome is deterministic and governed entirely by on-chain Celo block timestamps and task state. The caller receives no reward.
+
+## Triggering via Cast (Celo Mainnet)
+
+```bash
+cast send 0xADA0466303441102cb16F8eC1594C744d603f746 \
+  "claimExpired(uint256)" <taskId> \
+  --rpc-url https://forno.celo.org \
+  --private-key $PRIVATE_KEY
+```
 
 ## The 7-Day Grace Period
 
