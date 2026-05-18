@@ -4,18 +4,22 @@ import { useEffect, useState } from "react";
 import { USDC_FEE_ADAPTER } from "@/config";
 
 /**
- * Returns CIP-64 tx overrides (feeCurrency + tx type) ONLY when the connected
- * wallet advertises MiniPay/Valora — i.e. a Celo-native wallet that holds
- * stablecoins and expects to pay gas in them.
+ * Returns CIP-64 tx overrides for Celo fee abstraction — `feeCurrency` +
+ * `type: 'cip64'` — ONLY when the connected wallet is MiniPay or Valora.
  *
- * Desktop MetaMask (and most generic viem wallets) don't understand CIP-64,
- * so passing `type: 'cip64'` + `feeCurrency` will make them reject the tx.
- * For those wallets we return an empty object and the wallet pays gas in
- * native CELO as usual.
+ * USDC fee adapter: `0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B`.
+ * Passing these overrides lets users pay Celo gas in USDC instead of
+ * native CELO. See https://docs.celo.org/build/fee-abstraction (CIP-64).
+ *
+ * Desktop MetaMask and generic viem wallets don't understand CIP-64, so
+ * passing `type: 'cip64'` + `feeCurrency` will cause them to reject the tx.
+ * For those wallets we return `{}` and gas is paid in native CELO as usual.
  *
  * Usage:
- *   const cip64 = useCip64();
- *   writeContract({ ...call, functionName: 'x', args: [...], ...cip64 });
+ * ```ts
+ * const cip64 = useCip64();
+ * writeContract({ ...call, functionName: 'x', args: [...], ...cip64 });
+ * ```
  */
 export function useCip64() {
   const [supported, setSupported] = useState(false);
