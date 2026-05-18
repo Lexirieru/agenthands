@@ -97,9 +97,14 @@ contract AgentHands is
     address public feeRecipient;
 
     /// @notice Cumulative rating score per worker across all rated tasks.
+    /// @dev    Divide by `workerRatingCount[worker]` to get the floor average.
+    ///         Scores accumulate indefinitely; there is no cap or reset mechanism.
+    ///         Used by `getWorkerRating` to serve the Celo frontend reputation display.
     mapping(address => uint256) public workerTotalScore;
 
-    /// @notice Number of times a worker has been rated.
+    /// @notice Number of completed tasks for which a worker has received a rating.
+    /// @dev    Incremented once per rated task; never decremented. A value of 0 means
+    ///         the worker has not yet been rated on Celo mainnet.
     mapping(address => uint256) public workerRatingCount;
 
     /// @notice Cumulative rating score per agent across all rated tasks.
