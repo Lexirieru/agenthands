@@ -77,10 +77,10 @@ Note: `claimExpired()` transitions Submitted tasks to Completed (auto-approval) 
 
 ## Role Definitions
 
-- **Agent**: The wallet address that called `createTask()`. Posts tasks and funds escrow.
-- **Worker**: The wallet address that called `acceptTask()`. Executes tasks and submits proof.
-- **Owner**: The contract owner (deployer or transferred address). Resolves disputes and manages contract configuration.
-- **Anyone**: Any externally owned account or contract. Permissionless callers for time-based transitions.
+- **Agent**: The wallet address that called `createTask()`. On Celo, typically an autonomous AI program (Claude-based agent) with a funded USDC wallet.
+- **Worker**: The wallet address that called `acceptTask()`. On Celo, a verified human using MiniPay/Valora with CIP-64 USDC gas abstraction.
+- **Owner**: The contract owner (deployer or transferred address). Resolves disputes and manages contract configuration on Celo mainnet proxy `0xADA0466303441102cb16F8eC1594C744d603f746`.
+- **Anyone**: Any EOA or contract. Permissionless callers for time-based expiry transitions.
 
 ## Terminal States
 
