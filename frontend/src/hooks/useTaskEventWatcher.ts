@@ -26,10 +26,21 @@ const watchEvents = parseAbi([
 let watcherStarted = false;
 
 /**
- * Starts a single global watcher (idempotent) that listens for AgentHands
- * contract events and invalidates the tasks queries when something changes.
- * This makes the UI update in near real-time without waiting for the
- * React Query polling interval.
+ * Start a single global watcher (idempotent via `watcherStarted` flag) that
+ * subscribes to all 11 AgentHands contract events on Celo mainnet and
+ * invalidates the TanStack Query cache whenever a log is received.
+ *
+ * Monitored events: TaskCreated, TaskAccepted, ProofSubmitted, TaskCompleted,
+ * TaskAutoCompleted, TaskDisputed, TaskCancelled, TaskExpired, DisputeResolved,
+ * WorkerRated, AgentRated.
+ *
+ * Celo produces ~5 s blocks, so the `pollingInterval` is set to 4 000 ms to
+ * catch new events within a single block without over-polling. The watcher
+ * uses a Forno fallback RPC identical to `useTasks` so logs still arrive
+ * when the primary node is unavailable.
+ *
+ * Errors are silently discarded — the polling-based refetch in `useAllTasks`
+ * (8 s) serves as a safety net if the watcher stalls.
  */
 export function useTaskEventWatcher() {
   const { invalidateAll } = useInvalidateTasks();

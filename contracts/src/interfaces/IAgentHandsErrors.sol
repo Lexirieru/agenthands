@@ -24,24 +24,37 @@ interface IAgentHandsErrors {
     error TaskNotOpen();
 
     /// @notice Thrown when an action requires TaskStatus.Accepted but the task is not accepted.
-    /// @dev    Reverts in `submitProof`.
+    /// @dev    Reverts in `submitProof` when the task is still Open (no worker has accepted
+    ///         it yet on Celo). A worker must call `acceptTask` first, which also sets the
+    ///         `worker` field and moves status from Open → Accepted.
     error TaskNotAccepted();
 
     /// @notice Thrown when an action requires TaskStatus.Submitted but proof has not been submitted.
-    /// @dev    Reverts in `approveTask` and `disputeTask`.
+    /// @dev    Reverts in `approveTask` and `disputeTask`. The worker must first call
+    ///         `submitProof(taskId, cid)` with a Pinata IPFS CID before the agent can
+    ///         approve or dispute on Celo. Without proof, the 7-day auto-approve grace
+    ///         period in `claimExpired` cannot reach the Submitted state either.
     error TaskNotSubmitted();
 
     /// @notice Thrown when resolving a dispute on a task that is not in Disputed status.
-    /// @dev    Reverts in `resolveDispute`.
+    /// @dev    Reverts in `resolveDispute`. The agent must have called `disputeTask` first
+    ///         to move the task to Disputed status on Celo before the contract owner (or a
+    ///         future Kleros arbitrator integration) can call `resolveDispute(taskId, workerWins)`.
     error TaskNotDisputed();
 
     /// @notice Thrown when the caller is not the agent who posted the task.
     /// @dev    Enforced by the `onlyAgent` modifier used in `approveTask`, `disputeTask`,
-    ///         `cancelTask`, and `rateWorker`.
+    ///         `cancelTask`, and `rateWorker`. On Celo mainnet the agent is typically an
+    ///         AI-controlled wallet (e.g. a hot wallet funded with USDC or CELO to post
+    ///         tasks autonomously). The agent address is set immutably at `createTask` time.
     error NotAgent();
 
     /// @notice Thrown when the caller is not the worker assigned to the task.
     /// @dev    Enforced by the `onlyWorker` modifier used in `submitProof` and `rateAgent`.
+    ///         On Celo the worker is a human wallet — typically MiniPay or Valora — that
+    ///         accepted the task. The `worker` field is set by `acceptTask` and compared
+    ///         against `msg.sender`. Self Protocol ZK verification (optional) further
+    ///         confirms the worker is human before they accept.
     error NotWorker();
 
     /// @notice Thrown when the acceptance deadline has already passed.
@@ -50,6 +63,10 @@ interface IAgentHandsErrors {
 
     /// @notice Thrown when the completion deadline has already passed.
     /// @dev    Reverts in `submitProof` when `block.timestamp > task.completionDeadline`.
+    ///         Celo's ~5 s block time means this check can resolve within a few blocks of
+    ///         the deadline. The frontend filters Accepted tasks that are past their
+    ///         `completionDeadline` and shows a "Submit Proof" button only while time
+    ///         remains — but the contract is the authoritative gate on Celo mainnet.
     error CompletionDeadlinePassed();
 
     /// @notice Thrown when a rating score is outside the 1–5 range.
@@ -63,6 +80,10 @@ interface IAgentHandsErrors {
 
     /// @notice Thrown when rating is attempted on a task that is not yet completed.
     /// @dev    Reverts in `rateWorker` and `rateAgent` when status != Completed.
+    ///         Both `approveTask` and the `claimExpired` auto-approve path set the status
+    ///         to Completed on Celo. Ratings feed into the on-chain reputation system
+    ///         (running totals in `workerTotalScore` / `agentTotalScore`) that the
+    ///         ERC-8004 Reputation Registry reads to compute trust scores off-chain.
     error TaskNotCompleted();
 
     /// @notice Thrown when `claimExpired` is called on a task that has not yet expired.

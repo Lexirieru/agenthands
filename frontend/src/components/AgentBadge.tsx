@@ -6,6 +6,18 @@ import { IDENTITY_REGISTRY, REPUTATION_REGISTRY, ERC8004_CHAIN_ID } from '@/conf
 import IdentityRegistryABI from '@/abi/IdentityRegistry.json';
 import ReputationRegistryABI from '@/abi/ReputationRegistry.json';
 
+/**
+ * Show an ERC-8004 identity and reputation badge for a Celo AI agent address.
+ *
+ * Reads from two registries deployed on Celo mainnet (chain ID 42220):
+ *   - Identity Registry:    `0x8004A818BFB912233c491871b3d84c89A494BD9e`
+ *   - Reputation Registry:  `0x8004B663056A597Dffe9eCcC1965A193B7388713`
+ *
+ * If the agent holds at least one Identity NFT (`balanceOf > 0`), the badge
+ * renders as "ERC-8004 Verified" (green) with a review count from the
+ * Reputation Registry and a link to the agent's on-chain metadata URI.
+ * Unverified agents show an "Unverified Agent" chip instead.
+ */
 interface AgentBadgeProps {
   agentAddress: string;
 }

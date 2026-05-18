@@ -42,10 +42,19 @@ export interface CeloUsdPriceResult {
 }
 
 /**
- * Read Chainlink's CELO/USD feed and return a clean number + freshness
- * flag. We use this to convert CELO balances to a USD equivalent for the
- * desktop DollarsCard total. On mobile / inside MiniPay the caller skips
- * this hook entirely — that surface is stablecoin-only by design.
+ * Read Chainlink's CELO/USD feed on Celo mainnet and return a clean number
+ * + freshness flag.
+ *
+ * Feed address: `0x0568fD19986748cEfF3301e55c0eb1E729E0Ab7e` (8-decimal answer).
+ * The feed refreshes several times per hour; answers older than
+ * `STALE_AFTER_SECONDS` (1 h) are treated as unavailable so we never show
+ * a frozen price to users.
+ *
+ * Used exclusively by `useStablecoinBalances` (with `includeCelo: true`) to
+ * fold CELO balances into the desktop DollarsCard total. MiniPay / mobile
+ * surfaces skip this hook — those layouts are stablecoin-only by design.
+ *
+ * @param enabled - Set to false to skip all RPC calls (e.g. inside MiniPay).
  */
 export function useCeloUsdPrice(enabled = true): CeloUsdPriceResult {
   const round = useReadContract({

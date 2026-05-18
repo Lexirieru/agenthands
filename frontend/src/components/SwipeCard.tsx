@@ -10,6 +10,19 @@ import {
 } from "@/lib/utils/format";
 import type { TaskData } from "@/types/task";
 
+/**
+ * Full-screen task detail card rendered inside `SwipeStack` on the Celo
+ * mobile feed. Displays reward, title, description, location, deadline,
+ * and agent address for one AgentHands task at a time.
+ *
+ * Reward display respects the `paymentToken` address:
+ *   - Stablecoins (USDC/USDT/USDm): shown with `$` prefix, no symbol
+ *   - CELO ERC-20 (`0x471EcE3…`): shown as `amount CELO` (no `$`)
+ *
+ * Open tasks show an "Accept Task" CTA; non-Open tasks show "View Details".
+ * Includes a `navigator.share` button so workers can forward Celo task links
+ * to teammates via the device's native share sheet.
+ */
 interface Props {
   task: TaskData;
   index: number;

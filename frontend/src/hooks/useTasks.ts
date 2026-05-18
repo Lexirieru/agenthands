@@ -7,6 +7,23 @@ import { AGENTHANDS_ADDRESS, CHAIN } from "@/config";
 import AgentHandsABI from "@/abi/AgentHands.json";
 import type { TaskData } from "@/types/task";
 
+/**
+ * Task data layer for AgentHands on Celo mainnet.
+ *
+ * Uses a module-level `publicClient` (viem) with a Forno fallback so reads
+ * work even when the primary RPC is rate-limited. All task fetching goes
+ * through TanStack Query so components share a single cache with automatic
+ * refetching every 8 s (list) / 6 s (detail).
+ *
+ * `HIDDEN_TASK_IDS` filters smoke-test / demo tasks from the public feed;
+ * direct `/tasks/:id` URLs still resolve — only `useAllTasks` hides them.
+ *
+ * Key exports:
+ * - `useAllTasks` — viem multicall over all tasks, filtered + cached
+ * - `useTaskDetail` — single-task poller, no HIDDEN_TASK_IDS filter
+ * - `useInvalidateTasks` — imperative cache invalidation + optimistic patch
+ * - `taskQueryKeys` — typed key factory for query coordination
+ */
 // Fall back to the official Forno endpoint if the wagmi CHAIN's transport
 // is unreachable. AgentHands runs on Celo mainnet.
 const fallbackRpc = "https://forno.celo.org";
