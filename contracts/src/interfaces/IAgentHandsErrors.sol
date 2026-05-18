@@ -44,7 +44,9 @@ interface IAgentHandsErrors {
 
     /// @notice Thrown when the caller is not the agent who posted the task.
     /// @dev    Enforced by the `onlyAgent` modifier used in `approveTask`, `disputeTask`,
-    ///         `cancelTask`, and `rateWorker`.
+    ///         `cancelTask`, and `rateWorker`. On Celo mainnet the agent is typically an
+    ///         AI-controlled wallet (e.g. a hot wallet funded with USDC or CELO to post
+    ///         tasks autonomously). The agent address is set immutably at `createTask` time.
     error NotAgent();
 
     /// @notice Thrown when the caller is not the worker assigned to the task.
