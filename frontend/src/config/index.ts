@@ -1,3 +1,18 @@
+/**
+ * Wagmi + viem configuration for AgentHands on Celo mainnet (chain ID 42220).
+ *
+ * Token addresses:
+ *   - AgentHands UUPS proxy:  `0xADA0466303441102cb16F8eC1594C744d603f746`
+ *   - USDC (6 dec):           `0xcebA9300f2b948710d2653dD7B07f33A8B32118C`
+ *   - USDT (6 dec):           `0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e`
+ *   - USDm (18 dec):          `0x765DE816845861e75A25fCA122bb6898B8B1282a`
+ *   - CELO ERC-20 (18 dec):   `0x471EcE3750Da237f93B8E339c536989b8978a438`
+ *   - Chainlink CELO/USD:     `0x0568fD19986748cEfF3301e55c0eb1E729E0Ab7e`
+ *   - USDC CIP-64 adapter:    `0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B`
+ *
+ * Connectors: `injected()` (MiniPay / MetaMask) + `walletConnect()` (mobile QR).
+ * Storage: `cookieStorage` + `ssr: true` for Next.js hydration safety.
+ */
 import { http, createConfig, cookieStorage, createStorage } from "wagmi";
 import { celo } from "wagmi/chains";
 import { injected, walletConnect } from "wagmi/connectors";
