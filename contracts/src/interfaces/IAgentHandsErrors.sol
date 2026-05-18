@@ -30,7 +30,10 @@ interface IAgentHandsErrors {
     error TaskNotAccepted();
 
     /// @notice Thrown when an action requires TaskStatus.Submitted but proof has not been submitted.
-    /// @dev    Reverts in `approveTask` and `disputeTask`.
+    /// @dev    Reverts in `approveTask` and `disputeTask`. The worker must first call
+    ///         `submitProof(taskId, cid)` with a Pinata IPFS CID before the agent can
+    ///         approve or dispute on Celo. Without proof, the 7-day auto-approve grace
+    ///         period in `claimExpired` cannot reach the Submitted state either.
     error TaskNotSubmitted();
 
     /// @notice Thrown when resolving a dispute on a task that is not in Disputed status.
