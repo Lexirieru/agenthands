@@ -6,8 +6,14 @@ interface TaskGridSkeletonProps {
 }
 
 /**
- * Loading skeleton for the desktop task grid.
- * Renders `count` pulsing placeholder cards in the same 3-column layout.
+ * Loading skeleton for the Celo AgentHands desktop task grid.
+ *
+ * Renders `count` pulsing placeholder cards (Tailwind `animate-pulse`) in the
+ * same 3-column responsive layout as `TaskGrid`, so the page doesn't shift
+ * when real tasks arrive from the Celo RPC multicall.
+ *
+ * Default `count = 12` fills three full rows on a 1080 p viewport, matching
+ * a typical paginated task-list response from the AgentHands contract.
  */
 export default function TaskGridSkeleton({ count = 12 }: TaskGridSkeletonProps) {
   return (
