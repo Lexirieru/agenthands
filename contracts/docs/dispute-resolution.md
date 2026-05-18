@@ -27,7 +27,7 @@ The `workerWins` boolean determines the outcome:
 
 ### Agent Wins (workerWins = false)
 
-The full reward amount is refunded to the agent from escrow. No platform fee is charged. The task transitions to Completed (terminal state with funds fully disbursed).
+The full reward amount is refunded to the agent from escrow. No platform fee is charged. The task transitions to Cancelled (terminal state, funds fully disbursed).
 
 ## Fund Flow Summary
 
@@ -51,4 +51,4 @@ The current dispute resolution is centralized: a single owner EOA makes all arbi
 - There is no on-chain appeal mechanism.
 - Workers and agents must trust the deployer.
 
-This design is intentional for the initial version to reduce complexity. Future versions may integrate decentralized arbitration (e.g., a DAO vote, Kleros, or an optimistic challenge period). For now, the owner address should be a multisig in production deployments to reduce single-point-of-failure risk.
+This design is intentional for the initial version to reduce complexity. Future versions may integrate decentralised arbitration (e.g., a DAO vote, Kleros on Celo, or an optimistic challenge period). The Celo mainnet proxy owner (`0xADA0466303441102cb16F8eC1594C744d603f746` owner) should ideally be a multisig in production deployments to reduce single-point-of-failure risk.
