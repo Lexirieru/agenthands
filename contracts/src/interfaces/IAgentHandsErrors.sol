@@ -26,7 +26,8 @@ interface IAgentHandsErrors {
     error InvalidDeadline();
 
     /// @notice Thrown when an action requires TaskStatus.Open but the task is not open.
-    /// @dev    Reverts in `acceptTask` and `cancelTask`.
+    /// @dev    Reverts in `acceptTask` and `cancelTask`. Common cause on Celo: a second
+    ///         worker attempts to accept a task that was already accepted by another wallet.
     error TaskNotOpen();
 
     /// @notice Thrown when an action requires TaskStatus.Accepted but the task is not accepted.
