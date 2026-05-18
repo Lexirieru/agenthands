@@ -82,13 +82,18 @@ contract AgentHands is
 
     /// @notice Whitelist of ERC-20 tokens accepted as payment.
     /// @dev    Only the owner can add or remove tokens via `setAllowedToken`.
+    ///         Celo mainnet whitelist: USDC (`0xcebA9300f2b948710d2653dD7B07f33A8B32118C`)
+    ///         and CELO ERC-20 (`0x471EcE3750Da237f93B8E339c536989b8978a438`).
     mapping(address => bool) public allowedTokens;
 
     /// @notice Platform fee charged on successful payouts, expressed in basis points.
-    /// @dev    e.g. 250 = 2.5%. Applied in `_releaseFunds`.
+    /// @dev    e.g. 250 = 2.5%. Applied in `_releaseFunds`. Current Celo mainnet
+    ///         value: 250. Max theoretical value is 10 000 (100%) — no on-chain cap.
     uint256 public platformFeeBps;
 
     /// @notice Address that receives the platform fee on every completed task.
+    /// @dev    Receives the fee in whatever ERC-20 token the task was funded with
+    ///         (USDC or CELO on mainnet). Updated atomically with `platformFeeBps` via `setFee`.
     address public feeRecipient;
 
     /// @notice Cumulative rating score per worker across all rated tasks.
