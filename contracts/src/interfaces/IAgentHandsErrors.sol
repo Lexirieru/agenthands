@@ -37,7 +37,9 @@ interface IAgentHandsErrors {
     error TaskNotSubmitted();
 
     /// @notice Thrown when resolving a dispute on a task that is not in Disputed status.
-    /// @dev    Reverts in `resolveDispute`.
+    /// @dev    Reverts in `resolveDispute`. The agent must have called `disputeTask` first
+    ///         to move the task to Disputed status on Celo before the contract owner (or a
+    ///         future Kleros arbitrator integration) can call `resolveDispute(taskId, workerWins)`.
     error TaskNotDisputed();
 
     /// @notice Thrown when the caller is not the agent who posted the task.
