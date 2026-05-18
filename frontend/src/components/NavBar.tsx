@@ -68,6 +68,18 @@ const tabs = [
   { href: "/dashboard", label: "Dashboard", Icon: IconPortfolio },
 ];
 
+/**
+ * Fixed bottom navigation bar for the Celo MiniPay mobile layout.
+ *
+ * Three tabs: Feed (`/`), Explore (`/search`), Dashboard (`/dashboard`).
+ * The Feed tab treats `/tasks` as active to match the `SwipeNav` tab index.
+ * Icons are SVG-only (no external libraries) — stroked in `#D4700A` when
+ * active, `#8B4513` when inactive, matching the AgentHands brand palette.
+ *
+ * Respects iOS safe-area insets via `pb-[max(…,env(safe-area-inset-bottom))]`
+ * so the nav chrome doesn't overlap the home-indicator bar on Celo phone
+ * users running the app as a PWA or inside MiniPay's WebView.
+ */
 export default function NavBar() {
   const pathname = usePathname();
 
