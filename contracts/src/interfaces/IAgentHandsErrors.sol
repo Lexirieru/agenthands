@@ -78,7 +78,10 @@ interface IAgentHandsErrors {
     error TaskNotCompleted();
 
     /// @notice Thrown when `claimExpired` is called on a task that has not yet expired.
-    /// @dev    None of the three expiry paths (Open+deadline, Accepted+completionDeadline,
-    ///         Submitted+completionDeadline+7days) were satisfied.
+    /// @dev    None of the three Celo expiry paths were satisfied:
+    ///         A) `Open` status and `block.timestamp <= task.deadline`
+    ///         B) `Accepted` status and `block.timestamp <= task.completionDeadline`
+    ///         C) `Submitted` status and `block.timestamp <= task.completionDeadline + 7 days`
+    ///         Callers should verify on-chain timestamps before calling to avoid wasted gas.
     error NotExpired();
 }
