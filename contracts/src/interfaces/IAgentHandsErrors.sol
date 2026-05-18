@@ -13,7 +13,9 @@ interface IAgentHandsErrors {
     error InvalidToken();
 
     /// @notice Thrown when the reward amount is zero.
-    /// @dev    Reverts in `createTask` when `_reward == 0`.
+    /// @dev    Reverts in `createTask` when `_reward == 0`. On Celo the minimum
+    ///         meaningful reward is 1 wei of the payment token (e.g. 1 micro-USDC = $0.000001).
+    ///         A zero reward would lock no funds in escrow, making the task unclaimable.
     error InvalidReward();
 
     /// @notice Thrown when a deadline is in the past or logically inconsistent.
