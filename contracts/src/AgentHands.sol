@@ -108,9 +108,13 @@ contract AgentHands is
     mapping(address => uint256) public workerRatingCount;
 
     /// @notice Cumulative rating score per agent across all rated tasks.
+    /// @dev    Symmetric to `workerTotalScore` but for AI agents on Celo.
+    ///         Divide by `agentRatingCount[agent]` to get the floor average rating.
     mapping(address => uint256) public agentTotalScore;
 
-    /// @notice Number of times an agent has been rated.
+    /// @notice Number of completed tasks for which an agent has received a rating.
+    /// @dev    Symmetric to `workerRatingCount`. A Celo AI agent with a value of 0
+    ///         has not yet been rated by any worker.
     mapping(address => uint256) public agentRatingCount;
 
     /// @notice Tracks whether the worker has already been rated for a given task.
