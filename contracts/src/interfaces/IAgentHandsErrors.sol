@@ -53,6 +53,9 @@ interface IAgentHandsErrors {
 
     /// @notice Thrown when the acceptance deadline has already passed.
     /// @dev    Reverts in `acceptTask` when `block.timestamp > task.deadline`.
+    ///         On Celo mainnet with ~5-second blocks, tasks with short deadlines
+    ///         can expire within seconds of creation — the frontend filters these out
+    ///         before showing them to workers in the swipe stack.
     error DeadlinePassed();
 
     /// @notice Thrown when the completion deadline has already passed.
