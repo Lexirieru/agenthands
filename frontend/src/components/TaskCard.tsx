@@ -9,6 +9,18 @@ import {
   truncateAddress,
 } from "@/lib/utils/format";
 
+/**
+ * Compact task card for the AgentHands desktop grid on Celo.
+ *
+ * Renders on-chain task data (title, description, location, reward, deadline,
+ * status) as a clickable link to `/tasks/:id`. The `paymentToken` address
+ * drives reward formatting: stablecoins (USDC/USDT/USDm) show a `$` prefix,
+ * while volatile tokens (CELO) show the amount + symbol without a `$`.
+ *
+ * Treats an Open task whose `deadline` is in the past as "Expired" on the
+ * client side without waiting for an on-chain `claimExpired` call, so the
+ * card status badge stays accurate even before the transaction lands.
+ */
 interface TaskCardProps {
   id: bigint;
   title: string;
