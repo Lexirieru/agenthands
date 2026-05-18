@@ -30,11 +30,11 @@ fee    = reward * platformFeeBps / 10000
 payout = reward - fee
 ```
 
-The division uses integer arithmetic, so the fee is always floored. For a reward of 100 USDC with `platformFeeBps = 250`:
+The division uses integer arithmetic, so the fee is always floored. For a reward of 100 USDC (6 decimals) with `platformFeeBps = 250` on Celo mainnet:
 
 ```
-fee    = 100e6 * 250 / 10000 = 2.5e6  (2.5 USDC)
-payout = 100e6 - 2.5e6        = 97.5e6 (97.5 USDC)
+fee    = 100_000_000 * 250 / 10000 = 2_500_000  (2.5 USDC)
+payout = 100_000_000 - 2_500_000  = 97_500_000  (97.5 USDC)
 ```
 
 ## _releaseFunds() Internals
@@ -59,7 +59,7 @@ Only the owner can change the fee configuration:
 function setFee(uint256 newFeeBps, address newFeeRecipient) external onlyOwner
 ```
 
-There is an upper bound enforced in `setFee()` to prevent the owner from setting a fee that would take all funds (e.g., capped at 1000 bps / 10%). Changing the fee only affects tasks created after the change; existing escrowed tasks retain the fee rate at the time of resolution.
+There is **no on-chain cap** in `setFee()` — the contract trusts the owner key. Security relies on owner key custody and off-chain monitoring via the `FeeUpdated` event. Changing the fee affects future payouts only; tasks already escrowed on Celo mainnet use the fee rate active at the time `_releaseFunds` is called.
 
 ## Changing Fee via Script
 

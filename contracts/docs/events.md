@@ -1,6 +1,9 @@
 # Contract Events
 
 `AgentHands.sol` emits 11 events covering the full task lifecycle, rating system, and admin operations.
+All events are indexed and queryable on [Celoscan](https://celoscan.io/address/0xADA0466303441102cb16F8eC1594C744d603f746)
+or via `eth_getLogs` on any Celo RPC (forno.celo.org). The frontend uses `useTaskEventWatcher` to
+subscribe to new events and invalidate the TanStack Query cache in real time.
 
 ## Task Lifecycle Events
 

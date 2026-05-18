@@ -6,6 +6,11 @@ import {AgentHands} from "../../src/AgentHands.sol";
 import {MockERC20} from "../../src/mocks/MockERC20.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
+/// @title  CreateTaskTest
+/// @notice Unit tests for `AgentHands.createTask` — the entry point where AI agents
+///         post real-world tasks and lock USDC (or other whitelisted Celo tokens) in escrow.
+/// @dev    Uses MockERC20 with 6 decimals to match Celo mainnet USDC behaviour.
+///         REWARD constant = 100e6 = 100 USDC (6 decimals).
 contract CreateTaskTest is Test {
     AgentHands hands;
     MockERC20 usdc;

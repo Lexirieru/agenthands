@@ -23,7 +23,7 @@ forge script script/Deploy.s.sol:DeployScript \
   --broadcast --slow \
   --verify \
   --verifier etherscan \
-  --verifier-url https://api.celoscan.io/api \
+  --verifier-url "https://api.etherscan.io/v2/api?chainid=42220" \
   --etherscan-api-key $ETHERSCAN_API_KEY
 ```
 
@@ -56,7 +56,7 @@ forge verify-contract \
   contracts/src/AgentHands.sol:AgentHands \
   --chain-id 42220 \
   --verifier etherscan \
-  --verifier-url https://api.celoscan.io/api \
+  --verifier-url "https://api.etherscan.io/v2/api?chainid=42220" \
   --etherscan-api-key $ETHERSCAN_API_KEY
 
 # Verify the proxy (ERC1967)
@@ -65,7 +65,7 @@ forge verify-contract \
   lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy \
   --chain-id 42220 \
   --verifier etherscan \
-  --verifier-url https://api.celoscan.io/api \
+  --verifier-url "https://api.etherscan.io/v2/api?chainid=42220" \
   --etherscan-api-key $ETHERSCAN_API_KEY \
   --constructor-args $(cast abi-encode "constructor(address,bytes)" \
     0x29faf6cAFA4BeA1dC7c232f0a1818d4da6b724DD \

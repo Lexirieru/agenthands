@@ -6,6 +6,11 @@ import {AgentHands} from "../../src/AgentHands.sol";
 import {MockERC20} from "../../src/mocks/MockERC20.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
+/// @title  AdminTest
+/// @notice Unit tests for AgentHands owner-only admin functions: `setAllowedToken`,
+///         `setFee`, `initialize`, and UUPS upgrade authorization on Celo mainnet.
+/// @dev    Verifies that non-owners cannot whitelist tokens or change the fee, and that
+///         the proxy correctly stores the 250 bps (2.5%) Celo mainnet fee at init.
 contract AdminTest is Test {
     AgentHands hands;
     MockERC20 usdc;

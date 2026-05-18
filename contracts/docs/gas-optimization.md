@@ -18,7 +18,10 @@ These estimates are based on Foundry test measurements on a local fork. Actual c
 | `claimExpired()`                | ~60,000–80,000  | Depends on which case is triggered                 |
 | `rateWorker()` / `rateAgent()`  | ~45,000         | Two storage writes (total, count)                  |
 
-Celo's gas price is typically 0.1-5 gwei. At 1 gwei, a `createTask()` costs approximately 0.00018 CELO.
+Celo's gas price is typically **0.1–5 gwei** (minimum 0.025 gwei at network base fee).
+At 1 gwei a `createTask()` costs approximately 0.00018 CELO ≈ $0.00003 USD.
+
+**CIP-64 gas abstraction:** On MiniPay/Valora, workers and agents can attach `feeCurrency: USDC_FEE_ADAPTER` to pay gas in USDC instead of native CELO. The fee adapter address on Celo mainnet is `0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B`.
 
 ## Task Struct Packing
 

@@ -71,38 +71,60 @@ contract AgentHands is
     // ─── State ───────────────────────────────────────────────
 
     /// @notice Total number of tasks ever created. Also used as the next task ID.
+    /// @dev    Monotonically increasing — never decremented. On Celo mainnet task IDs
+    ///         are sequential starting at 1; ID 0 is never assigned.
     uint256 public taskCount;
 
     /// @notice Maps task ID to its Task struct.
+    /// @dev    Key range: [1, taskCount]. Accessing key 0 or a key > taskCount returns
+    ///         a zero-valued Task struct — callers should validate the ID first.
     mapping(uint256 => Task) public tasks;
 
     /// @notice Whitelist of ERC-20 tokens accepted as payment.
     /// @dev    Only the owner can add or remove tokens via `setAllowedToken`.
+    ///         Celo mainnet whitelist: USDC (`0xcebA9300f2b948710d2653dD7B07f33A8B32118C`)
+    ///         and CELO ERC-20 (`0x471EcE3750Da237f93B8E339c536989b8978a438`).
     mapping(address => bool) public allowedTokens;
 
     /// @notice Platform fee charged on successful payouts, expressed in basis points.
-    /// @dev    e.g. 250 = 2.5%. Applied in `_releaseFunds`.
+    /// @dev    e.g. 250 = 2.5%. Applied in `_releaseFunds`. Current Celo mainnet
+    ///         value: 250. Max theoretical value is 10 000 (100%) — no on-chain cap.
     uint256 public platformFeeBps;
 
     /// @notice Address that receives the platform fee on every completed task.
+    /// @dev    Receives the fee in whatever ERC-20 token the task was funded with
+    ///         (USDC or CELO on mainnet). Updated atomically with `platformFeeBps` via `setFee`.
     address public feeRecipient;
 
     /// @notice Cumulative rating score per worker across all rated tasks.
+    /// @dev    Divide by `workerRatingCount[worker]` to get the floor average.
+    ///         Scores accumulate indefinitely; there is no cap or reset mechanism.
+    ///         Used by `getWorkerRating` to serve the Celo frontend reputation display.
     mapping(address => uint256) public workerTotalScore;
 
-    /// @notice Number of times a worker has been rated.
+    /// @notice Number of completed tasks for which a worker has received a rating.
+    /// @dev    Incremented once per rated task; never decremented. A value of 0 means
+    ///         the worker has not yet been rated on Celo mainnet.
     mapping(address => uint256) public workerRatingCount;
 
     /// @notice Cumulative rating score per agent across all rated tasks.
+    /// @dev    Symmetric to `workerTotalScore` but for AI agents on Celo.
+    ///         Divide by `agentRatingCount[agent]` to get the floor average rating.
     mapping(address => uint256) public agentTotalScore;
 
-    /// @notice Number of times an agent has been rated.
+    /// @notice Number of completed tasks for which an agent has received a rating.
+    /// @dev    Symmetric to `workerRatingCount`. A Celo AI agent with a value of 0
+    ///         has not yet been rated by any worker.
     mapping(address => uint256) public agentRatingCount;
 
     /// @notice Tracks whether the worker has already been rated for a given task.
+    /// @dev    Set to `true` on first `rateWorker` call. Prevents double-rating on Celo
+    ///         where a misbehaving agent might try to overwrite a negative rating.
     mapping(uint256 => bool) public workerRatedForTask;
 
     /// @notice Tracks whether the agent has already been rated for a given task.
+    /// @dev    Set to `true` on first `rateAgent` call. Symmetric guard to `workerRatedForTask`
+    ///         — protects worker reputation scores from being overwritten on Celo mainnet.
     mapping(uint256 => bool) public agentRatedForTask;
 
     // ─── Events ──────────────────────────────────────────────
@@ -474,13 +496,14 @@ contract AgentHands is
     /// @dev    If `_workerWins` is true, the reward (minus fee) is sent to the worker.
     ///         If false, the full reward is refunded to the agent.
     ///         Arbitration notes:
-    ///         - This is centralised arbitration by the contract owner; future versions
-    ///           may integrate decentralised dispute resolution (e.g. Kleros).
+    ///         - Centralised arbitration by the Celo contract owner; future versions
+    ///           may integrate decentralised dispute resolution (e.g. Kleros on Celo).
     ///         - When the agent wins, the full `task.reward` (no fee deducted) is
-    ///           returned to the agent because the platform should not profit from
-    ///           invalid proof disputes.
-    ///         - The `DisputeResolved` event is emitted after fund transfer completes,
-    ///           not before — follow the Checks-Effects-Interactions pattern downstream.
+    ///           returned because the platform should not profit from invalid disputes.
+    ///         - The `DisputeResolved` event is emitted after the Celo ERC-20 transfer
+    ///           completes — Checks-Effects-Interactions order is preserved throughout.
+    ///         - Callable only by the proxy owner; reverts with `OwnableUnauthorizedAccount`
+    ///           for any other caller.
     /// @param _taskId     The ID of the disputed task.
     /// @param _workerWins True to pay the worker; false to refund the agent.
     function resolveDispute(uint256 _taskId, bool _workerWins) external onlyOwner nonReentrant {
@@ -606,8 +629,9 @@ contract AgentHands is
 
     /// @notice Returns the implementation version string.
     /// @dev    Hardcoded in the implementation bytecode — upgrade to a new implementation
-    ///         to bump this value. Useful for clients to detect which feature set is active
-    ///         without inspecting the EIP-1967 implementation slot directly.
+    ///         to bump this value. Celo frontend clients use this to detect which feature
+    ///         set is active without reading the EIP-1967 implementation slot directly.
+    ///         Current Celo mainnet implementation: `0x29faf6cAFA4BeA1dC7c232f0a1818d4da6b724DD` → "1.1.0".
     /// @return The semver version string of this implementation (e.g. "1.1.0").
     function version() external pure returns (string memory) {
         return "1.1.0";

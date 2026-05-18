@@ -6,6 +6,12 @@ import {AgentHands} from "../../src/AgentHands.sol";
 import {MockERC20} from "../../src/mocks/MockERC20.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
+/// @title  ViewHelpersTest
+/// @notice Unit tests for read-only AgentHands view functions: `version`,
+///         `isTokenAllowed`, `getTasksByStatus`, and the `FeeUpdated` event.
+/// @dev    These functions are the primary off-chain data source for the Celo frontend
+///         (viem multicall). They are gas-free when called via a read-only RPC node.
+///         `getTasksByStatus` performs an O(n) scan — never call it on-chain.
 contract ViewHelpersTest is Test {
     AgentHands hands;
     MockERC20 usdc;

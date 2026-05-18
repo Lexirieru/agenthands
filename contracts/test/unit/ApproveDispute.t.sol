@@ -6,6 +6,11 @@ import {AgentHands} from "../../src/AgentHands.sol";
 import {MockERC20} from "../../src/mocks/MockERC20.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
+/// @title  ApproveDisputeTest
+/// @notice Unit tests for `approveTask`, `disputeTask`, and `resolveDispute` —
+///         the payment release and arbitration paths of the Celo escrow lifecycle.
+/// @dev    FEE_BPS = 250 mirrors the live 2.5% platform fee on Celo mainnet.
+///         Worker payout = REWARD - (REWARD * 250 / 10000) = 97.5% of escrow.
 contract ApproveDisputeTest is Test {
     AgentHands hands;
     MockERC20 usdc;

@@ -1,6 +1,8 @@
 # Custom Errors
 
 `AgentHands.sol` uses 15 custom errors (EIP-838) for gas-efficient reverts with clear semantics.
+All errors are decodable on [Celoscan](https://celoscan.io/address/0xADA0466303441102cb16F8eC1594C744d603f746)
+using the verified ABI — custom error selectors are 4-byte keccak hashes of the error signature.
 
 ## Token / Reward Errors
 
