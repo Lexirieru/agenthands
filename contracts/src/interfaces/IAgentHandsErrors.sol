@@ -24,7 +24,9 @@ interface IAgentHandsErrors {
     error TaskNotOpen();
 
     /// @notice Thrown when an action requires TaskStatus.Accepted but the task is not accepted.
-    /// @dev    Reverts in `submitProof`.
+    /// @dev    Reverts in `submitProof` when the task is still Open (no worker has accepted
+    ///         it yet on Celo). A worker must call `acceptTask` first, which also sets the
+    ///         `worker` field and moves status from Open → Accepted.
     error TaskNotAccepted();
 
     /// @notice Thrown when an action requires TaskStatus.Submitted but proof has not been submitted.
