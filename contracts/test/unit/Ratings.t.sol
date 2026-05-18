@@ -6,6 +6,12 @@ import {AgentHands} from "../../src/AgentHands.sol";
 import {MockERC20} from "../../src/mocks/MockERC20.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
+/// @title  RatingsTest
+/// @notice Unit tests for `rateWorker` and `rateAgent` — the on-chain reputation
+///         system for human workers and AI agents operating on the Celo marketplace.
+/// @dev    Ratings accumulate in storage as running totals; floor averages are computed
+///         off-chain via `getWorkerRating` / `getAgentRating`. Each task can be rated
+///         exactly once per party (`AlreadyRated` revert on second attempt).
 contract RatingsTest is Test {
     AgentHands hands;
     MockERC20 usdc;
