@@ -80,6 +80,10 @@ interface IAgentHandsErrors {
 
     /// @notice Thrown when rating is attempted on a task that is not yet completed.
     /// @dev    Reverts in `rateWorker` and `rateAgent` when status != Completed.
+    ///         Both `approveTask` and the `claimExpired` auto-approve path set the status
+    ///         to Completed on Celo. Ratings feed into the on-chain reputation system
+    ///         (running totals in `workerTotalScore` / `agentTotalScore`) that the
+    ///         ERC-8004 Reputation Registry reads to compute trust scores off-chain.
     error TaskNotCompleted();
 
     /// @notice Thrown when `claimExpired` is called on a task that has not yet expired.
