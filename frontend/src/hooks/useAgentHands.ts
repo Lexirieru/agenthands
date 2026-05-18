@@ -44,6 +44,7 @@ const ERC20_ABI = [
 
 // ─── Read Hooks ──────────────────────────────────────────
 
+/** Total number of tasks ever posted to AgentHands on Celo mainnet. */
 export function useTaskCount() {
   return useReadContract({
     address: AGENTHANDS_ADDRESS,
@@ -52,6 +53,7 @@ export function useTaskCount() {
   });
 }
 
+/** Fetch a single task by its uint256 ID from the Celo mainnet contract. */
 export function useTask(taskId: bigint) {
   return useReadContract({
     address: AGENTHANDS_ADDRESS,
@@ -61,6 +63,10 @@ export function useTask(taskId: bigint) {
   });
 }
 
+/**
+ * Read the floor-average rating and submission count for a Celo worker
+ * address. Score range 1–5; computed as `totalScore / count` (floor).
+ */
 export function useWorkerRating(worker: `0x${string}`) {
   return useReadContract({
     address: AGENTHANDS_ADDRESS,
@@ -70,6 +76,10 @@ export function useWorkerRating(worker: `0x${string}`) {
   });
 }
 
+/**
+ * Read the floor-average rating and submission count for a Celo AI agent
+ * address. Score range 1–5; computed as `totalScore / count` (floor).
+ */
 export function useAgentRating(agent: `0x${string}`) {
   return useReadContract({
     address: AGENTHANDS_ADDRESS,
@@ -79,6 +89,10 @@ export function useAgentRating(agent: `0x${string}`) {
   });
 }
 
+/**
+ * Poll the USDC balance (`0xcebA9300…`, 6 decimals) for `address` every 8 s.
+ * Used by the header pill and the mobile dashboard stablecoin total.
+ */
 export function useUSDCBalance(address: `0x${string}` | undefined) {
   return useReadContract({
     address: USDC_ADDRESS,
@@ -203,38 +217,47 @@ export function useStablecoinBalances(
 
 // ─── Write Hooks ─────────────────────────────────────────
 
+/** Approve the AgentHands UUPS proxy to pull USDC reward tokens from the agent's wallet. */
 export function useApproveUSDC() {
   return useWriteContract();
 }
 
+/** Post a new task to AgentHands on Celo, locking the reward in escrow. */
 export function useCreateTask() {
   return useWriteContract();
 }
 
+/** Accept an open Celo task as a worker; pays CIP-64 gas in USDC if in MiniPay. */
 export function useAcceptTask() {
   return useWriteContract();
 }
 
+/** Submit a Pinata IPFS CID as proof of work for an accepted Celo task. */
 export function useSubmitProof() {
   return useWriteContract();
 }
 
+/** Agent approves submitted proof; releases USDC/CELO reward minus 2.5% fee to worker. */
 export function useApproveTask() {
   return useWriteContract();
 }
 
+/** Agent opens a dispute on a submitted Celo task; pauses payout for arbitration. */
 export function useDisputeTask() {
   return useWriteContract();
 }
 
+/** Agent cancels an open (unaccepted) Celo task and recovers the escrowed reward. */
 export function useCancelTask() {
   return useWriteContract();
 }
 
+/** Agent rates the worker (1–5) after task completion on Celo; immutable once set. */
 export function useRateWorker() {
   return useWriteContract();
 }
 
+/** Worker rates the agent (1–5) after task completion on Celo; immutable once set. */
 export function useRateAgent() {
   return useWriteContract();
 }
