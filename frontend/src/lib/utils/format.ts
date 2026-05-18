@@ -95,8 +95,8 @@ export function formatRewardDisplay(
 }
 
 /**
- * Truncate an address for display
- * e.g. "0x1234...abcd"
+ * Truncate a Celo wallet address for display — e.g. `0xADA046…3f746`.
+ * Default: first 6 chars + `…` + last 4 chars, matching Celoscan's style.
  */
 export function truncateAddress(address: string, start = 6, end = 4): string {
   if (address.length <= start + end + 3) return address;
@@ -122,7 +122,9 @@ export function formatDate(dateStr: string | number): string {
 }
 
 /**
- * Get status display label and color for contract status enum
+ * Map the Celo AgentHands `TaskStatus` enum to a UI label + Tailwind color.
+ * Enum values: 0=Open, 1=Accepted, 2=Submitted, 3=Completed,
+ *              4=Disputed, 5=Cancelled, 6=Expired.
  */
 export function getStatusDisplay(status: number): { label: string; color: string } {
   switch (status) {
