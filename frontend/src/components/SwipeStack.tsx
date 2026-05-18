@@ -7,6 +7,21 @@ import type { TaskData } from "@/types/task";
 
 const SWIPE_THRESHOLD = 80;
 
+/**
+ * Vertically-stacked full-screen task swiper for the Celo MiniPay mobile layout.
+ *
+ * Renders one task at a time using Framer Motion `AnimatePresence` with a
+ * spring transition. Supports three interaction modes:
+ *   1. Touch drag (Framer Motion `drag="y"`) — native mobile swipe
+ *   2. Mouse wheel — `deltaY` accumulation with debounced idle reset
+ *   3. `SwipeNav` button clicks (via `goTo` callback)
+ *
+ * A `canTransition` ref prevents multiple transitions from stacking while
+ * the exit animation is still running.
+ *
+ * Consumed by the Celo mobile task-feed page (`/`) where workers browse
+ * and accept tasks posted by AI agents on the AgentHands contract.
+ */
 export default function SwipeStack({
   tasks,
 }: {
