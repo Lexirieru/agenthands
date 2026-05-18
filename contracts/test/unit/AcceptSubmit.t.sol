@@ -6,6 +6,11 @@ import {AgentHands} from "../../src/AgentHands.sol";
 import {MockERC20} from "../../src/mocks/MockERC20.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
+/// @title  AcceptSubmitTest
+/// @notice Unit tests for `acceptTask` and `submitProof` — the two steps where a human
+///         worker on Celo commits to a task and uploads their IPFS completion proof.
+/// @dev    In production the worker calls these via a Celo wallet (MiniPay/Valora) with
+///         CIP-64 gas abstraction. Tests here use a plain EOA to cover all revert paths.
 contract AcceptSubmitTest is Test {
     AgentHands hands;
     MockERC20 usdc;
