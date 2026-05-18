@@ -71,9 +71,13 @@ contract AgentHands is
     // ─── State ───────────────────────────────────────────────
 
     /// @notice Total number of tasks ever created. Also used as the next task ID.
+    /// @dev    Monotonically increasing — never decremented. On Celo mainnet task IDs
+    ///         are sequential starting at 1; ID 0 is never assigned.
     uint256 public taskCount;
 
     /// @notice Maps task ID to its Task struct.
+    /// @dev    Key range: [1, taskCount]. Accessing key 0 or a key > taskCount returns
+    ///         a zero-valued Task struct — callers should validate the ID first.
     mapping(uint256 => Task) public tasks;
 
     /// @notice Whitelist of ERC-20 tokens accepted as payment.
