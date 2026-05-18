@@ -8,6 +8,8 @@ pragma solidity ^0.8.24;
 interface IAgentHandsErrors {
     /// @notice Thrown when the payment token is not on the whitelist.
     /// @dev    Reverts in `createTask` when `allowedTokens[_paymentToken]` is false.
+    ///         On Celo mainnet only USDC (`0xcebA9300f2b948710d2653dD7B07f33A8B32118C`) and
+    ///         CELO ERC-20 (`0x471EcE3750Da237f93B8E339c536989b8978a438`) are whitelisted.
     error InvalidToken();
 
     /// @notice Thrown when the reward amount is zero.
