@@ -6,6 +6,13 @@ import {AgentHands} from "../../src/AgentHands.sol";
 import {MockERC20} from "../../src/mocks/MockERC20.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
+/// @title  CancelExpiredTest
+/// @notice Unit tests for `cancelTask` and `claimExpired` — the two fund-recovery
+///         paths that ensure no USDC or CELO rewards are ever locked permanently on Celo.
+/// @dev    Three `claimExpired` paths are tested:
+///           A) Open task past deadline → refund agent.
+///           B) Accepted task past completionDeadline → refund agent.
+///           C) Submitted task past completionDeadline + 7 days → auto-pay worker.
 contract CancelExpiredTest is Test {
     AgentHands hands;
     MockERC20 usdc;
