@@ -16,6 +16,24 @@ const navLinks = [
   { href: "/dashboard", label: "DASHBOARD" },
 ];
 
+/**
+ * Sticky app header for the Celo AgentHands desktop and mobile layouts.
+ *
+ * **Mobile** (`< md`): compact bar with logo, wallet address pill, and a
+ * "Connect" button. MiniPay/Valora users see "Connecting…" instead — the
+ * manual connect button is hidden per MiniPay's UX spec.
+ *
+ * **Desktop** (`≥ md`): pill-shaped glassmorphism nav with logo, TASKS /
+ * DASHBOARD links, a combined USD balance pill (stablecoins + CELO via
+ * Chainlink), and a wallet button that flips to "Disconnect" on hover.
+ *
+ * CELO balance is included in the header pill only on desktop (`!isMobile &&
+ * !isMiniPay`), matching the DollarsCard `includeCelo` split. Balances are
+ * formatted to 2 dp when ≥ $1, or up to 6 dp with trailing zeros stripped
+ * for micro-balances (common with USDC 6-decimal amounts on Celo).
+ *
+ * `mounted` guard prevents SSR/hydration mismatches from wagmi account state.
+ */
 export default function Header() {
   const pathname = usePathname();
   const { address, isConnected } = useAccount();
