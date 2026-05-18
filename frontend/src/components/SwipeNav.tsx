@@ -5,6 +5,19 @@ import { useRouter, usePathname } from "next/navigation";
 
 const tabs = ["/", "/search", "/dashboard"];
 
+/**
+ * Horizontal-swipe page navigation wrapper for the Celo MiniPay mobile shell.
+ *
+ * Listens for touch events on its container and translates horizontal swipes
+ * into `router.push` calls across the three main tabs: `/` (Feed), `/search`
+ * (Explore), `/dashboard`. Vertical swipes (used by `SwipeStack`) are not
+ * intercepted — the lock axis is determined by the first 8 px of movement.
+ *
+ * `offset` creates a rubber-band drag effect; edge tabs resist with 0.15×
+ * multiplier, interior transitions use 0.35×. On release, a 120 ms snap
+ * animation completes before the route changes so the transition feels
+ * physical on low-end Celo phones.
+ */
 export default function SwipeNav({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
