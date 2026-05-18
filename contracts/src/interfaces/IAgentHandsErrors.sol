@@ -63,6 +63,10 @@ interface IAgentHandsErrors {
 
     /// @notice Thrown when the completion deadline has already passed.
     /// @dev    Reverts in `submitProof` when `block.timestamp > task.completionDeadline`.
+    ///         Celo's ~5 s block time means this check can resolve within a few blocks of
+    ///         the deadline. The frontend filters Accepted tasks that are past their
+    ///         `completionDeadline` and shows a "Submit Proof" button only while time
+    ///         remains — but the contract is the authoritative gate on Celo mainnet.
     error CompletionDeadlinePassed();
 
     /// @notice Thrown when a rating score is outside the 1–5 range.
