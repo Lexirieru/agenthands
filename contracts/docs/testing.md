@@ -10,11 +10,14 @@ cd contracts
 # Run all tests with verbose output
 forge test -vv
 
+# Run against a Celo mainnet fork (requires CELO_RPC env var)
+forge test -vv --fork-url $CELO_RPC --fork-block-number latest
+
 # Run a specific test file
 forge test --match-path test/unit/CreateTask.t.sol -vv
 
 # Run a specific test by name
-forge test --match-test testCreateTask_revertsIfTokenNotAllowed -vv
+forge test --match-test test_createTask_revertsOnDisallowedToken -vv
 
 # Coverage report
 forge coverage
