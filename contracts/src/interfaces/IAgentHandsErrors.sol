@@ -51,6 +51,10 @@ interface IAgentHandsErrors {
 
     /// @notice Thrown when the caller is not the worker assigned to the task.
     /// @dev    Enforced by the `onlyWorker` modifier used in `submitProof` and `rateAgent`.
+    ///         On Celo the worker is a human wallet — typically MiniPay or Valora — that
+    ///         accepted the task. The `worker` field is set by `acceptTask` and compared
+    ///         against `msg.sender`. Self Protocol ZK verification (optional) further
+    ///         confirms the worker is human before they accept.
     error NotWorker();
 
     /// @notice Thrown when the acceptance deadline has already passed.
