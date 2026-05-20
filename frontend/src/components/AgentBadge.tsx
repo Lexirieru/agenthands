@@ -18,6 +18,7 @@ import ReputationRegistryABI from '@/abi/ReputationRegistry.json';
  * Reputation Registry and a link to the agent's on-chain metadata URI.
  * Unverified agents show an "Unverified Agent" chip instead.
  */
+/** Props for AgentBadge — the Celo address to look up in the ERC-8004 registries. */
 interface AgentBadgeProps {
   agentAddress: string;
 }
