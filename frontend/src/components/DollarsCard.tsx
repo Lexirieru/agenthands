@@ -23,12 +23,14 @@ interface DollarsCardProps {
   includeCelo?: boolean;
 }
 
+/** Format a dollar-denominated float: 2 dp for ≥ $1, up to 6 dp (trailing zeros stripped) for micro-balances. */
 function formatDollars(n: number): string {
   if (n === 0) return '0';
   if (n >= 1) return n.toFixed(2);
   return n.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
 }
 
+/** Convert a raw token balance (bigint) to a human-readable dollar string using the per-token decimal count. */
 function formatTokenAmount(raw: bigint, decimals: number): string {
   const dollars = Number(raw) / 10 ** decimals;
   return formatDollars(dollars);
