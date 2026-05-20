@@ -21,10 +21,15 @@ const tabs = ["/", "/search", "/dashboard"];
 export default function SwipeNav({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  /** X coordinate where the current touch gesture started, or null if no touch is active. */
   const startX = useRef<number | null>(null);
+  /** Y coordinate where the current touch gesture started, used to disambiguate horizontal vs vertical. */
   const startY = useRef<number | null>(null);
+  /** True once the gesture has been classified as horizontal (set after the first 8 px of movement). */
   const isHorizontal = useRef(false);
+  /** Current translateX offset in pixels, creating a rubber-band drag effect during swipe. */
   const [offset, setOffset] = useState(0);
+  /** True during the 120 ms snap animation that runs before the route transition fires. */
   const [snapping, setSnapping] = useState(false);
 
   // Map /tasks to / for tab matching
