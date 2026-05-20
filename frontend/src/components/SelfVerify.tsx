@@ -125,7 +125,12 @@ export default function SelfVerify({ onVerified }: SelfVerifyProps) {
     }
   }, [address]);
 
-  /** Re-check verification status after the QR scan completes on desktop. */
+  /**
+   * Re-check verification status after the QR scan completes on desktop.
+   * Queries the backend `/api/self/verify` rather than flipping state
+   * optimistically — prevents fake verification if the Self Protocol
+   * relayer hasn't confirmed the Celo wallet yet.
+   */
   const handleSuccess = useCallback(async () => {
     setShowQR(false);
     // Trust the backend over optimism — re-check rather than flipping state
