@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+/** SVG icon for the Feed tab — stroked in the active/inactive brand color. */
 function IconFeed({ active }: { active: boolean }) {
   const c = active ? "#D4700A" : "#8B4513";
   return (
@@ -22,6 +23,7 @@ function IconFeed({ active }: { active: boolean }) {
   );
 }
 
+/** SVG icon for the Explore tab — stroked in the active/inactive brand color. */
 function IconExplore({ active }: { active: boolean }) {
   const c = active ? "#D4700A" : "#8B4513";
   return (
@@ -41,6 +43,7 @@ function IconExplore({ active }: { active: boolean }) {
   );
 }
 
+/** SVG icon for the Dashboard tab — stroked in the active/inactive brand color. */
 function IconPortfolio({ active }: { active: boolean }) {
   const c = active ? "#D4700A" : "#8B4513";
   return (
