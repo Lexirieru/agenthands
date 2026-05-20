@@ -11,6 +11,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { truncateAddress } from "@/lib/utils/format";
 import { useState, useEffect } from "react";
 
+/** Desktop nav link definitions — rendered as a segmented pill inside the glassmorphism header. */
 const navLinks = [
   { href: "/tasks", label: "TASKS" },
   { href: "/dashboard", label: "DASHBOARD" },
@@ -61,9 +62,13 @@ export default function Header() {
       ? totalDollars.toFixed(2)
       : totalDollars.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
 
+  /** Returns true when the current Next.js pathname matches the given nav link href. */
   const isActive = (href: string) => pathname === href;
 
-  // Wallet Connection Logic
+  /**
+   * Initiates wallet connection — prefers the injected connector (MiniPay/MetaMask)
+   * before falling back to the first available connector (usually WalletConnect).
+   */
   const handleConnect = () => {
     // Priority: injected (MiniPay/MetaMask) -> walletConnect
     const connector = connectors.find(c => c.id === 'injected') || connectors[0];
