@@ -7,13 +7,18 @@ import { USDC_FEE_ADAPTER } from "@/config";
  * Returns CIP-64 tx overrides for Celo fee abstraction — `feeCurrency` +
  * `type: 'cip64'` — ONLY when the connected wallet is MiniPay or Valora.
  *
- * USDC fee adapter: `0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B`.
- * Passing these overrides lets users pay Celo gas in USDC instead of
- * native CELO. See https://docs.celo.org/build/fee-abstraction (CIP-64).
+ * CIP-64 is a Celo-specific transaction type (EIP-1559 extension) that adds
+ * a `feeCurrency` field. When this field is set to the USDC Fee Adapter
+ * (`0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B`), the Celo gas market
+ * deducts the gas cost in USDC rather than native CELO. This allows workers
+ * to interact with AgentHands without holding any CELO — only the USDC
+ * reward they earn needs to be in their wallet.
  *
- * Desktop MetaMask and generic viem wallets don't understand CIP-64, so
- * passing `type: 'cip64'` + `feeCurrency` will cause them to reject the tx.
- * For those wallets we return `{}` and gas is paid in native CELO as usual.
+ * Desktop MetaMask and generic viem/wagmi wallets do not implement CIP-64;
+ * sending `type: 'cip64'` to them causes the tx to be rejected. The hook
+ * gates the overrides on `isMiniPay || isValora` detection (same check as
+ * `useIsMiniPay`) and returns an empty object `{}` for non-CIP-64 wallets,
+ * so gas is paid in native CELO as the standard EIP-1559 fallback.
  *
  * Usage:
  * ```ts
