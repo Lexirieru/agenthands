@@ -14,8 +14,20 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 import { useIsMiniPay } from '@/hooks/useIsMiniPay';
 import { EXPLORER_URL } from '@/config';
 
+/** Tab selector for the worker's task list — Active jobs vs completed ones. */
 type JobTab = 'active' | 'done';
 
+/**
+ * User dashboard — wallet balance, identity verification, and personal task history.
+ *
+ * Shows a DollarsCard with USDC + (desktop-only) CELO balance, a Self Protocol
+ * ZK-identity verification widget, and a tabbed Active / Done task list filtered
+ * to the connected Celo address. GSAP animates stat cards and the task grid on
+ * load and whenever the active tab changes.
+ *
+ * CELO is intentionally excluded from the Dollars total on MiniPay / mobile
+ * because it is volatile and not part of MiniPay's stablecoin-first UX.
+ */
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
   const isMobile = useIsMobile();
@@ -53,6 +65,10 @@ export default function DashboardPage() {
   );
   const visibleTasks = jobTab === 'active' ? activeWorkerTasks : doneWorkerTasks;
 
+  // completedCount: tasks in status=3 (Completed) where the user is either the agent or worker.
+  // activeCount:    agent tasks with status < 3 (Open/Accepted/Submitted) plus
+  //                 worker tasks with 0 < status < 3 (Accepted/Submitted — excludes Open since the
+  //                 user hasn't been assigned yet, and excludes Completed/Disputed/Cancelled).
   const completedCount = myAgentTasks.filter((t) => Number(t.status) === 3).length +
     myWorkerTasks.filter((t) => Number(t.status) === 3).length;
   const activeCount = myAgentTasks.filter((t) => Number(t.status) < 3).length +
