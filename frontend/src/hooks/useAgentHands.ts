@@ -12,6 +12,11 @@ import {
 import { useCeloUsdPrice } from "@/hooks/useCeloUsdPrice";
 import AgentHandsABI from "@/abi/AgentHands.json";
 
+/**
+ * Minimal ERC-20 ABI covering the three functions needed by AgentHands hooks:
+ * `approve` (for USDC reward escrow), `allowance` (pre-check before approve),
+ * and `balanceOf` (for the header balance pill and DollarsCard).
+ */
 const ERC20_ABI = [
   {
     name: "approve",
