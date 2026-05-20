@@ -27,6 +27,8 @@ contract MockERC20 is ERC20 {
     }
 
     /// @notice Mints `amount` tokens to `to`. No access control — test-only.
+    /// @dev    Wraps OpenZeppelin's `_mint`. Use in Foundry tests to seed wallets before
+    ///         calling `createTask` or `acceptTask` on a local AgentHands deployment.
     /// @param to     Recipient address.
     /// @param amount Amount in the token's native decimals (e.g. 1e6 = 1 USDC).
     function mint(address to, uint256 amount) external {
