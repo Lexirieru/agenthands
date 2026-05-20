@@ -129,11 +129,17 @@ interface IAgentHands is IAgentHandsEvents, IAgentHandsErrors {
     // ─── Ratings ─────────────────────────────────────────────
 
     /// @notice Agent rates the worker after task completion (1–5).
+    /// @dev    Reverts with `AlreadyRated` on a second call for the same task; reverts with
+    ///         `TaskNotCompleted` if the task is not yet in `Completed` status on Celo mainnet.
+    ///         Scores feed into the ERC-8004 Reputation Registry trust calculation.
     /// @param _taskId Task identifier.
     /// @param _score  Rating score.
     function rateWorker(uint256 _taskId, uint8 _score) external;
 
     /// @notice Worker rates the agent after task completion (1–5).
+    /// @dev    Symmetric to `rateWorker` for the AI agent side. Rating is immutable once
+    ///         set — no update path exists. Scores feed into the ERC-8004 agent trust score
+    ///         visible in the `AgentBadge` frontend component.
     /// @param _taskId Task identifier.
     /// @param _score  Rating score.
     function rateAgent(uint256 _taskId, uint8 _score) external;
