@@ -2,10 +2,15 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PaginationBarProps {
+  /** The currently active page (1-indexed). */
   currentPage: number;
+  /** Total number of pages; the component renders nothing when this is ≤ 1. */
   totalPages: number;
+  /** Callback fired when the "Prev" button is clicked. */
   onPrev: () => void;
+  /** Callback fired when the "Next" button is clicked. */
   onNext: () => void;
+  /** Callback fired when a numbered page button is clicked. */
   onPageSelect: (page: number) => void;
 }
 
