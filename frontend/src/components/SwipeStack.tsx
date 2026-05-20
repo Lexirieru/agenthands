@@ -5,6 +5,7 @@ import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import SwipeCard from "./SwipeCard";
 import type { TaskData } from "@/types/task";
 
+/** Minimum vertical drag (px) or velocity required to trigger a card transition. */
 const SWIPE_THRESHOLD = 80;
 
 /**
@@ -27,9 +28,12 @@ export default function SwipeStack({
 }: {
   tasks: readonly TaskData[];
 }) {
+  /** Zero-based index of the currently visible task card. */
   const [currentIndex, setCurrentIndex] = useState(0);
+  /** Last transition direction: positive = forward (down/next), negative = backward (up/prev). */
   const [direction, setDirection] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  /** Guards against stacked transitions — set to false while an exit animation is running. */
   const canTransition = useRef(true);
 
   const safeIndex = tasks.length === 0 ? 0 : Math.min(currentIndex, tasks.length - 1);
