@@ -327,10 +327,14 @@ contract AgentHands is
 
     /// @notice Creates a new task and locks the reward in escrow.
     /// @dev    The caller must have approved this contract to transfer `_reward`
-    ///         of `_paymentToken` before calling. The reward is held until the task
-    ///         is completed, cancelled, or expired.
-    ///         Celo note: USDC on Celo (`0xcebA9300f2b948710d2653dD7B07f33A8B32118C`) uses
-    ///         6 decimals — pass `_reward` in micro-USDC (e.g. `1_000_000` = $1.00).
+    ///         of `_paymentToken` before calling (ERC-20 "pull" pattern). The reward is held
+    ///         in the contract's balance until the task is completed, cancelled, or expired.
+    ///         Celo ERC-20 pull pattern: the agent calls `USDC.approve(AgentHands, amount)` in
+    ///         a separate tx (or via `permit` / EIP-3009 authorization) then calls `createTask`.
+    ///         USDC on Celo (`0xcebA9300f2b948710d2653dD7B07f33A8B32118C`) uses 6 decimals —
+    ///         pass `_reward` in micro-USDC (e.g. `1_000_000` = $1.00, `250_000` = $0.25).
+    ///         CELO ERC-20 (`0x471EcE3750Da237f93B8E339c536989b8978a438`) uses 18 decimals —
+    ///         pass `_reward` in wei (e.g. `1e18` = 1 CELO). Volatile value; no $ prefix in UI.
     ///         Agents using CIP-64 fee abstraction can pay this transaction's gas in USDC,
     ///         eliminating the need to hold a separate native CELO balance.
     ///         Reentrancy: guarded by `nonReentrant` because `safeTransferFrom` on
@@ -387,6 +391,12 @@ contract AgentHands is
     /// @notice Allows a human worker to accept an open task.
     /// @dev    Any address may accept as long as the task is open and the deadline
     ///         has not passed. Once accepted, the task is locked to this worker.
+    ///         `completionDeadline` enforcement: the accepted worker must call `submitProof`
+    ///         before `task.completionDeadline` or the agent can call `claimExpired` to
+    ///         recover the escrow. With Celo's ~5 s block time, a completionDeadline set
+    ///         72 hours from acceptance gives roughly 51 840 blocks of work time —
+    ///         ample even for multi-day physical tasks. The frontend surfaces this as a
+    ///         "Complete Before" countdown on the task detail page.
     ///         Celo wallets (MiniPay, Valora) can pay the gas for this call in USDC
     ///         via CIP-64 fee abstraction, so workers do not need a native CELO balance.
     ///         Identity verification (Self Protocol ZK proof) is enforced at the backend
@@ -410,7 +420,13 @@ contract AgentHands is
     ///         The proof CID is stored on-chain; the actual files (photos, videos) live
     ///         on IPFS. In the AgentHands reference integration, files are uploaded to
     ///         Pinata via the backend API and the returned CID is passed here. The CID
-    ///         is typically a base-32 CIDv1 string (e.g. "bafybeig...").
+    ///         is typically a base-32 CIDv1 string (e.g. `bafybeig...`); legacy CIDv0
+    ///         (base58, e.g. `Qm...`) is also accepted — the contract stores it as-is.
+    ///         7-day grace period: after `completionDeadline`, the agent has 7 additional
+    ///         days to review the submitted proof via `approveTask` or `disputeTask`.
+    ///         If neither is called within that window, anyone may call `claimExpired`
+    ///         to auto-approve the task and pay the worker — protecting workers from
+    ///         non-responsive agents. With Celo's ~5 s blocks this grace covers ~120 960 blocks.
     ///         On Celo, this call's gas is payable in USDC via CIP-64 on MiniPay/Valora.
     /// @param _taskId   The ID of the accepted task.
     /// @param _proofCID IPFS content identifier pointing to the completion proof.
@@ -439,6 +455,11 @@ contract AgentHands is
     ///           fee = 250_000 (2.5%), worker receives 9_750_000 ($9.75 USDC).
     ///         The emitted `TaskCompleted` event carries `task.reward` (gross), not the
     ///         net payout, for easier off-chain accounting.
+    ///         ERC-8004 reputation update: after this call succeeds, both the agent and
+    ///         the worker may call `rateWorker` / `rateAgent` to post a 1–5 score on-chain.
+    ///         These scores accumulate in the Reputation Registry indexed by the
+    ///         ERC-8004 Agent Trust Protocol, so agents with consistent approval histories
+    ///         build a higher on-chain trust score visible in `AgentBadge`.
     /// @param _taskId The ID of the submitted task to approve.
     function approveTask(uint256 _taskId) external onlyAgent(_taskId) nonReentrant {
         Task storage task = tasks[_taskId];
@@ -459,6 +480,11 @@ contract AgentHands is
     ///         `completionDeadline`, anyone can call `claimExpired` to auto-approve the
     ///         task and pay the worker — preventing agents from stalling indefinitely.
     ///         Disputing resets this countdown; the owner must then arbitrate via `resolveDispute`.
+    ///         ERC-8004 reputation update: if the owner resolves the dispute in the worker's
+    ///         favour (`workerWins = true`), the task reaches `Completed` status and both
+    ///         parties can post ratings. If the agent wins, the task moves to `Cancelled`
+    ///         and no ratings are possible — the ERC-8004 score is not penalised
+    ///         for disputed tasks where the agent prevails.
     /// @param _taskId The ID of the submitted task to dispute.
     function disputeTask(uint256 _taskId) external onlyAgent(_taskId) {
         Task storage task = tasks[_taskId];
