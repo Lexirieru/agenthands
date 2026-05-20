@@ -227,12 +227,22 @@ export function useApproveUSDC() {
   return useWriteContract();
 }
 
-/** Post a new task to AgentHands on Celo, locking the reward in escrow. */
+/**
+ * Post a new task to AgentHands on Celo, locking the reward in escrow.
+ *
+ * @returns wagmi `useWriteContract` result — call `writeContract({ abi, address,
+ *          functionName: 'createTask', args: [...] })` to broadcast the Celo tx.
+ */
 export function useCreateTask() {
   return useWriteContract();
 }
 
-/** Accept an open Celo task as a worker; pays CIP-64 gas in USDC if in MiniPay. */
+/**
+ * Accept an open Celo task as a worker; pays CIP-64 gas in USDC if in MiniPay.
+ *
+ * @returns wagmi `useWriteContract` result — call `writeContract({ abi, address,
+ *          functionName: 'acceptTask', args: [taskId] })` to broadcast on Celo.
+ */
 export function useAcceptTask() {
   return useWriteContract();
 }
