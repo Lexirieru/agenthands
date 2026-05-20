@@ -20,6 +20,7 @@ import { useCip64 } from '@/hooks/useCip64';
 import { toast } from '@/components/Toast';
 import { useTaskDetail, useInvalidateTasks } from '@/hooks/useTasks';
 
+/** Maps on-chain TaskStatus enum values (0–6) to Tailwind bg+text color classes for the status badge. */
 const STATUS_COLORS: Record<number, string> = {
   0: 'bg-green-900/10 text-green-800',
   1: 'bg-blue-900/10 text-blue-800',
@@ -30,6 +31,7 @@ const STATUS_COLORS: Record<number, string> = {
   6: 'bg-gray-900/10 text-gray-600',
 };
 
+/** Full-screen overlay with a spinner, shown while a Celo transaction is confirming on-chain. */
 function TxOverlay({ message }: { message: string }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#5C2D0A]/30 backdrop-blur-sm">
@@ -42,6 +44,12 @@ function TxOverlay({ message }: { message: string }) {
   );
 }
 
+/**
+ * Task detail page — renders a single AgentHands task and the appropriate
+ * action panel for the connected Celo wallet (accept, submit proof, approve,
+ * dispute, cancel, or rate). Optimistically patches the TanStack Query cache
+ * on tx success to avoid a stale-RPC flicker while the event watcher catches up.
+ */
 export default function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const taskId = BigInt(id);
