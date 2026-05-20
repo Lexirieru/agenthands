@@ -8,13 +8,17 @@ import { useConnect, useConnectors } from "wagmi";
  * and Valora, which both inject `window.ethereum` but do NOT trigger
  * wagmi's default auto-connect unless explicitly prompted.
  *
- * MiniPay's UX spec prohibits showing a manual "Connect Wallet" button,
- * so this hook fires once on mount, finds the `injected` connector, and
- * calls `connect()` immediately. `hasAttempted` prevents double-calls on
- * re-renders. If no injected provider is present (SSR / desktop without
- * extension) the hook is a no-op.
+ * MiniPay injects `window.ethereum` with `isMiniPay: true` and Valora with
+ * `isValora: true`. Both wallets expect the dapp to call `eth_requestAccounts`
+ * (or the wagmi `connect()` equivalent) on mount — showing a separate
+ * "Connect Wallet" button would violate MiniPay's UX guidelines and confuse
+ * users because the wallet is already open and active.
  *
- * Consumed by `ResponsiveShell` on the Celo mobile layout only.
+ * `hasAttempted` prevents double-calls on re-renders. On SSR or in desktop
+ * browsers without an injected provider the hook is a silent no-op.
+ *
+ * Consumed by `AppBoot` (context/index.tsx) so it runs once the Wagmi
+ * provider is in scope.
  */
 export function useAutoConnect() {
   const connectors = useConnectors();
