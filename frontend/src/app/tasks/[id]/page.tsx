@@ -20,7 +20,13 @@ import { useCip64 } from '@/hooks/useCip64';
 import { toast } from '@/components/Toast';
 import { useTaskDetail, useInvalidateTasks } from '@/hooks/useTasks';
 
-/** Maps on-chain TaskStatus enum values (0–6) to Tailwind bg+text color classes for the status badge. */
+/**
+ * Maps on-chain `TaskStatus` enum values (0–6) to Tailwind bg+text color pairs
+ * for the status badge on the Celo task detail page.
+ *
+ * Enum mapping (must stay in sync with `AgentHands.sol`):
+ *   0 Open, 1 Accepted, 2 Submitted, 3 Completed, 4 Disputed, 5 Cancelled, 6 Expired.
+ */
 const STATUS_COLORS: Record<number, string> = {
   0: 'bg-green-900/10 text-green-800',
   1: 'bg-blue-900/10 text-blue-800',
