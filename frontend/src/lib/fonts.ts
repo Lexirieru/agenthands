@@ -1,5 +1,12 @@
+/** @module fonts */
 import localFont from 'next/font/local';
 
+/**
+ * Parasitype — the AgentHands brand display typeface.
+ * Loaded from local `.otf` files (weights 200–700) and exposed as
+ * the `--font-parasitype` CSS custom property used by Tailwind's
+ * `font-heading` and `font-label` utilities.
+ */
 const parasitype = localFont({
   src: [
     { path: '../../public/fonts/parasitype/Parasitype-ExtraLight.otf', weight: '200' },
@@ -13,6 +20,10 @@ const parasitype = localFont({
   display: 'swap',
 });
 
+/**
+ * Courier New — monospace fallback used for on-chain identifiers such as
+ * Celo wallet addresses and task IDs throughout the AgentHands UI.
+ */
 const courierNew = localFont({
   src: [
     { path: '../../public/fonts/courierNew/CourierNewPSMT.ttf', weight: '400', style: 'normal' },
@@ -25,4 +36,10 @@ const courierNew = localFont({
 });
 
 const fonts = [parasitype, courierNew];
+
+/**
+ * Space-separated CSS variable string injected into `<html className>` by
+ * RootLayout, making both font variables available to every Tailwind class
+ * in the app (e.g. `font-heading` → `var(--font-parasitype)`).
+ */
 export const fontsVariable = fonts.map((f) => f.variable).join(' ');
