@@ -105,6 +105,15 @@ export function formatRewardDisplay(
 /**
  * Truncate a Celo wallet address for display — e.g. `0xADA046…3f746`.
  * Default: first 6 chars + `…` + last 4 chars, matching Celoscan's style.
+ *
+ * @param address Full 42-character Celo/EVM address string.
+ * @param start   Number of leading characters to keep (default: 6).
+ * @param end     Number of trailing characters to keep (default: 4).
+ * @returns       Truncated string, or the original if it's short enough to fit.
+ *
+ * @example
+ * truncateAddress('0xADA0466303441102cb16F8eC1594C744d603f746')
+ * // → '0xADA0...3f746'
  */
 export function truncateAddress(address: string, start = 6, end = 4): string {
   if (address.length <= start + end + 3) return address;
