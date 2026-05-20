@@ -13,6 +13,7 @@ import { useInvalidateTasks } from '@/hooks/useTasks';
 import { useCip64 } from '@/hooks/useCip64';
 import ConnectPrompt from '@/components/ConnectPrompt';
 
+/** Minimal ERC-20 ABI for the USDC `approve` call — only what NewTaskPage needs. */
 const ERC20_ABI = [
   {
     name: 'approve',
@@ -26,6 +27,16 @@ const ERC20_ABI = [
   },
 ] as const;
 
+/**
+ * Create-Task form — two-step flow for posting a new task on Celo.
+ *
+ * Step 1 (approve): calls USDC.approve(AgentHands, amount) so the contract
+ * can pull the reward into escrow. Uses CIP-64 fee delegation when available
+ * (MiniPay/Valora) so gas is paid in USDC rather than CELO.
+ * Step 2 (create): calls AgentHands.createTask with the form fields; on
+ * success invalidates the TanStack Query task list cache and shows a
+ * "Task Created!" confirmation card.
+ */
 export default function NewTaskPage() {
   const router = useRouter();
   const { isConnected, chainId: currentChainId } = useAccount();
@@ -38,6 +49,13 @@ export default function NewTaskPage() {
   const [reward, setReward] = useState('');
   const [deadlineHours, setDeadlineHours] = useState('24');
   const [completionHours, setCompletionHours] = useState('72');
+  /*
+   * step tracks the four-phase create-task flow:
+   *   'form'    — initial state; user fills in the form fields.
+   *   'approve' — USDC.approve tx sent; waiting for confirmation or showing status.
+   *   'create'  — createTask tx sent after approve confirms; waiting for on-chain receipt.
+   *   'done'    — createTask confirmed; success card replaces the form.
+   */
   const [step, setStep] = useState<'form' | 'approve' | 'create' | 'done'>('form');
 
   const { writeContract: approveWrite, data: approveTx, isPending: approving } = useWriteContract();
@@ -65,6 +83,7 @@ export default function NewTaskPage() {
     }
   }, [step]);
 
+  /** Prompt a chain switch to Celo mainnet if the user's wallet is on the wrong network. */
   const ensureChain = () => {
     if (currentChainId !== CHAIN.id) {
       switchChain({ chainId: CHAIN.id });
@@ -74,6 +93,7 @@ export default function NewTaskPage() {
     return true;
   };
 
+  /** Step 1 — approve the USDC reward amount for AgentHands escrow. */
   const handleApprove = () => {
     if (!ensureChain()) return;
     const amount = parseUnits(reward, 6);
@@ -88,6 +108,7 @@ export default function NewTaskPage() {
     toast('info', 'Approve USDC in your wallet...');
   };
 
+  /** Step 2 — submit the createTask transaction after USDC approval confirms. */
   const handleCreate = () => {
     if (!ensureChain()) return;
     const amount = parseUnits(reward, 6);
