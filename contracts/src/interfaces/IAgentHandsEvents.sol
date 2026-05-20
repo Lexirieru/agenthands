@@ -82,9 +82,14 @@ interface IAgentHandsEvents {
     /// @param score  Score between 1 and 5.
     event AgentRated(uint256 indexed taskId, address indexed agent, uint8 score);
 
-    /// @notice Emitted when a token's whitelist status is updated.
-    /// @param token   ERC-20 token address.
-    /// @param allowed True if now allowed; false if removed.
+    /// @notice Emitted when a token's whitelist status is updated by the owner.
+    /// @dev    Current Celo mainnet whitelist (as of deployment):
+    ///         - USDC: `0xcebA9300f2b948710d2653dD7B07f33A8B32118C` (6 decimals)
+    ///         - CELO ERC-20: `0x471EcE3750Da237f93B8E339c536989b8978a438` (18 decimals)
+    ///         Removing a token emits this event with `allowed = false`; tasks already
+    ///         funded with that token are unaffected — escrow settles in the original token.
+    /// @param token   ERC-20 token address being added or removed.
+    /// @param allowed True if now allowed as a reward token; false if removed from whitelist.
     event TokenAllowed(address token, bool allowed);
 
     /// @notice Emitted when an expired task is refunded to the agent on Celo.
