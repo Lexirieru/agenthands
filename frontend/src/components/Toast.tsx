@@ -3,11 +3,16 @@
 import { useEffect, useState, useCallback } from 'react';
 import { X } from 'lucide-react';
 
+/** Visual severity of a toast — maps to a distinct background colour (green / red / blue). */
 export type ToastType = 'success' | 'error' | 'info';
 
+/** Internal shape of a single queued toast; `id` is an auto-incrementing counter used as the React key. */
 interface ToastMessage {
+  /** Auto-incrementing counter used as the React list key and for targeted removal. */
   id: number;
+  /** Severity level — drives background colour in `bgColor` map. */
   type: ToastType;
+  /** Human-readable message shown in the toast body. */
   message: string;
 }
 
