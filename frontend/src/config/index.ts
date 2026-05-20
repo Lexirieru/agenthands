@@ -41,6 +41,13 @@ export type StablecoinSymbol = "USDC" | "USDT" | "USDm";
  * Ordered list of whitelisted stablecoins used for multicall balance reads
  * and reward token formatting across the AgentHands frontend.
  * USDC and USDT are 6-decimal; USDm is 18-decimal.
+ *
+ * Order is stable — index 0 = USDC, 1 = USDT, 2 = USDm — because
+ * `useStablecoinBalances` maps the `useReadContracts` result array by
+ * position. Changing the order here would silently misalign balances.
+ *
+ * USDC and USDT support EIP-3009 transferWithAuthorization, enabling the
+ * x402 self-settle path on Celo without a separate approve tx.
  */
 export const STABLECOINS: ReadonlyArray<{
   symbol: StablecoinSymbol;
