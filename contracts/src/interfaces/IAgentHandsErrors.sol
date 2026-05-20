@@ -87,7 +87,8 @@ interface IAgentHandsErrors {
     error TaskNotCompleted();
 
     /// @notice Thrown when `claimExpired` is called on a task that has not yet expired.
-    /// @dev    None of the three expiry paths (Open+deadline, Accepted+completionDeadline,
-    ///         Submitted+completionDeadline+7days) were satisfied.
+    /// @dev    None of the three expiry paths were satisfied on Celo mainnet:
+    ///         (1) Open task past `deadline`, (2) Accepted task past `completionDeadline`,
+    ///         or (3) Submitted task past `completionDeadline + 7 days` grace period.
     error NotExpired();
 }
