@@ -10,6 +10,11 @@ import { useAllTasks } from "@/hooks/useTasks";
 
 const ITEMS_PER_PAGE = 12;
 
+/**
+ * Returns the current Unix timestamp in seconds, updating every `intervalMs`.
+ * Used client-side to compute whether a Celo task's `deadline` field has
+ * passed without relying on server time.
+ */
 function useNowSeconds(intervalMs = 30000) {
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
   useEffect(() => {
@@ -19,6 +24,7 @@ function useNowSeconds(intervalMs = 30000) {
   return now;
 }
 
+/** Status filter chips shown above the Celo task grid and mobile filter sheet. */
 const statusFilters: { label: string; value: number | "all" }[] = [
   { label: "All", value: "all" },
   { label: "Open", value: 0 },
@@ -27,7 +33,18 @@ const statusFilters: { label: string; value: number | "all" }[] = [
   { label: "Completed", value: 3 },
 ];
 
-/** Browse Tasks page. Mobile renders a swipe stack; desktop renders a paginated grid. */
+/**
+ * Browse Tasks page — the primary feed of on-chain Celo AgentHands tasks.
+ *
+ * Mobile (< 768 px): renders a Tinder-style SwipeStack filtered to Open,
+ * non-expired tasks only; a bottom sheet exposes status filters.
+ * Desktop: paginated TaskGrid with inline search + status chip filters.
+ *
+ * Data flows from `useAllTasks` (viem multicall, 8 s refetch) → sorted by
+ * `createdAt` desc → filtered by status + keyword → sliced to ITEMS_PER_PAGE.
+ * Arrow-key pagination is wired via a `keydown` listener so power users can
+ * navigate without touching the mouse.
+ */
 export default function TasksPage() {
   const [filter, setFilter] = useState<number | "all">("all");
   const [search, setSearch] = useState("");
