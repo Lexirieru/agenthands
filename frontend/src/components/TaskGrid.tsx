@@ -4,9 +4,13 @@ import gsap from 'gsap';
 import TaskCard from '@/components/TaskCard';
 import type { TaskData } from '@/types/task';
 
+/** Props for TaskGrid — receives a pre-filtered, pre-paginated slice of tasks from the parent. */
 interface TaskGridProps {
+  /** Already-filtered and paginated tasks to render. */
   tasks: TaskData[];
+  /** Active search string — used in the empty-state "No results for …" message. */
   search?: string;
+  /** Callback shown in the empty state so the user can reset all filters in one click. */
   onClearFilters?: () => void;
 }
 
