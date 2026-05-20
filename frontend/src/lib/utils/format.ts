@@ -46,10 +46,18 @@ export function formatTokenAmount(
   }
 }
 
+/**
+ * Resolved metadata for a whitelisted AgentHands payment token.
+ * Returned by `tokenInfoForAddress` and consumed by reward-display helpers and TaskCard.
+ */
 export type TokenInfo = {
+  /** Short ticker symbol shown in the UI (e.g. "USDC", "CELO"). */
   symbol: string;
+  /** Number of decimals for this token (6 for USDC/USDT, 18 for USDm/CELO). */
   decimals: number;
+  /** True for dollar-pegged tokens; controls whether a `$` prefix is rendered. */
   isStablecoin: boolean;
+  /** Path to the token logo served from `/public`, or null for unknown tokens. */
   logo: string | null;
 };
 
@@ -104,7 +112,12 @@ export function truncateAddress(address: string, start = 6, end = 4): string {
 }
 
 /**
- * Format a date string or timestamp to relative time or locale string
+ * Format a Unix timestamp (seconds) or ISO date string to a relative or locale date string.
+ *
+ * Because Celo block timestamps are in seconds, numeric inputs are multiplied by 1 000
+ * before being passed to the Date constructor. Relative labels are returned for events
+ * within the last 7 days (e.g. "3h ago"), which covers most in-progress task activity;
+ * older dates fall back to `toLocaleDateString()` for brevity.
  */
 export function formatDate(dateStr: string | number): string {
   const date = typeof dateStr === 'number' ? new Date(dateStr * 1000) : new Date(dateStr);
@@ -122,9 +135,13 @@ export function formatDate(dateStr: string | number): string {
 }
 
 /**
- * Map the Celo AgentHands `TaskStatus` enum to a UI label + Tailwind color.
+ * Map the Celo AgentHands `TaskStatus` enum to a UI label + Tailwind color class.
  * Enum values: 0=Open, 1=Accepted, 2=Submitted, 3=Completed,
  *              4=Disputed, 5=Cancelled, 6=Expired.
+ *
+ * Used by TaskCard and TaskDetailPage status badges. Unknown values fall
+ * back to a generic "Status N" label so the UI degrades gracefully if
+ * new enum variants are added to the Celo contract without a frontend update.
  */
 export function getStatusDisplay(status: number): { label: string; color: string } {
   switch (status) {
