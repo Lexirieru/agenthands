@@ -19,10 +19,28 @@ const SelfQR = dynamic(() => import('./SelfQR'), {
   ),
 });
 
+/**
+ * Props for SelfVerify — the only required callback fires once when the
+ * connected Celo wallet transitions from unverified → verified.
+ */
 interface SelfVerifyProps {
   onVerified: (userId: string) => void;
 }
 
+/**
+ * Identity-verification widget powered by Self Protocol ZK proofs.
+ *
+ * Checks whether the connected Celo wallet already holds a valid Self
+ * verification by polling `/api/self/verify` every 3 s while the widget
+ * is visible. On mobile / MiniPay (`preferDeepLink`) it renders always-on
+ * deep-link + QR tabs so users can open the Self app without a separate
+ * "start verification" step. On desktop it hides behind a button until
+ * the user opts in.
+ *
+ * The `notifiedRef` guard ensures `onVerified` fires exactly once even
+ * when the deep-link path is used (no `SelfQRcodeWrapper.onSuccess`
+ * callback available in that case).
+ */
 export default function SelfVerify({ onVerified }: SelfVerifyProps) {
   const { address } = useAccount();
   const [showQR, setShowQR] = useState(false);
@@ -35,8 +53,14 @@ export default function SelfVerify({ onVerified }: SelfVerifyProps) {
   // would be painful — mobile browsers and embedded MiniPay/Valora dapps.
   const preferDeepLink = isMobile || !!isMiniPay;
 
-  // The universal link is what the Self mobile app intercepts. Tapping it
-  // on iOS/Android opens the Self app directly (or App Store fallback).
+  /**
+   * A Self Protocol universal link encodes the full verification request (scope,
+   * endpoint, userId) in a URL that the Self iOS/Android app can intercept via
+   * deep-link routing. Tapping it opens the Self app directly, or redirects to
+   * the App Store if the app is not installed. Returns null until `selfApp` is
+   * initialised (i.e., until the SelfAppBuilder effect has run on the client and
+   * the connected wallet address is available).
+   */
   const universalLink = useMemo(
     () => (selfApp ? getUniversalLink(selfApp) : null),
     [selfApp]
@@ -101,6 +125,7 @@ export default function SelfVerify({ onVerified }: SelfVerifyProps) {
     }
   }, [address]);
 
+  /** Re-check verification status after the QR scan completes on desktop. */
   const handleSuccess = useCallback(async () => {
     setShowQR(false);
     // Trust the backend over optimism — re-check rather than flipping state
