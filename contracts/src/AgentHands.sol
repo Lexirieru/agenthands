@@ -558,6 +558,10 @@ contract AgentHands is
     /// @dev    Anyone may call this function — no access control needed because funds always
     ///         flow to the rightful owner regardless of who triggers it.
     ///         Reverts with `NotExpired` if none of the three conditions are met.
+    ///         Celo timing: at ~5 s/block, the 7-day Path C grace period spans ~120 960 blocks.
+    ///         The `TaskExpired` and `TaskAutoCompleted` events are emitted once per call;
+    ///         the emitted `refund`/`payout` uses the task's own ERC-20 token (USDC or CELO
+    ///         ERC-20 facade on Celo mainnet).
     /// @param _taskId The ID of the task to claim.
     function claimExpired(uint256 _taskId) external nonReentrant {
         Task storage task = tasks[_taskId];
