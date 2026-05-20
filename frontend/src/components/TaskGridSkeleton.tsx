@@ -14,6 +14,12 @@ interface TaskGridSkeletonProps {
  *
  * Default `count = 12` fills three full rows on a 1080 p viewport, matching
  * a typical paginated task-list response from the AgentHands contract.
+ *
+ * Each placeholder card has `aria-hidden="true"` so screen readers skip the
+ * decorative shimmer and announce real task content once it loads.
+ *
+ * @param count Number of skeleton cards to render (default: 12).
+ * @returns     A responsive CSS grid of pulsing placeholder cards.
  */
 export default function TaskGridSkeleton({ count = 12 }: TaskGridSkeletonProps) {
   return (
