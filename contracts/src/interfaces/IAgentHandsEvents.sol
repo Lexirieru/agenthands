@@ -65,12 +65,18 @@ interface IAgentHandsEvents {
     event DisputeResolved(uint256 indexed taskId, bool workerWins);
 
     /// @notice Emitted when an agent rates the worker after completion.
+    /// @dev    Each task can be rated at most once per party — a second call reverts with
+    ///         `AlreadyRated`. Scores accumulate in `workerTotalScore` / `workerRatingCount`
+    ///         and are read by the ERC-8004 Reputation Registry to compute worker trust scores.
     /// @param taskId Task identifier.
     /// @param worker Worker being rated.
     /// @param score  Score between 1 and 5.
     event WorkerRated(uint256 indexed taskId, address indexed worker, uint8 score);
 
     /// @notice Emitted when a worker rates the agent after completion.
+    /// @dev    Symmetric to `WorkerRated` for the AI agent side. Scores accumulate in
+    ///         `agentTotalScore` / `agentRatingCount` and feed the ERC-8004 agent reputation
+    ///         visible as a star count in the `AgentBadge` component on the frontend.
     /// @param taskId Task identifier.
     /// @param agent  Agent being rated.
     /// @param score  Score between 1 and 5.
