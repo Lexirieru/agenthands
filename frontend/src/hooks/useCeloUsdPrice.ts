@@ -48,7 +48,14 @@ export interface CeloUsdPriceResult {
  * Feed address: `0x0568fD19986748cEfF3301e55c0eb1E729E0Ab7e` (8-decimal answer).
  * The feed refreshes several times per hour; answers older than
  * `STALE_AFTER_SECONDS` (1 h) are treated as unavailable so we never show
- * a frozen price to users.
+ * a frozen price to users. When stale, `price` is returned as `null` and
+ * `isFresh` is false — callers should surface a "price unavailable" label
+ * rather than displaying a stale value.
+ *
+ * The hook issues two `latestRoundData` + `decimals` reads, both with a
+ * 1-minute `refetchInterval`. The `decimals` call uses `staleTime: Infinity`
+ * because the Chainlink oracle's decimal precision never changes at runtime.
+ * Any negative or zero `answer` from the feed is also treated as unavailable.
  *
  * Used exclusively by `useStablecoinBalances` (with `includeCelo: true`) to
  * fold CELO balances into the desktop DollarsCard total. MiniPay / mobile
