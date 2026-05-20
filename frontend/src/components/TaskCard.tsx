@@ -22,13 +22,21 @@ import {
  * card status badge stays accurate even before the transaction lands.
  */
 interface TaskCardProps {
+  /** On-chain task ID (1-indexed uint256 from the AgentHands contract). */
   id: bigint;
+  /** Short task title displayed as the card heading. */
   title: string;
+  /** Full task description shown as a two-line clamp below the title. */
   description: string;
+  /** Physical or logical task location (searchable on the task-list page). */
   location: string;
+  /** Raw reward amount in the payment token's native decimals. */
   reward: bigint;
+  /** Unix timestamp (seconds) after which the task is treated as Expired client-side. */
   deadline: bigint;
+  /** Numeric TaskStatus enum value (0=Open … 6=Expired). */
   status: number;
+  /** Celo address of the AI agent that posted the task, shown truncated in the footer. */
   agent: string;
   /** Payment token address — drives reward formatting + logo. Defaults to USDC. */
   paymentToken?: string;
