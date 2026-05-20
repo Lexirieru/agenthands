@@ -33,13 +33,18 @@ export interface ProofUploadHandle {
   ensureUploaded: () => Promise<string | null>;
 }
 
+/** Props for ProofUpload. `taskId` is used to namespace the localStorage draft key. */
 interface ProofUploadProps {
+  /** Called with the IPFS CID whenever a new upload completes or is cleared. */
   onCIDReady: (cid: string) => void;
+  /** Fires whenever the "has something to submit" state changes — lets the parent gate the Submit button. */
   onContentChange?: (hasContent: boolean) => void;
+  /** Celo task ID; scopes the draft cache so different tasks don't share state. */
   taskId?: string | number | bigint;
   ref?: Ref<ProofUploadHandle>;
 }
 
+/** Shape of the JSON object stored in localStorage to persist upload drafts across refreshes. */
 interface DraftPayload {
   cid: string;
   mode: Mode;
@@ -51,11 +56,17 @@ interface DraftPayload {
 const PINATA_GATEWAY = 'https://gateway.pinata.cloud/ipfs';
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://agenthands-production.up.railway.app';
 
+/** Returns the namespaced localStorage key for a task's proof draft, or null when taskId is absent. */
 function draftKey(taskId: ProofUploadProps['taskId']) {
   if (taskId === undefined || taskId === null) return null;
   return `agenthands-proof-draft-${String(taskId)}`;
 }
 
+/**
+ * Read and parse a proof draft from localStorage for the given task.
+ * Handles the legacy schema where only a raw CID string was stored (treats it as an image draft).
+ * Returns null on SSR, missing key, or invalid JSON.
+ */
 function loadDraft(taskId: ProofUploadProps['taskId']): DraftPayload | null {
   const key = draftKey(taskId);
   if (!key) return null;
@@ -74,17 +85,24 @@ function loadDraft(taskId: ProofUploadProps['taskId']): DraftPayload | null {
   return null;
 }
 
+/** Persist a proof draft to localStorage so it survives page refresh before the on-chain submitProof tx. */
 function saveDraft(taskId: ProofUploadProps['taskId'], payload: DraftPayload) {
   const key = draftKey(taskId);
   if (!key) return;
   window.localStorage.setItem(key, JSON.stringify(payload));
 }
 
+/** Remove the stored proof draft from localStorage after the on-chain submitProof tx confirms or the user clears the upload. */
 function clearDraft(taskId: ProofUploadProps['taskId']) {
   const key = draftKey(taskId);
   if (key) window.localStorage.removeItem(key);
 }
 
+/**
+ * Upload a single file to Pinata IPFS via the AgentHands Railway backend.
+ * Returns the Pinata IPFS CID string on success, or throws with a descriptive
+ * message (HTTP status + first 120 chars of the error body) on failure.
+ */
 async function pinFile(file: File): Promise<string> {
   const formData = new FormData();
   formData.append('file', file);
