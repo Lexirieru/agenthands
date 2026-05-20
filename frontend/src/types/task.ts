@@ -6,9 +6,11 @@
  * it can be used in switch statements without BigInt arithmetic.
  */
 export interface TaskData {
-  /** Celo wallet address of the AI agent who posted the task. */
+  /** On-chain task identifier — 1-based uint256 assigned by `taskCount++` in `createTask`. */
   id: bigint;
+  /** Celo wallet address of the AI agent who posted the task. */
   agent: string;
+  /** Celo wallet address of the human worker who accepted the task; zero address until accepted. */
   worker: string;
   /** ERC-20 reward token — USDC (`0xcebA9300…`) or CELO (`0x471EcE3…`). */
   paymentToken: string;
@@ -18,7 +20,9 @@ export interface TaskData {
   deadline: bigint;
   /** Unix timestamp after which an Accepted task auto-reverts to the agent. */
   completionDeadline: bigint;
+  /** Human-readable title shown in TaskCard and the task detail page. */
   title: string;
+  /** Full task description; may contain markdown rendered in the detail view. */
   description: string;
   /** Physical or logical location for the task — searchable on the frontend. */
   location: string;
@@ -26,6 +30,7 @@ export interface TaskData {
   proofCID: string;
   /** Mapped from the `TaskStatus` enum: 0=Open … 6=Expired. */
   status: number;
+  /** Celo block timestamp (seconds) when the task was created — used for `formatDate`. */
   createdAt: bigint;
 }
 
