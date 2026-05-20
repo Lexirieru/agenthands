@@ -11,7 +11,15 @@ import type { TaskData } from '@/types/task';
  *
  * The `search` string matches against `title`, `description`, and
  * `location` fields stored on-chain, enabling keyword search across
- * physical task locations posted by Celo AI agents.
+ * physical task locations posted by Celo AI agents. Matching is
+ * case-insensitive substring search (`includes` after `toLowerCase`).
+ * All three fields are tested in parallel, so a single keyword can
+ * match a city name in `location`, a skill in `title`, or any phrasing
+ * in `description`.
+ *
+ * `clearFilters` resets both `filter` back to `'all'` and `search` back
+ * to the empty string in a single state flush, so callers don't need to
+ * call `setFilter` and `setSearch` separately.
  *
  * Returns the filtered task slice together with setters and `clearFilters`.
  */
