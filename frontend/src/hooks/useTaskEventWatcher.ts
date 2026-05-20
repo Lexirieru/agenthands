@@ -34,13 +34,23 @@ let watcherStarted = false;
  * TaskAutoCompleted, TaskDisputed, TaskCancelled, TaskExpired, DisputeResolved,
  * WorkerRated, AgentRated.
  *
- * Celo produces ~5 s blocks, so the `pollingInterval` is set to 4 000 ms to
- * catch new events within a single block without over-polling. The watcher
- * uses a Forno fallback RPC identical to `useTasks` so logs still arrive
- * when the primary node is unavailable.
+ * Each event signature must exactly match the Solidity declaration in
+ * `contracts/src/AgentHands.sol` — viem derives the topic hash from the
+ * canonical ABI string, so parameter names are irrelevant but types and order
+ * are not. Any mismatch silently produces zero matches.
+ *
+ * Celo produces a new block roughly every 5 s, so `pollingInterval` is set to
+ * 4 000 ms to catch each new block within one interval without excessive RPC
+ * load. The watcher uses a Forno fallback RPC (`https://forno.celo.org`)
+ * identical to `useTasks` so logs still arrive when the primary node is
+ * rate-limited.
+ *
+ * On each log batch, the handler invalidates the full tasks query key tree
+ * (list + detail) plus the wagmi `readContract` / `readContracts` caches
+ * so the header balance pill refreshes alongside the task feed.
  *
  * Errors are silently discarded — the polling-based refetch in `useAllTasks`
- * (8 s) serves as a safety net if the watcher stalls.
+ * (8 s) serves as a safety net if the watcher stalls or the WebSocket drops.
  */
 export function useTaskEventWatcher() {
   const { invalidateAll } = useInvalidateTasks();
