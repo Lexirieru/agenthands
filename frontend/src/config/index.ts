@@ -34,7 +34,14 @@ export const USDT_ADDRESS =
 export const USDM_ADDRESS =
   "0x765DE816845861e75A25fCA122bb6898B8B1282a" as `0x${string}`;
 
+/** Union of the three stablecoin symbols supported as task reward tokens on AgentHands. */
 export type StablecoinSymbol = "USDC" | "USDT" | "USDm";
+
+/**
+ * Ordered list of whitelisted stablecoins used for multicall balance reads
+ * and reward token formatting across the AgentHands frontend.
+ * USDC and USDT are 6-decimal; USDm is 18-decimal.
+ */
 export const STABLECOINS: ReadonlyArray<{
   symbol: StablecoinSymbol;
   address: `0x${string}`;
@@ -66,10 +73,10 @@ export const CELO_USD_FEED_ADDRESS =
 export const USDC_FEE_ADAPTER =
   "0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B" as `0x${string}`;
 
-// Active chain — Celo mainnet
+/** Active chain for all wagmi and viem calls — Celo mainnet (chain ID 42220). */
 export const CHAIN = celo;
 
-// Block explorer base URL — used for "View on Celoscan" links.
+/** Celoscan base URL used for "View on Celoscan" external links in the dashboard and header. */
 export const EXPLORER_URL =
   CHAIN.blockExplorers?.default?.url ?? "https://celoscan.io";
 
