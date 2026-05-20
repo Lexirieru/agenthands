@@ -116,6 +116,9 @@ async function fetchTask(taskId: bigint): Promise<TaskData | null> {
  * TanStack Query hook that returns every non-hidden task on Celo mainnet.
  * Refetches every 8 s and on window focus; stale time is 4 s so multiple
  * components share the same in-flight request.
+ *
+ * @returns TanStack Query result with `data: TaskData[]` (empty array while loading),
+ *          plus standard `isLoading`, `isError`, and `refetch` fields.
  */
 export function useAllTasks() {
   return useQuery({
@@ -133,6 +136,8 @@ export function useAllTasks() {
  * Does NOT filter HIDDEN_TASK_IDS — direct links always resolve.
  *
  * @param taskId - Task ID to load; pass `undefined` to skip fetching.
+ * @returns      TanStack Query result with `data: TaskData | null` (null on
+ *               revert or missing ID) and standard loading/error state.
  */
 export function useTaskDetail(taskId: bigint | undefined) {
   return useQuery({
