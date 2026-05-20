@@ -29,7 +29,16 @@ export interface TaskData {
   createdAt: bigint;
 }
 
+/**
+ * Shape of a single viem `multicall` result entry when `allowFailure: true`.
+ *
+ * Used by `fetchAllTasks` to distinguish successful `getTask` reads from
+ * on-chain reverts (e.g. out-of-range task IDs) without aborting the whole
+ * multicall batch. Failed entries are filtered out before the list is returned.
+ */
 export interface ContractResult {
+  /** `"success"` when the call returned data; `"failure"` when it reverted. */
   status: "success" | "failure";
+  /** The decoded TaskData struct — only valid when `status === "success"`. */
   result: TaskData;
 }
