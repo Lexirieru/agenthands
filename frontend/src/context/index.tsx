@@ -7,7 +7,15 @@ import { config } from "@/config";
 import { useAutoConnect } from "@/hooks/useAutoConnect";
 import { useTaskEventWatcher } from "@/hooks/useTaskEventWatcher";
 
-/** Shared TanStack Query client — staleTime of 4 s balances freshness with RPC cost on Celo. */
+/**
+ * Shared TanStack Query client for the AgentHands frontend on Celo mainnet.
+ *
+ * `staleTime: 4000` — all task data is considered fresh for 4 s, matching the
+ * 8 s refetch interval used in `useTasks` and `useAgentHands` hooks. This means
+ * back-to-back navigations within 4 s reuse the cached Celo RPC response rather
+ * than firing a redundant multicall. `retry: 2` handles transient Forno outages
+ * without hammering the RPC with excessive retries.
+ */
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
