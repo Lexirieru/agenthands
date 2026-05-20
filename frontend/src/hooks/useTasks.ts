@@ -24,10 +24,13 @@ import type { TaskData } from "@/types/task";
  * - `useInvalidateTasks` — imperative cache invalidation + optimistic patch
  * - `taskQueryKeys` — typed key factory for query coordination
  */
-// Fall back to the official Forno endpoint if the wagmi CHAIN's transport
-// is unreachable. AgentHands runs on Celo mainnet.
+/** Official Celo Foundation RPC used as the secondary transport when the primary node is unreachable. */
 const fallbackRpc = "https://forno.celo.org";
 
+/**
+ * Module-level viem public client for Celo mainnet with automatic fallback to Forno.
+ * Shared across all fetch functions so every hook in this module uses the same transport.
+ */
 const publicClient = createPublicClient({
   chain: CHAIN,
   transport: fallback([
@@ -48,6 +51,11 @@ export const taskQueryKeys = {
   count: () => [...taskQueryKeys.all, "count"] as const,
 };
 
+/**
+ * Fetch all tasks ever posted to AgentHands via viem multicall.
+ * Calls `taskCount` then batches `getTask(i)` for every ID in one multicall.
+ * Results that failed on-chain or whose IDs are in `HIDDEN_TASK_IDS` are omitted.
+ */
 async function fetchAllTasks(): Promise<TaskData[]> {
   const count = (await publicClient.readContract({
     address: AGENTHANDS_ADDRESS,
@@ -84,6 +92,12 @@ async function fetchAllTasks(): Promise<TaskData[]> {
     .filter((t): t is TaskData => t !== null && !HIDDEN_TASK_IDS.has(t.id.toString()));
 }
 
+/**
+ * Fetch a single task by its on-chain uint256 ID.
+ * Returns `null` if the contract call reverts (e.g. ID out of range).
+ *
+ * @param taskId - The 1-based task ID from the AgentHands contract.
+ */
 async function fetchTask(taskId: bigint): Promise<TaskData | null> {
   try {
     const result = await publicClient.readContract({
@@ -98,6 +112,11 @@ async function fetchTask(taskId: bigint): Promise<TaskData | null> {
   }
 }
 
+/**
+ * TanStack Query hook that returns every non-hidden task on Celo mainnet.
+ * Refetches every 8 s and on window focus; stale time is 4 s so multiple
+ * components share the same in-flight request.
+ */
 export function useAllTasks() {
   return useQuery({
     queryKey: taskQueryKeys.list(),
@@ -108,6 +127,13 @@ export function useAllTasks() {
   });
 }
 
+/**
+ * TanStack Query hook for a single Celo task. Polling is set to 6 s to keep
+ * the task detail page up to date as workers interact with the contract.
+ * Does NOT filter HIDDEN_TASK_IDS — direct links always resolve.
+ *
+ * @param taskId - Task ID to load; pass `undefined` to skip fetching.
+ */
 export function useTaskDetail(taskId: bigint | undefined) {
   return useQuery({
     queryKey: taskId ? taskQueryKeys.detail(taskId) : ["tasks", "detail", "none"],
@@ -119,6 +145,11 @@ export function useTaskDetail(taskId: bigint | undefined) {
   });
 }
 
+/**
+ * Returns imperative cache helpers for the task query cache.
+ * Use `invalidateList` after creating a task, `invalidateDetail` after accepting
+ * or completing one, and `patchDetail` for optimistic UI updates on tx success.
+ */
 export function useInvalidateTasks() {
   const queryClient = useQueryClient();
 
