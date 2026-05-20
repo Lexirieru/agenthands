@@ -11,6 +11,7 @@ import { MapPin, Clock } from "lucide-react";
 import Link from "next/link";
 import { useAllTasks } from "@/hooks/useTasks";
 
+/** Status filter pills for the Celo task explore/search view. */
 const statusFilters = [
   { label: "All", value: "all" as const },
   { label: "Open", value: 0 },
@@ -19,6 +20,14 @@ const statusFilters = [
   { label: "Done", value: 3 },
 ];
 
+/**
+ * Mobile-first Explore page — a searchable, filterable list of all Celo
+ * AgentHands tasks. Unlike the /tasks grid, every status is surfaced here
+ * (including Completed/Cancelled) so workers can browse history.
+ *
+ * Renders a compact card per task with reward token logo resolved via
+ * `tokenInfoForAddress` so USDC and CELO rewards display correctly.
+ */
 export default function SearchPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<number | "all">("all");
