@@ -48,6 +48,14 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Root Next.js layout shared by every route in the AgentHands app.
+ *
+ * Reads the `cookie` header server-side and passes it to ContextProvider
+ * so wagmi can rehydrate the connected Celo wallet without a flash of
+ * "disconnected" state on first render. Wraps children in ResponsiveShell,
+ * which switches between SwipeNav (mobile/MiniPay) and a plain <main> (desktop).
+ */
 export default async function RootLayout({
   children,
 }: Readonly<{
