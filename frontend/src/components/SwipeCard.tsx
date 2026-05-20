@@ -23,9 +23,12 @@ import type { TaskData } from "@/types/task";
  * Includes a `navigator.share` button so workers can forward Celo task links
  * to teammates via the device's native share sheet.
  */
+/** Props for SwipeCard — position metadata (`index`/`total`) drives the progress indicator. */
 interface Props {
   task: TaskData;
+  /** Zero-based index of this card in the current SwipeStack task array. */
   index: number;
+  /** Total number of tasks in the stack — used to render "1 of N". */
   total: number;
 }
 
