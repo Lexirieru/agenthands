@@ -102,6 +102,14 @@ function clearDraft(taskId: ProofUploadProps['taskId']) {
  * Upload a single file to Pinata IPFS via the AgentHands Railway backend.
  * Returns the Pinata IPFS CID string on success, or throws with a descriptive
  * message (HTTP status + first 120 chars of the error body) on failure.
+ *
+ * The returned CID is a base-32 CIDv1 (e.g. `bafybei…`) from Pinata; it is
+ * stored on-chain via `submitProof(taskId, cid)` on Celo and retrievable at
+ * `https://gateway.pinata.cloud/ipfs/<cid>`.
+ *
+ * @param file The `File` object to pin (image or text blob).
+ * @returns    Pinata IPFS CID of the pinned file.
+ * @throws     Error with HTTP status detail if the Railway endpoint returns non-2xx.
  */
 async function pinFile(file: File): Promise<string> {
   const formData = new FormData();
