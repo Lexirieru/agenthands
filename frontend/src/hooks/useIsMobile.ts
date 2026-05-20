@@ -15,6 +15,14 @@ import { useState, useEffect } from "react";
  * resize without needing React state polling.
  *
  * @param breakpoint - Pixel width threshold (exclusive upper bound).
+ * @returns `true` while the viewport is below `breakpoint` px; `false` otherwise.
+ *   Initialises to `false` on SSR and updates synchronously in the first paint effect.
+ *
+ * @example
+ * ```tsx
+ * const isMobile = useIsMobile(); // true on < 768 px viewports
+ * const isNarrow = useIsMobile(480); // true on < 480 px viewports
+ * ```
  */
 export function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(false);
