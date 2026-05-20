@@ -7,15 +7,20 @@ import { useEffect, useState } from "react";
  * wallets that auto-connect and that MiniPay's official docs explicitly
  * instruct us NOT to show a "Connect Wallet" button for.
  *
- * Both wallets inject `window.ethereum` with `isMiniPay: true` or
- * `isValora: true`. We check both flags so the same hook covers the two
- * most common Celo mobile wallet surfaces.
+ * Detection logic: reads `window.ethereum.isMiniPay` and
+ * `window.ethereum.isValora`. Both flags are set by the respective wallet's
+ * injected provider before the page script runs, so the check is synchronous
+ * inside the `useEffect`. A single hook covers both wallets because their
+ * UX requirements are identical in the AgentHands frontend (no connect button,
+ * CIP-64 fee abstraction enabled, stablecoin-only balance display).
  *
- * Returns `null` on first render (SSR) to prevent hydration mismatches;
- * flips to a real boolean once the client-side effect runs.
+ * Returns `null` on the first (SSR) render to avoid a hydration mismatch
+ * between the server HTML (no window) and the client. After the effect runs
+ * on mount the value is a stable boolean that will not change for the
+ * lifetime of the page.
  *
- * Used by `Header`, `SwipeStack`, and `useAutoConnect` to skip the manual
- * connect button on Celo's mobile-first wallet experience.
+ * Used by `Header`, `DollarsCard`, `SelfVerify`, and `useCip64` to adjust
+ * UI and transaction behaviour for Celo mobile wallets.
  */
 export function useIsMiniPay(): boolean | null {
   const [isMiniPay, setIsMiniPay] = useState<boolean | null>(null);
