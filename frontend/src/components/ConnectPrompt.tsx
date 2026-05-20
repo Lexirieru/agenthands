@@ -4,8 +4,11 @@ import { Wallet, Loader2 } from "lucide-react";
 import { useConnect } from "wagmi";
 import { useIsMiniPay } from "@/hooks/useIsMiniPay";
 
+/** Props for ConnectPrompt — both fields have sensible defaults. */
 interface Props {
+  /** Heading shown above the connect button. */
   title?: string;
+  /** Secondary line below the heading. */
   subtitle?: string;
 }
 
