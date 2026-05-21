@@ -19,7 +19,7 @@ import { injected, walletConnect } from "wagmi/connectors";
 
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || "3fcc6b444f69e6b35d2630d06f157140";
 
-// AgentHands UUPS proxy on Celo mainnet
+/** @since 1.0.0 AgentHands UUPS proxy on Celo mainnet (chainId 42220). */
 export const AGENTHANDS_ADDRESS =
   "0xADA0466303441102cb16F8eC1594C744d603f746" as `0x${string}`;
 
