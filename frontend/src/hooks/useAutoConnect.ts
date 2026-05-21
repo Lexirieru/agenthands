@@ -31,6 +31,7 @@ export function useAutoConnect() {
   const [hasAttempted, setHasAttempted] = useState(false);
 
   useEffect(() => {
+    // Skip if already attempted — prevents double-connect on React StrictMode re-mount.
     if (hasAttempted) return;
 
     const injected = connectors.find((c) => c.id === "injected");
