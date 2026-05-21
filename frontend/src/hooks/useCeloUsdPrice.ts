@@ -37,7 +37,7 @@ const STALE_AFTER_SECONDS = 60 * 60; // 1 hour
 export interface CeloUsdPriceResult {
   /** Price in USD (e.g. 0.0966) — null if unavailable, stale (> 1 h), or feed answer ≤ 0. */
   price: number | null;
-  /** Last on-chain update unix-seconds — null if unavailable. */
+  /** Last on-chain update unix-seconds from `latestRoundData.updatedAt` — null if the feed call fails. */
   updatedAt: number | null;
   /** True only when we have a fresh, positive answer. */
   isFresh: boolean;
