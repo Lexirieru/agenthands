@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-/** SVG icon for the Feed tab — stroked in the active/inactive brand color. */
+/**
+ * SVG icon for the Feed tab in the Celo MiniPay bottom navigation bar.
+ * @since 1.0.0
+ * Stroked in the active (`#D4700A`) or inactive (`#8B4513`) brand colour.
+ */
 function IconFeed({ active }: { active: boolean }) {
   const c = active ? "#D4700A" : "#8B4513";
   return (
