@@ -43,6 +43,7 @@ export function formatTokenAmount(
     }
     return `${whole}.${fractionStr}`;
   } catch {
+    // Malformed raw value — return the original string rather than throwing.
     return raw.toString();
   }
 }
