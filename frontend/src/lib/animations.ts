@@ -48,8 +48,10 @@ export function staggerChildren(
  * Animate a numeric counter from 0 to `target` over 1.2 seconds.
  * Drives the stat counters on the Celo dashboard (tasks posted, completed, etc.).
  *
- * @param el - DOM element whose `textContent` is updated on every tick.
+ * @param el     - DOM element whose `textContent` is updated on every tick.
  * @param target - Final integer value the counter should reach.
+ * @returns GSAP Tween instance — resolves when `val` reaches `target`.
+ * @since 1.0.0
  */
 export function countUp(el: Element, target: number) {
   const obj = { val: 0 };
