@@ -1,6 +1,7 @@
 "use client";
 
 import { useIsMobile } from "@/hooks/useIsMobile";
+/** @see SwipeNav — handles horizontal swipe gestures for Celo MiniPay mobile routing */
 import SwipeNav from "./SwipeNav";
 import NavBar from "./NavBar";
 
