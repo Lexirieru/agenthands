@@ -21,6 +21,9 @@ import { useEffect, useState } from "react";
  *
  * Used by `Header`, `DollarsCard`, `SelfVerify`, and `useCip64` to adjust
  * UI and transaction behaviour for Celo mobile wallets.
+ *
+ * @since 1.0.0
+ * @returns `true` inside MiniPay or Valora; `false` on desktop; `null` during SSR.
  */
 export function useIsMiniPay(): boolean | null {
   const [isMiniPay, setIsMiniPay] = useState<boolean | null>(null);
