@@ -34,7 +34,12 @@ function formatDollars(n: number): string {
   return n.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
 }
 
-/** Convert a raw token balance (bigint) to a human-readable dollar string using the per-token decimal count. */
+/**
+ * Convert a raw on-chain token balance (`bigint`) to a human-readable dollar string.
+ * @since 1.0.0
+ * @param raw      Raw balance in the token's native decimals (e.g. 1_000_000n = $1 USDC on Celo).
+ * @param decimals Token decimal count (6 for USDC/USDT, 18 for CELO/USDm).
+ */
 function formatTokenAmount(raw: bigint, decimals: number): string {
   const dollars = Number(raw) / 10 ** decimals;
   return formatDollars(dollars);
