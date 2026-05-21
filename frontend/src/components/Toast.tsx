@@ -32,9 +32,9 @@ let addToastFn: ((type: ToastType, message: string) => void) | null = null;
  *
  * Typical Celo use-cases: transaction success ("Task accepted on Celo!"),
  * wallet errors ("Insufficient USDC balance"), and IPFS upload failures.
- * Toasts auto-dismiss after 5 s or can be closed manually.
+ * Toasts auto-dismiss after 5 000 ms or can be closed manually via the ✕ button.
  *
- * Requires `<ToastContainer>` to be mounted once in the layout root.
+ * Requires `<ToastContainer>` to be mounted once in the Next.js layout root.
  */
 export function toast(type: ToastType, message: string) {
   addToastFn?.(type, message);
