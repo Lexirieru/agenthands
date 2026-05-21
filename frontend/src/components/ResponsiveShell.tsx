@@ -30,7 +30,7 @@ export default function ResponsiveShell({ children }: { children: React.ReactNod
     );
   }
 
-  // Desktop: classic layout — no bottom nav, no swipe
+  // Desktop (≥ 768 px): classic layout — no bottom nav, no swipe gesture routing
   return (
     <main className="flex-1">
       {children}
