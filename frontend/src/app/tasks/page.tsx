@@ -1,4 +1,5 @@
 'use client';
+/** @module TasksPage — Celo AgentHands task list page with filter and pagination. */
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Search, X } from "lucide-react";
 import SwipeStack from "@/components/SwipeStack";
