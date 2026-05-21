@@ -24,9 +24,11 @@ export function fadeInUp(el: gsap.TweenTarget, delay = 0) {
  * Each child fades up with an `stagger`-second offset so the list feels
  * alive rather than appearing all at once.
  *
- * @param parent - Selector string or element that contains the children.
+ * @param parent   - Selector string or element that contains the children.
  * @param selector - CSS selector for the child elements to animate.
- * @param stagger - Seconds between each child's tween start (default 0.08).
+ * @param stagger  - Seconds between each child's tween start (default `0.08`).
+ * @returns GSAP Tween instance for the stagger batch.
+ * @since 1.0.0
  */
 export function staggerChildren(
   parent: gsap.TweenTarget,
