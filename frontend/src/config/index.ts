@@ -35,7 +35,10 @@ export const USDT_ADDRESS =
 export const USDM_ADDRESS =
   "0x765DE816845861e75A25fCA122bb6898B8B1282a" as `0x${string}`;
 
-/** Union of the three stablecoin symbols supported as task reward tokens on AgentHands. */
+/**
+ * Union of the three stablecoin symbols supported as task reward tokens on AgentHands.
+ * @since 1.0.0
+ */
 export type StablecoinSymbol = "USDC" | "USDT" | "USDm";
 
 /**
