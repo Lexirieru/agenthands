@@ -29,6 +29,7 @@ const FEED_ABI = [
 // Chainlink CELO/USD on Celo mainnet refreshes a few times an hour. If the
 // last update is more than this many seconds old we treat the price as
 // stale and skip it instead of pricing balances from a frozen feed.
+/** Maximum age (seconds) for a Chainlink answer before it is treated as stale; matches Celo oracle heartbeat. */
 const STALE_AFTER_SECONDS = 60 * 60; // 1 hour
 
 /**
