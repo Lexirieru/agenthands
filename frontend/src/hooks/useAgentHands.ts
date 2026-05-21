@@ -48,7 +48,7 @@ const ERC20_ABI = [
   },
 ] as const;
 
-// ─── Read Hooks ──────────────────────────────────────────
+// ─── Read Hooks — all backed by wagmi useReadContract / useReadContracts ────
 
 /**
  * Total number of tasks ever posted to AgentHands on Celo mainnet.
