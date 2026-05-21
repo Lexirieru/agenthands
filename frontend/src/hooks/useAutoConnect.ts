@@ -27,6 +27,7 @@ import { useConnect, useConnectors } from "wagmi";
 export function useAutoConnect() {
   const connectors = useConnectors();
   const { connect, error, isPending } = useConnect();
+  /** Prevents duplicate `connect()` calls across StrictMode double-invocations on Celo. */
   const [hasAttempted, setHasAttempted] = useState(false);
 
   useEffect(() => {
