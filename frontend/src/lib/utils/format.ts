@@ -18,9 +18,9 @@ export function formatUSDC(raw: string | number | bigint): string {
 
 /**
  * Format an arbitrary on-chain token amount given its decimals.
- *  - 1_000_000n at 6 decimals → "1"
- *  - 100_000_000_000_000_000n at 18 decimals → "0.1"
- *  - With trimTrailingZeros=false: "1" → "1.00" (legacy USDC display).
+ *  - `1_000_000n` at 6 decimals → `"1"` (1 USDC on Celo)
+ *  - `100_000_000_000_000_000n` at 18 decimals → `"0.1"` (0.1 CELO)
+ *  - With `trimTrailingZeros=false`: `"1"` → `"1.00"` (legacy USDC display).
  */
 export function formatTokenAmount(
   raw: string | number | bigint,
