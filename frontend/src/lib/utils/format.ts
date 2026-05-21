@@ -4,6 +4,7 @@ import {
   CELO_TOKEN_DECIMALS,
 } from "@/config";
 
+/** USDC decimal precision on Celo mainnet — 6 decimals, same as on Ethereum. */
 const USDC_DECIMALS = 6;
 
 /**
