@@ -35,6 +35,7 @@ export function useCip64() {
   const [supported, setSupported] = useState(false);
 
   useEffect(() => {
+    // Guard for SSR — `window.ethereum` is only available in the browser on Celo.
     if (typeof window === "undefined") return;
     const eth = (window as unknown as { ethereum?: { isMiniPay?: boolean; isValora?: boolean } }).ethereum;
     setSupported(!!(eth?.isMiniPay || eth?.isValora));
