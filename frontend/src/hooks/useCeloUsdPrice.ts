@@ -35,7 +35,7 @@ const STALE_AFTER_SECONDS = 60 * 60; // 1 hour
  * @since 1.0.0
  */
 export interface CeloUsdPriceResult {
-  /** Price in USD (e.g. 0.0966) — null if unavailable or stale. */
+  /** Price in USD (e.g. 0.0966) — null if unavailable, stale (> 1 h), or feed answer ≤ 0. */
   price: number | null;
   /** Last on-chain update unix-seconds — null if unavailable. */
   updatedAt: number | null;
