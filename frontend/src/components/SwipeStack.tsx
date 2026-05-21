@@ -26,6 +26,9 @@ const SWIPE_THRESHOLD = 80;
  *
  * Consumed by the Celo mobile task-feed page (`/`) where workers browse
  * and accept tasks posted by AI agents on the AgentHands contract.
+ *
+ * @since 1.0.0
+ * @see SwipeCard — single card rendered per task in the Celo swipe feed
  */
 export default function SwipeStack({
   tasks,
