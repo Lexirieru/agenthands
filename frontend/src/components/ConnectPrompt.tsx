@@ -10,7 +10,7 @@ import { useIsMiniPay } from "@/hooks/useIsMiniPay";
  * Both fields have sensible defaults and are optional.
  */
 interface Props {
-  /** Heading shown above the connect button. */
+  /** Heading shown above the connect button (default: `"Connect Wallet"`). */
   title?: string;
   /** Secondary line below the heading. */
   subtitle?: string;
