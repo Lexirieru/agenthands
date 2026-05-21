@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+/// @notice Foundry test suite for AgentHands on Celo — covers full task lifecycle.
 pragma solidity ^0.8.24;
 
 import {Test} from "forge-std/Test.sol";
