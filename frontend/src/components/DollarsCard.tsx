@@ -19,7 +19,10 @@ import { useStablecoinBalances } from '@/hooks/useAgentHands';
  */
 interface DollarsCardProps {
   address: `0x${string}` | undefined;
-  /** Desktop only — fold CELO balance into the total via Chainlink CELO/USD. */
+  /**
+   * Desktop only — fold the CELO ERC-20 balance into the total via Chainlink CELO/USD feed
+   * (`0x0568fD19986748cEfF3301e55c0eb1E729E0Ab7e`) on Celo mainnet.
+   */
   includeCelo?: boolean;
 }
 
