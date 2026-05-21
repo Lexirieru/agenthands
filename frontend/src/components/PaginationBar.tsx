@@ -2,7 +2,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PaginationBarProps {
-  /** The currently active page (1-indexed). */
+  /** The currently active page (1-indexed); passed from parent pagination state. */
   currentPage: number;
   /** Total number of pages; the component renders nothing when this is ≤ 1. */
   totalPages: number;
