@@ -8,7 +8,7 @@ import { useStablecoinBalances } from '@/hooks/useAgentHands';
  * MiniPay-style balance card for the Celo dashboard.
  *
  * Shows the total USD-equivalent balance across all whitelisted stablecoins
- * (USDC, USDT, USDm). When `includeCelo` is true (desktop only), the CELO
+ * (USDC, USDT, USDm) held by the Celo wallet address. When `includeCelo` is true (desktop only), the CELO
  * ERC-20 balance is also fetched and converted via the Chainlink CELO/USD
  * feed (`0x0568fD19986748cEfF3301e55c0eb1E729E0Ab7e`) and folded into the
  * total. If the price feed is stale, CELO shows "$0" contribution and a
