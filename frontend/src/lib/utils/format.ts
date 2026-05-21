@@ -8,6 +8,7 @@ const USDC_DECIMALS = 6;
 
 /**
  * Format raw USDC amount (6 decimals) to a short human-readable string.
+ * @since 1.0.0
  * Kept for legacy callers — prefer `formatRewardDisplay(raw, paymentToken)`
  * everywhere new so multi-token rewards (USDT/USDm/CELO) render correctly.
  */
