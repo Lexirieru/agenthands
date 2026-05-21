@@ -28,7 +28,7 @@ export interface TaskData {
   description: string;
   /** Physical or logical location for the task — searchable on the frontend. */
   location: string;
-  /** Pinata IPFS CID submitted by the worker as proof of completion. */
+  /** Pinata/IPFS CIDv1 (or legacy CIDv0) submitted by the worker as completion proof; empty string until `submitProof`. */
   proofCID: string;
   /** Mapped from the `TaskStatus` enum: 0=Open … 6=Expired. */
   status: number;
