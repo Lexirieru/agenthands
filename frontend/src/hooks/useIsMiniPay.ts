@@ -17,7 +17,7 @@ import { useEffect, useState } from "react";
  * Returns `null` on the first (SSR) render to avoid a Next.js hydration mismatch
  * between the server HTML (no window) and the client. After the effect runs
  * on mount the value is a stable boolean that will not change for the
- * lifetime of the page.
+ * lifetime of the page (injected providers cannot change after page load).
  *
  * Used by `Header`, `DollarsCard`, `SelfVerify`, and `useCip64` to adjust
  * UI and transaction behaviour for Celo mobile wallets.
