@@ -23,7 +23,11 @@ interface DollarsCardProps {
   includeCelo?: boolean;
 }
 
-/** Format a dollar-denominated float: 2 dp for ≥ $1, up to 6 dp (trailing zeros stripped) for micro-balances. */
+/**
+ * Format a dollar-denominated float for display.
+ * @since 1.0.0
+ * Returns 2 dp for ≥ $1; up to 6 dp with trailing zeros stripped for micro-balances (common in USDC 6-dec).
+ */
 function formatDollars(n: number): string {
   if (n === 0) return '0';
   if (n >= 1) return n.toFixed(2);
