@@ -80,6 +80,8 @@ export function useTask(taskId: bigint) {
 /**
  * Read the floor-average rating and submission count for a Celo worker
  * address. Score range 1–5; computed as `totalScore / count` (floor).
+ * @since 1.0.0
+ * @returns `{ avg: bigint, count: bigint }` — both zero if the worker is unrated.
  */
 export function useWorkerRating(worker: `0x${string}`) {
   return useReadContract({
