@@ -19,6 +19,8 @@ import { useConnect, useConnectors } from "wagmi";
  *
  * Consumed by `AppBoot` (context/index.tsx) so it runs once the Wagmi
  * provider is in scope.
+ *
+ * @since 1.0.0
  */
 export function useAutoConnect() {
   const connectors = useConnectors();
