@@ -6,6 +6,8 @@ import localFont from 'next/font/local';
  * Loaded from local `.otf` files (weights 200–700) and exposed as
  * the `--font-parasitype` CSS custom property used by Tailwind's
  * `font-heading` and `font-label` utilities.
+ *
+ * @since 1.0.0
  */
 const parasitype = localFont({
   src: [
