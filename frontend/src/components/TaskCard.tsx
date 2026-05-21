@@ -18,7 +18,7 @@ import {
  * while volatile tokens (CELO) show the amount + symbol without a `$`.
  *
  * Treats an Open task whose `deadline` is in the past as "Expired" on the
- * client side without waiting for an on-chain `claimExpired` call, so the
+ * client side — no need to wait for the on-chain `claimExpired` transaction — so the
  * card status badge stays accurate even before the transaction lands.
  */
 interface TaskCardProps {
