@@ -37,5 +37,6 @@ export function useAutoConnect() {
     }
   }, [connectors, connect, hasAttempted]);
 
+  /** @returns `error` from wagmi connect, `isConnecting` pending flag, and `hasAttempted` guard. */
   return { error, isConnecting: isPending, hasAttempted };
 }
