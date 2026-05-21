@@ -2,7 +2,9 @@
  * Mirrors the on-chain `Task` struct from `AgentHands.sol` on Celo mainnet.
  *
  * All `bigint` fields come directly from the Solidity `uint256` ABI encoding
- * via viem multicall. `status` is coerced to `number` by `fetchAllTasks` so
+ * via viem multicall on Celo mainnet.
+ *
+ * @since 1.0.0 `status` is coerced to `number` by `fetchAllTasks` so
  * it can be used in switch statements without BigInt arithmetic.
  */
 export interface TaskData {
