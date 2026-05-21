@@ -25,6 +25,9 @@ import { USDC_FEE_ADAPTER } from "@/config";
  * const cip64 = useCip64();
  * writeContract({ ...call, functionName: 'x', args: [...], ...cip64 });
  * ```
+ *
+ * @since 1.0.0
+ * @returns CIP-64 `feeCurrency` + `type` overrides, or empty object for non-CIP-64 wallets.
  */
 export function useCip64() {
   const [supported, setSupported] = useState(false);
