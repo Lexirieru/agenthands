@@ -23,6 +23,7 @@ const watchEvents = parseAbi([
   "event AgentRated(uint256 indexed taskId, address indexed agent, uint8 score)",
 ]);
 
+/** Module-level flag ensuring only one Celo log-subscription is active regardless of React re-mounts. */
 let watcherStarted = false;
 
 /**
