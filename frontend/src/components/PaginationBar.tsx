@@ -24,6 +24,8 @@ interface PaginationBarProps {
  *
  * Fully keyboard and screen-reader accessible: `role="navigation"`,
  * `aria-label`, `aria-current="page"`, and `disabled` on edge buttons.
+ *
+ * @since 1.0.0
  */
 export default function PaginationBar({ currentPage, totalPages, onPrev, onNext, onPageSelect }: PaginationBarProps) {
   if (totalPages <= 1) return null;
