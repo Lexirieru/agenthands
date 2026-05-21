@@ -51,6 +51,9 @@ let watcherStarted = false;
  *
  * Errors are silently discarded — the polling-based refetch in `useAllTasks`
  * (8 s) serves as a safety net if the watcher stalls or the WebSocket drops.
+ *
+ * @since 1.0.0
+ * @see useAllTasks — 8 s polling fallback that covers watcher gaps
  */
 export function useTaskEventWatcher() {
   const { invalidateAll } = useInvalidateTasks();
