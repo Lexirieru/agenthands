@@ -40,7 +40,7 @@ export interface CeloUsdPriceResult {
   price: number | null;
   /** Last on-chain update unix-seconds from `latestRoundData.updatedAt` — null if the feed call fails. */
   updatedAt: number | null;
-  /** True only when we have a fresh, positive answer. */
+  /** True only when we have a fresh (age < 1 h), positive answer from the Chainlink CELO/USD feed on Celo. */
   isFresh: boolean;
   isLoading: boolean;
 }
