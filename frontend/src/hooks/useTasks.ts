@@ -44,6 +44,7 @@ const publicClient = createPublicClient({
 // (useTaskDetail doesn't filter), so anyone with the link can still see them.
 const HIDDEN_TASK_IDS = new Set<string>(["1", "2"]);
 
+/** @since 1.0.0 Typed TanStack Query key factory — keeps all cache keys in sync across hooks. */
 export const taskQueryKeys = {
   all: ["tasks"] as const,
   list: () => [...taskQueryKeys.all, "list"] as const,
