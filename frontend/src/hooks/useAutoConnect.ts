@@ -14,7 +14,7 @@ import { useConnect, useConnectors } from "wagmi";
  * "Connect Wallet" button would violate MiniPay's UX guidelines and confuse
  * users because the wallet is already open and active.
  *
- * `hasAttempted` prevents double-calls on re-renders. On SSR or in desktop
+ * `hasAttempted` ref-guard prevents double-calls on re-renders and hot-module reloads. On SSR or in desktop
  * browsers without an injected provider the hook is a silent no-op.
  *
  * Consumed by `AppBoot` (context/index.tsx) so it runs once the Wagmi
