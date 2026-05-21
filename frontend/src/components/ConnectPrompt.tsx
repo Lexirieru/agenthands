@@ -17,7 +17,10 @@ interface Props {
  *
  * MiniPay auto-connects on load (and the docs tell us not to ship a Connect
  * button), so when we detect it we render a subtle "Connecting…" indicator
- * instead and lean on useAutoConnect to finish the job.
+ * instead and lean on `useAutoConnect` to finish the job.
+ *
+ * @since 1.0.0
+ * @see useAutoConnect — handles injected wallet connection for Celo MiniPay
  */
 export default function ConnectPrompt({
   title = "Connect Wallet",
