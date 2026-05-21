@@ -76,6 +76,7 @@ export default function TaskCard({
   const rewardLabel = formatRewardDisplay(reward, paymentToken);
   const statusInfo = getStatusDisplay(status);
   const deadlineDate = new Date(Number(deadline) * 1000);
+  /** Client-side expiry: Open tasks past their deadline are shown as Expired without waiting for `claimExpired`. */
   const isExpired = deadlineDate < new Date() && status === 0;
 
   return (
