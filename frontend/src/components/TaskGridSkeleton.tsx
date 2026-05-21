@@ -1,5 +1,9 @@
 'use client';
 
+/**
+ * Props for `TaskGridSkeleton`.
+ * @since 1.0.0
+ */
 interface TaskGridSkeletonProps {
   /** Number of skeleton cards to render. Defaults to 12 (3×4 desktop grid). */
   count?: number;
