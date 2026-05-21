@@ -10,7 +10,11 @@ import { X } from 'lucide-react';
  */
 export type ToastType = 'success' | 'error' | 'info';
 
-/** Internal shape of a single queued toast; `id` is an auto-incrementing counter used as the React key. */
+/**
+ * Internal shape of a single queued toast notification.
+ * @since 1.0.0
+ * `id` is a module-level auto-incrementing counter used as the stable React list key.
+ */
 interface ToastMessage {
   /** Auto-incrementing counter used as the React list key and for targeted removal. */
   id: number;
