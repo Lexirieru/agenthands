@@ -53,6 +53,7 @@ export default function ContextProvider({
   cookies,
 }: {
   children: ReactNode;
+  /** Serialised wagmi cookie from `headers()` — passed from the Next.js Server Component layout. */
   cookies: string | null;
 }) {
   const initialState = cookieToInitialState(config, cookies);
