@@ -22,7 +22,7 @@ import {
  * card status badge stays accurate even before the transaction lands.
  */
 interface TaskCardProps {
-  /** On-chain task ID (1-indexed uint256 from the AgentHands contract). */
+  /** On-chain task ID — 1-indexed `uint256` assigned by `++taskCount` in `createTask` on Celo. */
   id: bigint;
   /** Short task title displayed as the card heading. */
   title: string;
