@@ -40,7 +40,7 @@ export function useIsMobile(breakpoint = 768) {
 
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler); // cleanup: prevents stale listener on re-mount
   }, [breakpoint]);
 
   return isMobile;
