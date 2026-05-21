@@ -1,4 +1,5 @@
 'use client';
+/** @module NewTaskPage — Two-step form for posting a new task with USDC escrow on Celo. */
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
