@@ -26,5 +26,10 @@ export const IDENTITY_REGISTRY = "0x8004A818BFB912233c491871b3d84c89A494BD9e" as
  */
 export const REPUTATION_REGISTRY = "0x8004B663056A597Dffe9eCcC1965A193B7388713" as `0x${string}`;
 
-/** @description Celo mainnet chain ID — passed to wagmi `useReadContract` so ERC-8004 reads stay on the right chain. */
+/**
+ * Celo mainnet chain ID.
+ * @since 1.0.0
+ * Passed to wagmi `useReadContract` calls so ERC-8004 reads are explicitly
+ * pinned to Celo (42220) and do not follow any future multi-chain config.
+ */
 export const ERC8004_CHAIN_ID = 42220;
