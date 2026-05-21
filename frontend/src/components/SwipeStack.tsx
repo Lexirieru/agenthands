@@ -5,7 +5,11 @@ import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import SwipeCard from "./SwipeCard";
 import type { TaskData } from "@/types/task";
 
-/** Minimum vertical drag (px) or velocity required to trigger a card transition. */
+/**
+ * Minimum vertical drag distance (px) or velocity required to trigger a card transition.
+ * @since 1.0.0
+ * Tuned for Celo MiniPay touch targets — lowering this value risks accidental swipes.
+ */
 const SWIPE_THRESHOLD = 80;
 
 /**
