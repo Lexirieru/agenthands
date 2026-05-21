@@ -10,8 +10,8 @@
  *   - Chainlink CELO/USD:     `0x0568fD19986748cEfF3301e55c0eb1E729E0Ab7e`
  *   - USDC CIP-64 adapter:    `0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B`
  *
- * Connectors: `injected()` (MiniPay / MetaMask) + `walletConnect()` (mobile QR).
- * Storage: `cookieStorage` + `ssr: true` for Next.js hydration safety.
+ * Connectors: `injected()` (MiniPay / Valora / MetaMask) + `walletConnect()` (mobile QR).
+ * Storage: `cookieStorage` + `ssr: true` for Next.js hydration safety on Celo.
  */
 import { http, createConfig, cookieStorage, createStorage } from "wagmi";
 import { celo } from "wagmi/chains";
