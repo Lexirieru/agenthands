@@ -61,6 +61,8 @@ export interface CeloUsdPriceResult {
  * because the Chainlink oracle's decimal precision never changes at runtime.
  * Any negative or zero `answer` from the feed is also treated as unavailable.
  *
+ * @since 1.0.0
+ *
  * Used exclusively by `useStablecoinBalances` (with `includeCelo: true`) to
  * fold CELO balances into the desktop DollarsCard total. MiniPay / mobile
  * surfaces skip this hook — those layouts are stablecoin-only by design.
