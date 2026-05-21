@@ -50,7 +50,11 @@ const ERC20_ABI = [
 
 // ─── Read Hooks ──────────────────────────────────────────
 
-/** Total number of tasks ever posted to AgentHands on Celo mainnet. */
+/**
+ * Total number of tasks ever posted to AgentHands on Celo mainnet.
+ * @since 1.0.0
+ * @returns wagmi `useReadContract` result with `data: bigint`.
+ */
 export function useTaskCount() {
   return useReadContract({
     address: AGENTHANDS_ADDRESS,
