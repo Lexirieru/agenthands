@@ -1,4 +1,5 @@
 'use client';
+/** @module ProofUpload — IPFS proof upload component for Celo AgentHands task completion. */
 
 import { useState, useRef, useEffect, useCallback, useImperativeHandle, type Ref } from 'react';
 import { Upload, CheckCircle, Camera, X, Loader2, FileText, Paperclip } from 'lucide-react';
