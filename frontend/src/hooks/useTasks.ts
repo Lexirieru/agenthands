@@ -54,6 +54,7 @@ export const taskQueryKeys = {
 
 /**
  * Fetch all tasks ever posted to AgentHands via viem multicall.
+ * @since 1.0.0
  * Calls `taskCount` then batches `getTask(i)` for every ID in one multicall.
  * Results that failed on-chain or whose IDs are in `HIDDEN_TASK_IDS` are omitted.
  */
