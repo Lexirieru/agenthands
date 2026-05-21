@@ -10,7 +10,7 @@ import { useTaskEventWatcher } from "@/hooks/useTaskEventWatcher";
 /**
  * Shared TanStack Query client for the AgentHands frontend on Celo mainnet.
  *
- * `staleTime: 4000` — all task data is considered fresh for 4 s, matching the
+ * `staleTime: 4_000` ms — all task data is considered fresh for 4 s, matching the
  * 8 s refetch interval used in `useTasks` and `useAgentHands` hooks. This means
  * back-to-back navigations within 4 s reuse the cached Celo RPC response rather
  * than firing a redundant multicall. `retry: 2` handles transient Forno outages
