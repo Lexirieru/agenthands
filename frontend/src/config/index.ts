@@ -33,6 +33,7 @@ export const USDC_ADDRESS =
 /** Celo mainnet USDT (6 decimals) — whitelisted reward token; supports EIP-3009 and CIP-64. */
 export const USDT_ADDRESS =
   "0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e" as `0x${string}`;
+/** Celo mainnet USDm (18 decimals) — whitelisted reward token; EIP-2612 permit only (no EIP-3009). */
 export const USDM_ADDRESS =
   "0x765DE816845861e75A25fCA122bb6898B8B1282a" as `0x${string}`;
 
