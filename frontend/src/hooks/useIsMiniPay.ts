@@ -26,6 +26,7 @@ import { useEffect, useState } from "react";
  * @returns `true` inside MiniPay or Valora; `false` on desktop; `null` during SSR.
  */
 export function useIsMiniPay(): boolean | null {
+  /** Starts null (SSR-safe); set to a stable boolean after the first mount effect on Celo. */
   const [isMiniPay, setIsMiniPay] = useState<boolean | null>(null);
 
   useEffect(() => {
