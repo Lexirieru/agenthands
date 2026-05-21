@@ -1,4 +1,5 @@
 'use client';
+/** @module DashboardPage — Celo wallet dashboard showing balance and task history. */
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
