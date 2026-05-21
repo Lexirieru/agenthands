@@ -44,7 +44,7 @@ export function toast(type: ToastType, message: string) {
  * Mount once at the layout root (next to `<Header>`).
  * Renders a fixed stack of toast messages in the bottom-right corner.
  * Uses a module-level singleton (`addToastFn`) so `toast()` above can
- * enqueue messages from outside the React tree (e.g. wagmi callbacks).
+ * enqueue messages from outside the React tree (e.g. wagmi write callbacks, IPFS upload handlers).
  */
 export default function ToastContainer() {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
