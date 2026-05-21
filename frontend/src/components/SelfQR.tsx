@@ -14,6 +14,7 @@ import { SelfQRcodeWrapper } from '@selfxyz/qrcode';
  * @see SelfVerify — consumer that dynamic-imports this component for Celo ZK identity
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+/** @param props Forwarded directly to `SelfQRcodeWrapper`; typed `any` because the library ships no public prop types. */
 export default function SelfQR(props: any) {
   return <SelfQRcodeWrapper {...props} />;
 }
