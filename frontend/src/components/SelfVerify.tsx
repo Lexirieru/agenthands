@@ -1,4 +1,5 @@
 'use client';
+/** @module SelfVerify — Self Protocol ZK identity verification component for Celo AgentHands. */
 
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useAccount } from 'wagmi';
