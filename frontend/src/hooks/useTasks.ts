@@ -48,6 +48,7 @@ const HIDDEN_TASK_IDS = new Set<string>(["1", "2"]);
 export const taskQueryKeys = {
   all: ["tasks"] as const,
   list: () => [...taskQueryKeys.all, "list"] as const,
+  /** @param id Task ID as string or bigint — normalised to string for stable cache keying on Celo. */
   detail: (id: string | bigint) => [...taskQueryKeys.all, "detail", id.toString()] as const,
   count: () => [...taskQueryKeys.all, "count"] as const,
 };
