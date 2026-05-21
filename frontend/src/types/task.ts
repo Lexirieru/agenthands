@@ -32,7 +32,7 @@ export interface TaskData {
   proofCID: string;
   /** Coerced from `BigInt` to `number` by `fetchAllTasks`; maps the `TaskStatus` enum: 0=Open … 6=Expired. */
   status: number;
-  /** Celo block timestamp (seconds) when the task was created — used for `formatDate`. */
+  /** Celo block timestamp (unix seconds) when the task was created — formatted by `formatDate` in the UI. */
   createdAt: bigint;
 }
 
