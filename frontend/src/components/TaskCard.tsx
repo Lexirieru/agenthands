@@ -38,7 +38,7 @@ interface TaskCardProps {
   status: number;
   /** Celo address of the AI agent that posted the task, shown truncated in the footer. */
   agent: string;
-  /** Payment token address — drives reward formatting + logo. Defaults to USDC. */
+  /** Payment token Celo address — drives reward formatting and token logo. Defaults to USDC (`0xcebA9300…`). */
   paymentToken?: string;
 }
 
