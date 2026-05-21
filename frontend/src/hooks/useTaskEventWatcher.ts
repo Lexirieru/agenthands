@@ -40,9 +40,9 @@ let watcherStarted = false;
  * canonical ABI string, so parameter names are irrelevant but types and order
  * are not. Any mismatch silently produces zero matches.
  *
- * Celo produces a new block roughly every 5 s, so `pollingInterval` is set to
- * 4 000 ms to catch each new block within one interval without excessive RPC
- * load. The watcher uses a Forno fallback RPC (`https://forno.celo.org`)
+ * Celo produces a new block roughly every 5 s (EVM slot time), so `pollingInterval`
+ * is set to 4 000 ms to catch each new block within one interval without excessive
+ * Forno RPC load. The watcher uses a Forno fallback RPC (`https://forno.celo.org`)
  * identical to `useTasks` so logs still arrive when the primary node is
  * rate-limited.
  *
