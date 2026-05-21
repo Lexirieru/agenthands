@@ -45,6 +45,8 @@ function AppBoot({ children }: { children: ReactNode }) {
  * Root provider that wraps the Next.js app with Wagmi (Celo mainnet) and
  * TanStack Query. Accepts SSR cookies so wagmi can rehydrate wallet state
  * on the server without a hydration mismatch.
+ *
+ * @since 1.0.0
  */
 export default function ContextProvider({
   children,
