@@ -31,6 +31,9 @@ const FEED_ABI = [
 // stale and skip it instead of pricing balances from a frozen feed.
 const STALE_AFTER_SECONDS = 60 * 60; // 1 hour
 
+/**
+ * @since 1.0.0
+ */
 export interface CeloUsdPriceResult {
   /** Price in USD (e.g. 0.0966) — null if unavailable or stale. */
   price: number | null;
