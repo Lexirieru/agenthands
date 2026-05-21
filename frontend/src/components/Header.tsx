@@ -24,7 +24,7 @@ const navLinks = [
  * "Connect" button. MiniPay/Valora users see "Connecting…" instead — the
  * manual connect button is hidden per MiniPay's UX spec.
  *
- * **Desktop** (`≥ md`): pill-shaped glassmorphism nav with logo, TASKS /
+ * **Desktop** (`≥ 768 px`): pill-shaped glassmorphism nav with logo, TASKS /
  * DASHBOARD links, a combined USD balance pill (stablecoins + CELO via
  * Chainlink), and a wallet button that flips to "Disconnect" on hover.
  *
