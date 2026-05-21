@@ -31,6 +31,7 @@ import { USDC_FEE_ADAPTER } from "@/config";
  * @returns CIP-64 `feeCurrency` + `type` overrides, or empty object for non-CIP-64 wallets.
  */
 export function useCip64() {
+  /** True when the injected provider exposes `isMiniPay` or `isValora` on Celo. */
   const [supported, setSupported] = useState(false);
 
   useEffect(() => {
