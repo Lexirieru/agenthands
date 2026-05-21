@@ -21,7 +21,10 @@ import ReputationRegistryABI from '@/abi/ReputationRegistry.json';
  * @since 1.0.0
  * @see IDENTITY_REGISTRY — `0x8004A818BFB912233c491871b3d84c89A494BD9e` on Celo mainnet
  */
-/** Props for AgentBadge — the Celo address to look up in the ERC-8004 registries. */
+/**
+ * Props for `AgentBadge`.
+ * @since 1.0.0
+ */
 interface AgentBadgeProps {
   agentAddress: string;
 }
