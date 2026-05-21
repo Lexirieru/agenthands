@@ -27,7 +27,11 @@ function IconFeed({ active }: { active: boolean }) {
   );
 }
 
-/** SVG icon for the Explore tab — stroked in the active/inactive brand color. */
+/**
+ * SVG icon for the Explore tab in the Celo MiniPay bottom navigation bar.
+ * @since 1.0.0
+ * Stroked in the active (`#D4700A`) or inactive (`#8B4513`) brand colour.
+ */
 function IconExplore({ active }: { active: boolean }) {
   const c = active ? "#D4700A" : "#8B4513";
   return (
