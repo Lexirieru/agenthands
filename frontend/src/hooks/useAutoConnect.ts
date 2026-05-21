@@ -8,6 +8,8 @@ import { useConnect, useConnectors } from "wagmi";
  * and Valora, which both inject `window.ethereum` but do NOT trigger
  * wagmi's default auto-connect unless explicitly prompted.
  *
+ * @see {@link https://docs.minipay.opera.com/build/getting-started} MiniPay UX guidelines
+ *
  * MiniPay injects `window.ethereum` with `isMiniPay: true` and Valora with
  * `isValora: true`. Both wallets expect the dapp to call `eth_requestAccounts`
  * (or the wagmi `connect()` equivalent) on mount — showing a separate
