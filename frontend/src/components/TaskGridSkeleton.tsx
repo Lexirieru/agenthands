@@ -18,8 +18,9 @@ interface TaskGridSkeletonProps {
  * Each placeholder card has `aria-hidden="true"` so screen readers skip the
  * decorative shimmer and announce real task content once it loads.
  *
- * @param count Number of skeleton cards to render (default: 12).
- * @returns     A responsive CSS grid of pulsing placeholder cards.
+ * @param count Number of skeleton cards to render (default: `12` — fills 3 rows on a 1080 p viewport).
+ * @returns     A responsive CSS grid of pulsing `animate-pulse` placeholder cards.
+ * @since 1.0.0
  */
 export default function TaskGridSkeleton({ count = 12 }: TaskGridSkeletonProps) {
   return (
