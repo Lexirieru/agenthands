@@ -30,6 +30,10 @@ const queryClient = new QueryClient({
  * Inner component that runs global side-effect hooks once the Wagmi and
  * Query providers are in scope: auto-connects injected wallets (MiniPay/Valora)
  * and starts the AgentHands event watcher.
+ *
+ * @since 1.0.0
+ * @see useAutoConnect — injected wallet auto-connect for Celo MiniPay
+ * @see useTaskEventWatcher — live Celo contract event subscription
  */
 function AppBoot({ children }: { children: ReactNode }) {
   useAutoConnect();
