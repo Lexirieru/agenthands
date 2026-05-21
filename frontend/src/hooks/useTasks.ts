@@ -24,7 +24,7 @@ import type { TaskData } from "@/types/task";
  * - `useInvalidateTasks` — imperative cache invalidation + optimistic patch
  * - `taskQueryKeys` — typed key factory for query coordination
  */
-/** Official Celo Foundation RPC used as the secondary transport when the primary node is unreachable. */
+/** Official Celo Foundation Forno RPC — used as the secondary fallback transport when the primary node is rate-limited or unreachable. */
 const fallbackRpc = "https://forno.celo.org";
 
 /**
