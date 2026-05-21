@@ -3,7 +3,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { X } from 'lucide-react';
 
-/** Visual severity of a toast — maps to a distinct background colour (green / red / blue). */
+/**
+ * Visual severity of a toast notification.
+ * @since 1.0.0
+ * Maps to `success` (green), `error` (red), or `info` (blue) background.
+ */
 export type ToastType = 'success' | 'error' | 'info';
 
 /** Internal shape of a single queued toast; `id` is an auto-incrementing counter used as the React key. */
