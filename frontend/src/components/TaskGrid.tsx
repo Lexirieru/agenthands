@@ -4,7 +4,11 @@ import gsap from 'gsap';
 import TaskCard from '@/components/TaskCard';
 import type { TaskData } from '@/types/task';
 
-/** Props for TaskGrid — receives a pre-filtered, pre-paginated slice of tasks from the parent. */
+/**
+ * Props for `TaskGrid`.
+ * @since 1.0.0
+ * Receives a pre-filtered, pre-paginated task slice from the parent page.
+ */
 interface TaskGridProps {
   /** Already-filtered and paginated tasks to render. */
   tasks: TaskData[];
