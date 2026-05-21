@@ -30,6 +30,7 @@ export function useIsMiniPay(): boolean | null {
   const [isMiniPay, setIsMiniPay] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // Guard for SSR — `window` is undefined in the Next.js server environment.
     if (typeof window === "undefined") return;
     const eth = (window as unknown as {
       ethereum?: { isMiniPay?: boolean; isValora?: boolean };
