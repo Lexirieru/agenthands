@@ -50,6 +50,7 @@ export function formatTokenAmount(
 
 /**
  * Resolved metadata for a whitelisted AgentHands payment token.
+ * @since 1.0.0
  * Returned by `tokenInfoForAddress` and consumed by reward-display helpers and TaskCard.
  */
 export type TokenInfo = {
