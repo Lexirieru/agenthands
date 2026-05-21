@@ -1,5 +1,6 @@
 "use client";
 
+/** @module useAgentHands — wagmi hooks for AgentHands contract reads and writes on Celo mainnet. */
 import { useMemo } from "react";
 import { useReadContracts, useReadContract, useWriteContract } from "wagmi";
 import {
