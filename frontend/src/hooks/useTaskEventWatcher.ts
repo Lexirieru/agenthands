@@ -46,7 +46,7 @@ let watcherStarted = false;
  * identical to `useTasks` so logs still arrive when the primary node is
  * rate-limited.
  *
- * On each log batch, the handler invalidates the full tasks query key tree
+ * On each log batch, the handler invalidates the full TanStack Query task key tree
  * (list + detail) plus the wagmi `readContract` / `readContracts` caches
  * so the header balance pill refreshes alongside the task feed.
  *
