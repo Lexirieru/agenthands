@@ -30,7 +30,7 @@ export interface TaskData {
   location: string;
   /** Pinata/IPFS CIDv1 (or legacy CIDv0) submitted by the worker as completion proof; empty string until `submitProof`. */
   proofCID: string;
-  /** Mapped from the `TaskStatus` enum: 0=Open … 6=Expired. */
+  /** Coerced from `BigInt` to `number` by `fetchAllTasks`; maps the `TaskStatus` enum: 0=Open … 6=Expired. */
   status: number;
   /** Celo block timestamp (seconds) when the task was created — used for `formatDate`. */
   createdAt: bigint;
