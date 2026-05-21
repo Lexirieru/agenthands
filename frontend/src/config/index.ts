@@ -27,6 +27,7 @@ export const AGENTHANDS_ADDRESS =
 // USDC + USDT both support EIP-3009 (ride the x402 self-settle path);
 // USDm is whitelisted on the contract but only supports EIP-2612 permit
 // — the dashboard still surfaces its balance even though it bypasses x402.
+/** Celo mainnet USDC (6 decimals) — primary reward token on AgentHands; supports EIP-3009 and CIP-64. */
 export const USDC_ADDRESS =
   "0xcebA9300f2b948710d2653dD7B07f33A8B32118C" as `0x${string}`;
 export const USDT_ADDRESS =
