@@ -22,6 +22,10 @@ import type { TaskData } from '@/types/task';
  * call `setFilter` and `setSearch` separately.
  *
  * Returns the filtered task slice together with setters and `clearFilters`.
+ *
+ * @since 1.0.0
+ * @param tasks Pre-fetched `TaskData[]` array from `useAllTasks` on Celo.
+ * @returns Filter state, setters, filtered task slice, and `clearFilters` helper.
  */
 export function useTaskFilter(tasks: TaskData[]) {
   const [filter, setFilter] = useState<number | 'all'>('all');
