@@ -23,7 +23,7 @@ interface TaskGridProps {
  * `opacity: 0 → 1 + y: 20 → 0` fade-in using a `.task-card` selector
  * scoped to a `gsap.context` so cleanup is automatic on unmount.
  *
- * The empty-state panel surfaces a "No results" message and an optional
+ * The empty-state panel surfaces a "No results for [keyword]" message and an optional
  * "Clear filters" button when `onClearFilters` is provided, so users can
  * reset after searching for Celo tasks by location or keyword.
  */
