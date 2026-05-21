@@ -14,7 +14,7 @@ import { USDC_FEE_ADAPTER } from "@/config";
  * to interact with AgentHands without holding any CELO — only the USDC
  * reward they earn needs to be in their wallet.
  *
- * Desktop MetaMask and generic viem/wagmi wallets do not implement CIP-64;
+ * Desktop MetaMask, Rainbow, and generic viem/wagmi wallets do not implement CIP-64;
  * sending `type: 'cip64'` to them causes the tx to be rejected. The hook
  * gates the overrides on `isMiniPay || isValora` detection (same check as
  * `useIsMiniPay`) and returns an empty object `{}` for non-CIP-64 wallets,
