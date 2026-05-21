@@ -42,7 +42,12 @@ interface TaskCardProps {
   paymentToken?: string;
 }
 
-/** Returns Tailwind bg+text classes for each task status badge. */
+/**
+ * Returns Tailwind bg+text utility classes for each TaskStatus badge.
+ * @param status Numeric TaskStatus enum value (0=Open … 6=Expired) from Celo contract.
+ * @returns Tailwind `bg-*` + `text-*` class string for the status chip.
+ * @since 1.0.0
+ */
 function statusBadgeClass(status: number): string {
   switch (status) {
     case 0: return 'bg-green-100 text-green-700';    // Open
