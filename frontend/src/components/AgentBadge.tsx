@@ -26,6 +26,7 @@ import ReputationRegistryABI from '@/abi/ReputationRegistry.json';
  * @since 1.0.0
  */
 interface AgentBadgeProps {
+  /** Celo mainnet wallet address of the AI agent to look up in the ERC-8004 identity and reputation registries. */
   agentAddress: string;
 }
 
