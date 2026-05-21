@@ -47,6 +47,7 @@ export function useTaskFilter(tasks: TaskData[]) {
     [tasks, filter, search]
   );
 
+  /** Reset both filter and search in one flush — avoids two separate re-renders. */
   const clearFilters = () => {
     setFilter('all');
     setSearch('');
