@@ -4,8 +4,10 @@ import gsap from 'gsap';
  * Fade-and-rise entrance for a single element.
  * Used on Celo task cards and form containers to soften page transitions.
  *
- * @param el - GSAP tween target (element, selector, or NodeList).
- * @param delay - Seconds to wait before the tween starts (default 0).
+ * @param el    - GSAP tween target (element, selector, or NodeList).
+ * @param delay - Seconds to wait before the tween starts (default `0`).
+ * @returns GSAP Tween instance — call `.kill()` to cancel early.
+ * @since 1.0.0
  */
 export function fadeInUp(el: gsap.TweenTarget, delay = 0) {
   return gsap.from(el, {
