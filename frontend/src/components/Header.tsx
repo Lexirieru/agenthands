@@ -20,7 +20,7 @@ const navLinks = [
 /**
  * Sticky app header for the Celo AgentHands desktop and mobile layouts.
  *
- * **Mobile** (`< md`): compact bar with logo, wallet address pill, and a
+ * **Mobile** (`< 768 px`): compact bar with logo, wallet address pill, and a
  * "Connect" button. MiniPay/Valora users see "Connecting…" instead — the
  * manual connect button is hidden per MiniPay's UX spec.
  *
