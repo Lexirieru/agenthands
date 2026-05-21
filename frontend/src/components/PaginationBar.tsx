@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 interface PaginationBarProps {
   /** The currently active page (1-indexed); passed from parent pagination state. */
   currentPage: number;
-  /** Total number of pages; the component renders nothing when this is ≤ 1. */
+  /** Total number of pages; returns `null` when ≤ 1 — no pagination needed for single-page Celo task lists. */
   totalPages: number;
   /** Callback fired when the "Prev" button is clicked. */
   onPrev: () => void;
