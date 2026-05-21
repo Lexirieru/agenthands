@@ -30,6 +30,7 @@ interface PaginationBarProps {
 export default function PaginationBar({ currentPage, totalPages, onPrev, onNext, onPageSelect }: PaginationBarProps) {
   if (totalPages <= 1) return null;
 
+  /** Compute the visible page-number window: up to 5 pages centred on `currentPage`. */
   const pageNumbers = () => {
     const pages = [];
     const start = Math.max(1, currentPage - 2);
