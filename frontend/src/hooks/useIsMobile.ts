@@ -31,6 +31,7 @@ import { useState, useEffect } from "react";
  * ```
  */
 export function useIsMobile(breakpoint = 768) {
+  /** Initialises to `false` so SSR and first server render are consistent on Celo Next.js. */
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
