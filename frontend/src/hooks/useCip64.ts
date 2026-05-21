@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+/** @see {@link /config} USDC_FEE_ADAPTER — `0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B` on Celo mainnet */
 import { USDC_FEE_ADAPTER } from "@/config";
 
 /**
