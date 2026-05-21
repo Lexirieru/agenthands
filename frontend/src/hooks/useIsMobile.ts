@@ -11,6 +11,9 @@ import { useState, useEffect } from "react";
  * in `Header` and `DollarsCard` that excludes volatile CELO balances from
  * the MiniPay/mobile surface.
  *
+ * The `change` listener is removed in the `useEffect` cleanup function,
+ * preventing memory leaks when the component unmounts.
+ *
  * Uses `matchMedia` with a `change` listener so the value updates on window
  * resize without needing React state polling.
  *
