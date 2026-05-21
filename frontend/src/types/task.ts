@@ -14,7 +14,7 @@ export interface TaskData {
   agent: string;
   /** Celo wallet address of the human worker who accepted the task; zero address until accepted. */
   worker: string;
-  /** ERC-20 reward token — USDC (`0xcebA9300…`) or CELO (`0x471EcE3…`). */
+  /** ERC-20 reward token address — USDC (`0xcebA9300…`, 6 dec) or CELO ERC-20 (`0x471EcE3…`, 18 dec). */
   paymentToken: string;
   /** Raw reward in the token's native decimals (USDC: 6, CELO: 18). */
   reward: bigint;
