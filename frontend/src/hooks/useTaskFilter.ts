@@ -30,6 +30,7 @@ import type { TaskData } from '@/types/task';
 export function useTaskFilter(tasks: TaskData[]) {
   /** Current TaskStatus filter; 'all' skips status filtering on Celo task feed. */
   const [filter, setFilter] = useState<number | 'all'>('all');
+  /** Case-insensitive keyword matched against title, description, and location on Celo tasks. */
   const [search, setSearch] = useState('');
 
   const filteredTasks = useMemo(
