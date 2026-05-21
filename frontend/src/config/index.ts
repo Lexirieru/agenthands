@@ -50,8 +50,9 @@ export type StablecoinSymbol = "USDC" | "USDT" | "USDm";
  * `useStablecoinBalances` maps the `useReadContracts` result array by
  * position. Changing the order here would silently misalign balances.
  *
- * USDC and USDT support EIP-3009 transferWithAuthorization, enabling the
- * x402 self-settle path on Celo without a separate approve tx.
+ * USDC and USDT support EIP-3009 `transferWithAuthorization`, enabling the
+ * x402 self-settle path on Celo without a separate `approve` tx.
+ * USDm only supports EIP-2612 `permit` — the x402 path is unavailable for it.
  */
 export const STABLECOINS: ReadonlyArray<{
   symbol: StablecoinSymbol;
