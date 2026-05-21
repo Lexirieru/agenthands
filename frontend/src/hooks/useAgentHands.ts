@@ -49,7 +49,8 @@ const ERC20_ABI = [
   },
 ] as const;
 
-// ─── Read Hooks — all backed by wagmi useReadContract / useReadContracts ────
+// ─── Read Hooks — all backed by wagmi useReadContract / useReadContracts ─────
+// All read hooks use the default wagmi staleTime from queryClient in context/index.tsx.
 
 /**
  * Total number of tasks ever posted to AgentHands on Celo mainnet.
