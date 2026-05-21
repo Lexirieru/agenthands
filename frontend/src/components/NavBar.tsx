@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+/** @module NavBar — Bottom navigation bar for Celo MiniPay mobile layout. */
 import { usePathname } from "next/navigation";
 
 /**
