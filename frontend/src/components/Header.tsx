@@ -29,7 +29,8 @@ const navLinks = [
  * Chainlink), and a wallet button that flips to "Disconnect" on hover.
  *
  * CELO balance is included in the header pill only on desktop (`!isMobile &&
- * !isMiniPay`), matching the DollarsCard `includeCelo` split. Balances are
+ * !isMiniPay`), matching the `DollarsCard` `includeCelo` split — Chainlink
+ * price feed on Celo is used to convert the CELO balance to USD. Balances are
  * formatted to 2 dp when ≥ $1, or up to 6 dp with trailing zeros stripped
  * for micro-balances (common with USDC 6-decimal amounts on Celo).
  *
