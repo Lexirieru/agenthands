@@ -1,5 +1,6 @@
 'use client';
 
+/** Self Protocol QR code component — renders a ZK identity verification QR for Celo MiniPay users. */
 import { SelfQRcodeWrapper } from '@selfxyz/qrcode';
 
 /**
