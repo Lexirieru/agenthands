@@ -1,4 +1,5 @@
 'use client';
+/** @module TaskDetailPage — On-chain task detail view with status transitions on Celo. */
 
 import { use, useState, useEffect, useRef, useCallback } from 'react';
 import { useWriteContract, useWaitForTransactionReceipt, useAccount, useSwitchChain } from 'wagmi';
