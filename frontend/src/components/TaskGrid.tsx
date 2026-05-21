@@ -12,7 +12,7 @@ import type { TaskData } from '@/types/task';
 interface TaskGridProps {
   /** Already-filtered and paginated tasks to render. */
   tasks: TaskData[];
-  /** Active search string — used in the empty-state "No results for …" message. */
+  /** Active search string — displayed in the empty-state "No results for [query]" message; may be empty. */
   search?: string;
   /** Callback shown in the empty state so the user can reset all filters in one click. */
   onClearFilters?: () => void;
