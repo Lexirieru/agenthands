@@ -24,7 +24,9 @@ const parasitype = localFont({
 
 /**
  * Courier New — monospace fallback used for on-chain identifiers such as
- * Celo wallet addresses and task IDs throughout the AgentHands UI.
+ * Celo wallet addresses, IPFS CIDs, and task IDs throughout the AgentHands UI.
+ *
+ * @since 1.0.0
  */
 const courierNew = localFont({
   src: [
