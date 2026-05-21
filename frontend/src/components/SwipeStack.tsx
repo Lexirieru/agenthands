@@ -21,8 +21,8 @@ const SWIPE_THRESHOLD = 80;
  *   2. Mouse wheel — `deltaY` accumulation with debounced idle reset
  *   3. `SwipeNav` button clicks (via `goTo` callback)
  *
- * A `canTransition` ref prevents multiple transitions from stacking while
- * the exit animation is still running.
+ * A `canTransition` ref gate prevents multiple transitions from stacking while
+ * the Framer Motion exit animation is still running on Celo MiniPay.
  *
  * Consumed by the Celo mobile task-feed page (`/`) where workers browse
  * and accept tasks posted by AI agents on the AgentHands contract.
