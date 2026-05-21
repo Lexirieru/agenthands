@@ -4,7 +4,7 @@ import gsap from 'gsap';
 
 /**
  * Fade-and-rise entrance for a single element.
- * Used on Celo task cards and form containers to soften page transitions.
+ * Used on Celo task cards, modal overlays, and form containers to soften page transitions.
  *
  * @param el    - GSAP tween target (element, selector, or NodeList).
  * @param delay - Seconds to wait before the tween starts (default `0`).
