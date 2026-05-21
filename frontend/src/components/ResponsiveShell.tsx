@@ -15,8 +15,8 @@ import NavBar from "./NavBar";
  * @see SwipeNav — horizontal gesture routing for Celo MiniPay
  * @see NavBar — bottom tab bar for Celo mobile layout
  *
- * Must be a Client Component because it reads `useIsMobile`, which depends on
- * `matchMedia` — a browser-only API.
+ * Must be a Client Component (`"use client"`) because it reads `useIsMobile`,
+ * which depends on `matchMedia` — a browser-only API unavailable during Next.js SSR.
  */
 export default function ResponsiveShell({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
