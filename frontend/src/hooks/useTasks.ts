@@ -50,6 +50,7 @@ export const taskQueryKeys = {
   list: () => [...taskQueryKeys.all, "list"] as const,
   /** @param id Task ID as string or bigint — normalised to string for stable cache keying on Celo. */
   detail: (id: string | bigint) => [...taskQueryKeys.all, "detail", id.toString()] as const,
+  /** Cache key for `taskCount` reads — used to coordinate invalidation after write transactions. */
   count: () => [...taskQueryKeys.all, "count"] as const,
 };
 
