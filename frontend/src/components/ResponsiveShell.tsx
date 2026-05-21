@@ -8,8 +8,12 @@ import NavBar from "./NavBar";
  * Layout switcher between the mobile and desktop shells.
  *
  * Below the 768 px `md:` breakpoint (Celo MiniPay / phones): wraps children
- * in SwipeNav for horizontal gesture routing and renders NavBar at the bottom.
- * Above the breakpoint: renders a plain flex <main> with no swipe or bottom nav.
+ * in `SwipeNav` for horizontal gesture routing and renders `NavBar` at the bottom.
+ * Above the breakpoint: renders a plain `<main>` flex container with no swipe or bottom nav.
+ *
+ * @since 1.0.0
+ * @see SwipeNav — horizontal gesture routing for Celo MiniPay
+ * @see NavBar — bottom tab bar for Celo mobile layout
  *
  * Must be a Client Component because it reads `useIsMobile`, which depends on
  * `matchMedia` — a browser-only API.
