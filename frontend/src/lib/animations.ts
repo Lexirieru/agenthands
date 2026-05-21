@@ -1,5 +1,7 @@
 import gsap from 'gsap';
 
+/** @module animations — GSAP utility functions for AgentHands Celo UI transitions. */
+
 /**
  * Fade-and-rise entrance for a single element.
  * Used on Celo task cards and form containers to soften page transitions.
