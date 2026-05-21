@@ -63,7 +63,11 @@ export function useTaskCount() {
   });
 }
 
-/** Fetch a single task by its uint256 ID from the Celo mainnet contract. */
+/**
+ * Fetch a single task by its uint256 ID from the Celo mainnet contract.
+ * @since 1.0.0
+ * @param taskId 1-based uint256 task ID assigned by `createTask` on Celo.
+ */
 export function useTask(taskId: bigint) {
   return useReadContract({
     address: AGENTHANDS_ADDRESS,
