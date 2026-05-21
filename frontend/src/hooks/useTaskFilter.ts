@@ -53,5 +53,6 @@ export function useTaskFilter(tasks: TaskData[]) {
     setSearch('');
   };
 
+  /** @see TaskData — fields available for search (title, description, location) */
   return { filter, setFilter, search, setSearch, filteredTasks, clearFilters };
 }
