@@ -17,6 +17,9 @@ import ReputationRegistryABI from '@/abi/ReputationRegistry.json';
  * renders as "ERC-8004 Verified" (green) with a review count from the
  * Reputation Registry and a link to the agent's on-chain metadata URI.
  * Unverified agents show an "Unverified Agent" chip instead.
+ *
+ * @since 1.0.0
+ * @see IDENTITY_REGISTRY — `0x8004A818BFB912233c491871b3d84c89A494BD9e` on Celo mainnet
  */
 /** Props for AgentBadge — the Celo address to look up in the ERC-8004 registries. */
 interface AgentBadgeProps {
