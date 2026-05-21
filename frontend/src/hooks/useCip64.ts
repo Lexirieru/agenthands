@@ -39,6 +39,7 @@ export function useCip64() {
     setSupported(!!(eth?.isMiniPay || eth?.isValora));
   }, []);
 
+  /** Spread this object directly into `writeContract` args to add CIP-64 fee fields on Celo. */
   return supported
     ? ({ feeCurrency: USDC_FEE_ADAPTER, type: "cip64" as const } as const)
     : ({} as const);
