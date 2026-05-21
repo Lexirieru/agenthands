@@ -16,7 +16,10 @@ import { useState, useEffect } from "react";
  *
  * @param breakpoint - Pixel width threshold (exclusive upper bound).
  * @returns `true` while the viewport is below `breakpoint` px; `false` otherwise.
- *   Initialises to `false` on SSR and updates synchronously in the first paint effect.
+ *   Initialises to `false` on SSR and updates synchronously on the first client paint.
+ *
+ * @since 1.0.0
+ * @see {@link ResponsiveShell} — primary consumer that switches mobile/desktop layouts
  *
  * @example
  * ```tsx
