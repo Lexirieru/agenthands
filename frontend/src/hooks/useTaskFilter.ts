@@ -28,6 +28,7 @@ import type { TaskData } from '@/types/task';
  * @returns Filter state, setters, filtered task slice, and `clearFilters` helper.
  */
 export function useTaskFilter(tasks: TaskData[]) {
+  /** Current TaskStatus filter; 'all' skips status filtering on Celo task feed. */
   const [filter, setFilter] = useState<number | 'all'>('all');
   const [search, setSearch] = useState('');
 
