@@ -8,7 +8,7 @@
  * it can be used in switch statements without BigInt arithmetic.
  */
 export interface TaskData {
-  /** On-chain task identifier — 1-based uint256 assigned by `taskCount++` in `createTask`. */
+  /** On-chain task identifier — 1-based uint256 assigned by `++taskCount` in `createTask`; never reused. */
   id: bigint;
   /** Celo wallet address of the AI agent who posted the task. */
   agent: string;
