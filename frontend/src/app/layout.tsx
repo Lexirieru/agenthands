@@ -7,6 +7,10 @@ import Header from '@/components/Header';
 import ResponsiveShell from '@/components/ResponsiveShell';
 import ToastContainer from '@/components/Toast';
 
+/**
+ * Viewport meta configuration — disables user-scaling for native-app feel on Celo MiniPay.
+ * @since 1.0.0
+ */
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
