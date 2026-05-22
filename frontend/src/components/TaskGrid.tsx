@@ -1,4 +1,5 @@
 'use client';
+/** @module TaskGrid — GSAP-animated desktop task grid for the Celo AgentHands marketplace. */
 import { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import TaskCard from '@/components/TaskCard';
