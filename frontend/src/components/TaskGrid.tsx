@@ -33,6 +33,7 @@ interface TaskGridProps {
  * reset after searching for Celo tasks by location or keyword.
  */
 export default function TaskGrid({ tasks, search, onClearFilters }: TaskGridProps) {
+  /** Container ref passed to `gsap.context` so GSAP animations are scoped and cleaned up on unmount. */
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
