@@ -49,7 +49,10 @@ interface ProofUploadProps {
   ref?: Ref<ProofUploadHandle>;
 }
 
-/** Shape of the JSON object stored in localStorage to persist upload drafts across refreshes. */
+/**
+ * Shape of the JSON object stored in `localStorage` to persist Celo proof upload drafts across page refreshes.
+ * @since 1.0.0
+ */
 interface DraftPayload {
   cid: string;
   mode: Mode;
