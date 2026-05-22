@@ -139,6 +139,10 @@ export function truncateAddress(address: string, start = 6, end = 4): string {
  * before being passed to the Date constructor. Relative labels are returned for events
  * within the last 7 days (e.g. "3h ago"), which covers most in-progress task activity;
  * older dates fall back to `toLocaleDateString()` for brevity.
+ *
+ * @since 1.0.0
+ * @param dateStr Unix timestamp in seconds (Celo block time) or ISO date string.
+ * @returns       Relative label (e.g. `"3h ago"`) or locale date string.
  */
 export function formatDate(dateStr: string | number): string {
   const date = typeof dateStr === 'number' ? new Date(dateStr * 1000) : new Date(dateStr);
