@@ -45,6 +45,7 @@ export default function SwipeCard({ task, index, total }: Props) {
   const tokenInfo = tokenInfoForAddress(task.paymentToken);
   const rewardFormatted = formatTokenAmount(task.reward, tokenInfo.decimals);
 
+  /** Tailwind badge classes keyed by Celo `TaskStatus` enum value (0=Open … 5=Cancelled). */
   const statusStyle: Record<number, string> = {
     0: "bg-emerald-100 text-emerald-700",
     1: "bg-blue-100 text-blue-700",
