@@ -25,11 +25,15 @@ type Kind = 'image' | 'text' | 'text+image';
  * `ProofUploadHandle.ensureUploaded()` is the imperative API called by the
  * parent's Submit button to flush any pending text before the tx fires.
  */
+/**
+ * Imperative handle exposed by `ProofUpload` via `useImperativeHandle`.
+ * @since 1.0.0
+ */
 export interface ProofUploadHandle {
   /**
-   * Called by the parent's Submit button. Returns the CID — uploading
+   * Called by the parent's Submit button. Returns the Pinata IPFS CID — uploading
    * pending text content if needed. Returns null if there's nothing to
-   * upload yet (and the parent should surface that to the user).
+   * upload yet (and the parent should surface that to the user on Celo).
    */
   ensureUploaded: () => Promise<string | null>;
 }
