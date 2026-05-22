@@ -34,6 +34,8 @@ export default function ConnectPrompt({
   const isMiniPay = useIsMiniPay();
 
   const handleConnect = () => {
+    // Prefer the injected connector (MiniPay / MetaMask) so Celo wallet state is reused;
+    // fall back to the first available connector for generic desktop browsers.
     const connector = connectors.find((c) => c.id === "injected") || connectors[0];
     if (connector) connect({ connector });
   };
