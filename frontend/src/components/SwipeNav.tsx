@@ -37,7 +37,7 @@ export default function SwipeNav({ children }: { children: React.ReactNode }) {
   /** True during the 120 ms snap animation that runs before the route transition fires. */
   const [snapping, setSnapping] = useState(false);
 
-  // Map /tasks to / for tab matching
+  // Map /tasks/* to / so the Feed tab stays active on Celo task detail pages.
   const normalizedPath = pathname === "/tasks" ? "/" : pathname;
 
   const onTouchStart = (e: React.TouchEvent) => {
