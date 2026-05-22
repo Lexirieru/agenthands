@@ -34,7 +34,7 @@ export default function SwipeNav({ children }: { children: React.ReactNode }) {
   const isHorizontal = useRef(false);
   /** Current translateX offset in pixels, creating a rubber-band drag effect during swipe. */
   const [offset, setOffset] = useState(0);
-  /** True during the 120 ms snap animation that runs before the route transition fires. */
+  /** True during the 120 ms CSS snap animation before Next.js `router.push` fires on Celo MiniPay. */
   const [snapping, setSnapping] = useState(false);
 
   // Map /tasks/* to / so the Feed tab stays active on Celo task detail pages.
