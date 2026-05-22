@@ -11,7 +11,7 @@ import type { TaskData } from '@/types/task';
  * Receives a pre-filtered, pre-paginated task slice from the parent page.
  */
 interface TaskGridProps {
-  /** Already-filtered and paginated tasks to render. */
+  /** Already-filtered and paginated `TaskData[]` slice from `useTaskFilter` + pagination state on Celo. */
   tasks: TaskData[];
   /** Active search string — displayed in the empty-state "No results for [query]" message; may be empty. */
   search?: string;
