@@ -1,4 +1,5 @@
 "use client";
+/** @module SwipeCard — Full-screen task card rendered inside SwipeStack for the Celo MiniPay feed. */
 
 import Link from "next/link";
 import { MapPin, Clock, ArrowRight, Share2 } from "lucide-react";
