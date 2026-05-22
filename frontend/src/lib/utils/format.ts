@@ -96,9 +96,13 @@ export function tokenInfoForAddress(addr: string | undefined | null): TokenInfo 
 }
 
 /**
- * Render a reward amount with its token symbol, picking the right format:
- *  - stablecoins: "$0.5" (USD-style, since they're 1:1 with USD)
- *  - everything else: "0.1 CELO" (no $ prefix — value isn't $-pegged)
+ * Render a reward amount with its token symbol, picking the right format.
+ * @since 1.0.0
+ *  - Stablecoins (USDC/USDT/USDm): `"$0.5"` (USD-style, 1:1 peg on Celo)
+ *  - Non-stablecoins (CELO ERC-20): `"0.1 CELO"` (no `$` — value not USD-pegged)
+ * @param raw          Raw on-chain `bigint` reward amount.
+ * @param paymentToken Celo ERC-20 address of the reward token.
+ * @returns            Human-readable reward string with appropriate prefix/suffix.
  */
 export function formatRewardDisplay(
   raw: string | number | bigint,
