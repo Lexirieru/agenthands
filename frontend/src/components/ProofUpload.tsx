@@ -61,6 +61,7 @@ interface DraftPayload {
   attachedImageCID?: string;
 }
 
+/** Pinata dedicated gateway for previewing uploaded Celo proof CIDs before on-chain `submitProof`. */
 const PINATA_GATEWAY = 'https://gateway.pinata.cloud/ipfs';
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://agenthands-production.up.railway.app';
 
