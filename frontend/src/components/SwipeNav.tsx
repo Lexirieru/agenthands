@@ -1,4 +1,5 @@
 "use client";
+/** @module SwipeNav — Horizontal swipe gesture router for Celo MiniPay mobile shell. */
 
 import { useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
