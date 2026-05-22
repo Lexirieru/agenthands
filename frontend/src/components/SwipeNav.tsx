@@ -18,6 +18,9 @@ const tabs = ["/", "/search", "/dashboard"];
  * multiplier, interior transitions use 0.35×. On release, a 120 ms snap
  * animation completes before the route changes so the transition feels
  * physical on low-end Celo phones.
+ *
+ * @since 1.0.0
+ * @see ResponsiveShell — mounts SwipeNav only below the 768 px breakpoint
  */
 export default function SwipeNav({ children }: { children: React.ReactNode }) {
   const router = useRouter();
