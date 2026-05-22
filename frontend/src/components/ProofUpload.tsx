@@ -38,7 +38,11 @@ export interface ProofUploadHandle {
   ensureUploaded: () => Promise<string | null>;
 }
 
-/** Props for ProofUpload. `taskId` is used to namespace the localStorage draft key. */
+/**
+ * Props for `ProofUpload`.
+ * @since 1.0.0
+ * `taskId` namespaces the `localStorage` draft so multiple Celo tasks can have independent drafts.
+ */
 interface ProofUploadProps {
   /** Called with the IPFS CID whenever a new upload completes or is cleared. */
   onCIDReady: (cid: string) => void;
