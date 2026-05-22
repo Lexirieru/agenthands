@@ -4,6 +4,7 @@
 import { useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
+/** Ordered route list for Celo MiniPay bottom tabs: Feed → Explore → Dashboard. */
 const tabs = ["/", "/search", "/dashboard"];
 
 /**
