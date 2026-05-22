@@ -66,9 +66,12 @@ export type TokenInfo = {
 };
 
 /**
- * Look up the user-facing metadata for a payment token address. Falls back
- * to USDC when the address is missing (legacy code paths) and to a generic
- * "TOKEN" label for anything not in our registry, so callers never crash.
+ * Look up the user-facing metadata for a Celo payment token address.
+ * @since 1.0.0
+ * Falls back to USDC when the address is missing (legacy code paths) and to a generic
+ * `"TOKEN"` label for anything not in the registry, so callers never crash.
+ * @param addr Celo ERC-20 token address, or `null`/`undefined` for legacy USDC paths.
+ * @returns `TokenInfo` with symbol, decimals, isStablecoin, and logo for the given token.
  */
 export function tokenInfoForAddress(addr: string | undefined | null): TokenInfo {
   if (!addr) {
