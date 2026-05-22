@@ -72,8 +72,8 @@ export default function SelfVerify({ onVerified }: SelfVerifyProps) {
     [selfApp]
   );
 
-  // Source of truth is the backend — query on mount and whenever the wallet
-  // address changes, with a light poll while the verify dialog is open so we
+  // Source of truth is the backend — query on mount and whenever the Celo wallet
+  // address changes, with a 3 s poll while the verify dialog is open so we
   // pick up the "verified" flip the moment the Self relayer hits our backend.
   // We also fire onVerified() exactly once on transition, so the parent gets
   // notified even when the deep-link path is used (no SelfQRcodeWrapper
