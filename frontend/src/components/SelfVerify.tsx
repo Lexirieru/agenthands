@@ -43,6 +43,9 @@ interface SelfVerifyProps {
  * The `notifiedRef` guard ensures `onVerified` fires exactly once even
  * when the deep-link path is used (no `SelfQRcodeWrapper.onSuccess`
  * callback available in that case).
+ *
+ * @since 1.0.0
+ * @see SelfQR — dynamically loaded QR wrapper for Celo ZK identity scan
  */
 export default function SelfVerify({ onVerified }: SelfVerifyProps) {
   const { address } = useAccount();
