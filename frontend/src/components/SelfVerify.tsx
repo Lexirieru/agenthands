@@ -21,8 +21,10 @@ const SelfQR = dynamic(() => import('./SelfQR'), {
 });
 
 /**
- * Props for SelfVerify — the only required callback fires once when the
- * connected Celo wallet transitions from unverified → verified.
+ * Props for `SelfVerify`.
+ * @since 1.0.0
+ * The only required callback fires exactly once when the connected Celo wallet
+ * transitions from unverified → verified via Self Protocol ZK proof.
  */
 interface SelfVerifyProps {
   onVerified: (userId: string) => void;
