@@ -52,8 +52,8 @@ export default function SelfVerify({ onVerified }: SelfVerifyProps) {
   const [mobileTab, setMobileTab] = useState<'deeplink' | 'qr'>('deeplink');
   const isMobile = useIsMobile();
   const isMiniPay = useIsMiniPay();
-  // Use the deep-link path on anything that's likely scanning its own QR
-  // would be painful — mobile browsers and embedded MiniPay/Valora dapps.
+  // Use the deep-link path on Celo MiniPay / Valora / mobile browsers where
+  // scanning a QR with the same device would be painful or impossible.
   const preferDeepLink = isMobile || !!isMiniPay;
 
   /**
