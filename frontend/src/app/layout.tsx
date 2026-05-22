@@ -55,6 +55,9 @@ export const metadata: Metadata = {
  * so wagmi can rehydrate the connected Celo wallet without a flash of
  * "disconnected" state on first render. Wraps children in ResponsiveShell,
  * which switches between SwipeNav (mobile/MiniPay) and a plain <main> (desktop).
+ *
+ * @since 1.0.0
+ * @see ContextProvider — Wagmi + TanStack Query root provider for Celo mainnet
  */
 export default async function RootLayout({
   children,
