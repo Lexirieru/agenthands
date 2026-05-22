@@ -69,7 +69,10 @@ interface DraftPayload {
 const PINATA_GATEWAY = 'https://gateway.pinata.cloud/ipfs';
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://agenthands-production.up.railway.app';
 
-/** Returns the namespaced localStorage key for a task's proof draft, or null when taskId is absent. */
+/**
+ * Returns the namespaced `localStorage` key for a Celo task's proof draft, or `null` when `taskId` is absent.
+ * @since 1.0.0
+ */
 function draftKey(taskId: ProofUploadProps['taskId']) {
   if (taskId === undefined || taskId === null) return null;
   return `agenthands-proof-draft-${String(taskId)}`;
