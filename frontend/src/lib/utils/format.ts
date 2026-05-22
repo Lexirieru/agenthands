@@ -115,6 +115,7 @@ export function formatRewardDisplay(
 
 /**
  * Truncate a Celo wallet address for display — e.g. `0xADA046…3f746`.
+ * @since 1.0.0
  * Default: first 6 chars + `…` + last 4 chars, matching Celoscan's style.
  *
  * @param address Full 42-character Celo/EVM address string.
