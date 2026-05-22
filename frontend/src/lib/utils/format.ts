@@ -19,9 +19,13 @@ export function formatUSDC(raw: string | number | bigint): string {
 
 /**
  * Format an arbitrary on-chain token amount given its decimals.
+ * @since 1.0.0
  *  - `1_000_000n` at 6 decimals → `"1"` (1 USDC on Celo)
  *  - `100_000_000_000_000_000n` at 18 decimals → `"0.1"` (0.1 CELO)
  *  - With `trimTrailingZeros=false`: `"1"` → `"1.00"` (legacy USDC display).
+ * @param raw      Raw `bigint` token amount from Celo contract ABI decoding.
+ * @param decimals Token decimal precision (6 for USDC/USDT, 18 for CELO/USDm).
+ * @returns        Human-readable decimal string with trailing zeros stripped by default.
  */
 export function formatTokenAmount(
   raw: string | number | bigint,
