@@ -23,6 +23,9 @@ import type { TaskData } from "@/types/task";
  * Open tasks show an "Accept Task" CTA; non-Open tasks show "View Details".
  * Includes a `navigator.share` button so workers can forward Celo task links
  * to teammates via the device's native share sheet.
+ *
+ * @since 1.0.0
+ * @see SwipeStack — manages the stack of SwipeCard instances for the Celo feed
  */
 /**
  * Props for `SwipeCard`.
