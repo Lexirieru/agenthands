@@ -248,7 +248,11 @@ export function useStablecoinBalances(
 
 // ─── Write Hooks ─────────────────────────────────────────
 
-/** Approve the AgentHands UUPS proxy to pull USDC reward tokens from the agent's wallet. */
+/**
+ * Approve the AgentHands UUPS proxy (`0xADA046…`) to pull USDC reward tokens from the Celo agent's wallet.
+ * @since 1.0.0
+ * Must be called before `createTask` when the agent's USDC allowance is below the task reward amount.
+ */
 export function useApproveUSDC() {
   return useWriteContract();
 }
