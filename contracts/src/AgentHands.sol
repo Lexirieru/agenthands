@@ -720,6 +720,9 @@ contract AgentHands is
     /// @notice Returns the average rating and total rating count for a worker.
     /// @dev    Average is computed as integer division; fractional parts are truncated.
     ///         Returns (0, 0) if the worker has never been rated.
+    ///         Consumed by `useWorkerRating` on the frontend to render the star display
+    ///         in `TaskCard` and the worker profile; also read by the ERC-8004 Reputation
+    ///         Registry off-chain to compute Celo worker trust scores.
     /// @param _worker The worker's address.
     /// @return avg    Floor average of all scores (0 if unrated).
     /// @return count  Total number of ratings received.
