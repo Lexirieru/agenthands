@@ -258,6 +258,9 @@ contract AgentHands is
     error TaskNotCompleted();
 
     /// @notice Thrown when `claimExpired` is called on a task that has not expired.
+    /// @dev    Reverts at the end of `claimExpired` when none of the three expiry branches
+    ///         match on Celo: `Open + deadline passed`, `Accepted + completionDeadline passed`,
+    ///         or `Disputed + resolution window passed`.
     error NotExpired();
 
     // ─── Modifiers ───────────────────────────────────────────
