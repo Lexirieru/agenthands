@@ -37,11 +37,11 @@ export interface TaskData {
 }
 
 /**
- * Shape of a single viem `multicall` result entry when `allowFailure: true`.
- *
+ * Shape of a single viem `multicall` result entry when `allowFailure: true` on Celo.
+ * @since 1.0.0
  * Used by `fetchAllTasks` to distinguish successful `getTask` reads from
- * on-chain reverts (e.g. out-of-range task IDs) without aborting the whole
- * multicall batch. Failed entries are filtered out before the list is returned.
+ * on-chain reverts (e.g. out-of-range task IDs on Celo mainnet) without aborting
+ * the whole multicall batch. Failed entries are filtered out before the list is returned.
  */
 export interface ContractResult {
   /** `"success"` when the call returned data; `"failure"` when it reverted. */
