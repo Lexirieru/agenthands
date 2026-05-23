@@ -120,9 +120,9 @@ contract AgentHands is
     /// @param paymentToken Whitelisted ERC-20 token address used for the reward.
     event TaskCreated(uint256 indexed taskId, address indexed agent, uint256 reward, address paymentToken);
 
-    /// @notice Emitted when a worker accepts an open task.
+    /// @notice Emitted when a Celo worker accepts an open task; transitions status Open → Accepted.
     /// @param taskId The ID of the accepted task.
-    /// @param worker The address of the worker who accepted.
+    /// @param worker Celo address of the human worker who accepted the task.
     event TaskAccepted(uint256 indexed taskId, address indexed worker);
 
     /// @notice Emitted when a worker submits proof of completion.
