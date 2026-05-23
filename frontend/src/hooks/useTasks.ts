@@ -98,10 +98,10 @@ async function fetchAllTasks(): Promise<TaskData[]> {
 }
 
 /**
- * Fetch a single task by its on-chain uint256 ID.
- * Returns `null` if the contract call reverts (e.g. ID out of range).
- *
- * @param taskId - The 1-based task ID from the AgentHands contract.
+ * Fetch a single task by its on-chain `uint256` ID from Celo mainnet.
+ * @since 1.0.0
+ * Returns `null` if the contract call reverts (e.g. ID out of range or zero).
+ * @param taskId 1-based task ID assigned by `createTask` on the AgentHands Celo contract.
  */
 async function fetchTask(taskId: bigint): Promise<TaskData | null> {
   try {
