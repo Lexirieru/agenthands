@@ -115,8 +115,8 @@ export default function DollarsCard({ address, includeCelo = false }: DollarsCar
         </div>
       </div>
 
-      {/* Floating chevron pill — sits at the bottom edge, half-overlapping the
-          card. Click toggles the breakdown. Rotates 180° on open. */}
+      {/* Floating chevron pill — sits at the bottom edge of the Celo DollarsCard,
+          half-overlapping the card. Click toggles the per-token breakdown; rotates 180° when open. */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
