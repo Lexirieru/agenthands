@@ -17,7 +17,12 @@ import { useStablecoinBalances } from '@/hooks/useAgentHands';
  * Clicking the chevron expands an animated per-token breakdown rendered as
  * white sub-cards inside the same dark panel — matching MiniPay's style.
  */
+/**
+ * Props for `DollarsCard`.
+ * @since 1.0.0
+ */
 interface DollarsCardProps {
+  /** Connected Celo wallet address to fetch stablecoin balances for. */
   address: `0x${string}` | undefined;
   /**
    * Desktop only — fold the CELO ERC-20 balance into the total via Chainlink CELO/USD feed
