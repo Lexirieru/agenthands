@@ -46,6 +46,6 @@ export interface TaskData {
 export interface ContractResult {
   /** `"success"` when the call returned data; `"failure"` when it reverted. */
   status: "success" | "failure";
-  /** The decoded TaskData struct — only valid when `status === "success"`. */
+  /** Decoded `Task` struct from the Celo ABI — only valid when `status === "success"`; undefined on revert. */
   result: TaskData;
 }
