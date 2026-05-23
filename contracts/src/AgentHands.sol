@@ -243,6 +243,8 @@ contract AgentHands is
     error CompletionDeadlinePassed();
 
     /// @notice Thrown when a rating score is outside the 1–5 range.
+    /// @dev    Reverts in `rateWorker` and `rateAgent` when `_score < 1 || _score > 5` on Celo.
+    ///         Scores are accumulated in `workerTotalScore` / `agentTotalScore` for floor-average.
     error InvalidRating();
 
     /// @notice Thrown when attempting to rate a task that has already been rated.
