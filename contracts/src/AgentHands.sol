@@ -708,6 +708,9 @@ contract AgentHands is
     }
 
     /// @notice Returns the full Task struct for a given task ID.
+    /// @dev    Returns a zero-value struct (not a revert) for IDs beyond `taskCount` — safe
+    ///         to call in a viem multicall batch on Celo RPC (forno.celo.org) with `allowFailure: true`.
+    ///         The frontend uses `fetchAllTasks` to batch-read every task in one multicall round-trip.
     /// @param _taskId  The ID of the task to retrieve.
     /// @return task    The Task struct stored at that ID (zero-value struct if ID does not exist).
     function getTask(uint256 _taskId) external view returns (Task memory) {
