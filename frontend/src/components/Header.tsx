@@ -67,11 +67,12 @@ export default function Header() {
   const isActive = (href: string) => pathname === href;
 
   /**
-   * Initiates wallet connection — prefers the injected connector (MiniPay/MetaMask)
-   * before falling back to the first available connector (usually WalletConnect).
+   * Initiates Celo wallet connection — prefers the injected connector (MiniPay/MetaMask)
+   * so the existing wallet session is reused; falls back to the first available connector (WalletConnect).
+   * @since 1.0.0
    */
   const handleConnect = () => {
-    // Priority: injected (MiniPay/MetaMask) -> walletConnect
+    // Priority: injected (MiniPay/MetaMask) → walletConnect (for non-injected Celo wallets)
     const connector = connectors.find(c => c.id === 'injected') || connectors[0];
     if (connector) {
       connect({ connector });
