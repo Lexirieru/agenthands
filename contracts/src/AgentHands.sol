@@ -208,6 +208,8 @@ contract AgentHands is
     error TaskNotOpen();
 
     /// @notice Thrown when an action requires `TaskStatus.Accepted` but the task is not accepted.
+    /// @dev    Reverts in `submitProof` — worker can only submit proof while the task is in `Accepted`
+    ///         status on Celo. Guards the `completionDeadline` window check.
     error TaskNotAccepted();
 
     /// @notice Thrown when an action requires `TaskStatus.Submitted` but proof has not been submitted.
