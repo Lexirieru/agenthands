@@ -110,8 +110,10 @@ export function useAgentRating(agent: `0x${string}`) {
 }
 
 /**
- * Poll the USDC balance (`0xcebA9300…`, 6 decimals) for `address` every 8 s.
- * Used by the header pill and the mobile dashboard stablecoin total.
+ * Poll the USDC balance (`0xcebA9300…`, 6 decimals) for `address` every 8 s on Celo.
+ * @since 1.0.0
+ * Used by the header balance pill and the mobile DollarsCard stablecoin total.
+ * @param address Connected Celo wallet address; pass `undefined` to skip fetching.
  */
 export function useUSDCBalance(address: `0x${string}` | undefined) {
   return useReadContract({
