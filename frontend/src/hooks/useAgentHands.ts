@@ -313,7 +313,11 @@ export function useCancelTask() {
   return useWriteContract();
 }
 
-/** Agent rates the worker (1–5) after task completion on Celo; immutable once set. */
+/**
+ * Agent rates the worker (1–5) after task completion on Celo; immutable once set on-chain.
+ * @since 1.0.0
+ * Score is accumulated in `workerTotalScore` and `workerRatingCount`; averaged by `useWorkerRating`.
+ */
 export function useRateWorker() {
   return useWriteContract();
 }
