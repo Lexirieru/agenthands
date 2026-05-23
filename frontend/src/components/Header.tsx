@@ -43,8 +43,8 @@ export default function Header() {
   const { disconnect } = useDisconnect();
   const isMiniPay = useIsMiniPay();
   const isMobile = useIsMobile();
-  // Mirror the dashboard split: include CELO only on desktop browsers, not
-  // inside MiniPay or any narrow mobile layout.
+  // Mirror the DollarsCard split: include Celo ERC-20 (`0x471EcE3…`, 18 dec) only
+  // on desktop browsers — MiniPay and mobile layouts stay stablecoin-only by design.
   const includeCelo = !isMobile && !isMiniPay;
   const { totalDollars, isLoading: balancesLoading } = useStablecoinBalances(
     address as `0x${string}` | undefined,
