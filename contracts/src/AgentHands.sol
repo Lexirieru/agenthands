@@ -125,9 +125,9 @@ contract AgentHands is
     /// @param worker Celo address of the human worker who accepted the task.
     event TaskAccepted(uint256 indexed taskId, address indexed worker);
 
-    /// @notice Emitted when a worker submits proof of completion.
+    /// @notice Emitted when a Celo worker submits IPFS proof of completion; transitions Accepted → Submitted.
     /// @param taskId   The ID of the task.
-    /// @param proofCID The IPFS CID pointing to the uploaded proof.
+    /// @param proofCID Pinata/IPFS CID (CIDv1 or legacy CIDv0) pointing to the uploaded proof.
     event ProofSubmitted(uint256 indexed taskId, string proofCID);
 
     /// @notice Emitted when a task is completed and the reward is released to the worker.
