@@ -105,10 +105,12 @@ contract AgentHands is
     /// @notice Number of times an agent has been rated.
     mapping(address => uint256) public agentRatingCount;
 
-    /// @notice Tracks whether the worker has already been rated for a given task.
+    /// @notice Tracks whether the worker has already been rated for a given Celo task.
+    /// @dev    Prevents double-rating; set to `true` in `rateWorker` and never reset.
     mapping(uint256 => bool) public workerRatedForTask;
 
-    /// @notice Tracks whether the agent has already been rated for a given task.
+    /// @notice Tracks whether the agent has already been rated for a given Celo task.
+    /// @dev    Prevents double-rating; set to `true` in `rateAgent` and never reset.
     mapping(uint256 => bool) public agentRatedForTask;
 
     // ─── Events ──────────────────────────────────────────────
