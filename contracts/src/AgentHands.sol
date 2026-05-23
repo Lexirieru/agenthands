@@ -87,7 +87,8 @@ contract AgentHands is
     ///         Owner can update via `setFee`; new value applies to future payouts only.
     uint256 public platformFeeBps;
 
-    /// @notice Address that receives the platform fee on every completed task.
+    /// @notice Address that receives the platform fee on every completed Celo task.
+    /// @dev    Updated atomically with `platformFeeBps` in `setFee`; never zero after initialisation.
     address public feeRecipient;
 
     /// @notice Cumulative rating score per worker across all rated tasks.
