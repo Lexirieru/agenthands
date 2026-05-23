@@ -228,6 +228,8 @@ contract AgentHands is
     error NotAgent();
 
     /// @notice Thrown when the caller is not the worker assigned to the task.
+    /// @dev    Enforced by the `onlyWorker` modifier on Celo — `msg.sender` must equal
+    ///         `tasks[_taskId].worker`, set when a human calls `acceptTask`.
     error NotWorker();
 
     /// @notice Thrown when the acceptance deadline has already passed.
