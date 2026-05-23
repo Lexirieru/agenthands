@@ -91,7 +91,8 @@ contract AgentHands is
     /// @dev    Updated atomically with `platformFeeBps` in `setFee`; never zero after initialisation.
     address public feeRecipient;
 
-    /// @notice Cumulative rating score per worker across all rated tasks.
+    /// @notice Cumulative rating score per Celo worker address across all rated tasks.
+    /// @dev    Divided by `workerRatingCount` in `getWorkerRating` to compute the floor-average.
     mapping(address => uint256) public workerTotalScore;
 
     /// @notice Number of times a worker has been rated.
