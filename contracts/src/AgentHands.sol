@@ -78,8 +78,9 @@ contract AgentHands is
     /// @dev    IDs start at 1; ID 0 is never valid and will return a zero-value struct.
     mapping(uint256 => Task) public tasks;
 
-    /// @notice Whitelist of ERC-20 tokens accepted as payment.
-    /// @dev    Only the owner can add or remove tokens via `setAllowedToken`.
+    /// @notice Whitelist of ERC-20 tokens accepted as Celo task payment.
+    /// @dev    Only the proxy owner can add or remove tokens via `setAllowedToken`.
+    ///         Celo mainnet: USDC `0xcebA9300…`, USDT, USDm, CELO ERC-20 `0x471EcE3…`.
     mapping(address => bool) public allowedTokens;
 
     /// @notice Platform fee charged on successful Celo payouts, expressed in basis points.
