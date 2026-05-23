@@ -190,7 +190,8 @@ contract AgentHands is
 
     // ─── Errors ──────────────────────────────────────────────
 
-    /// @notice Thrown when the payment token is not on the whitelist.
+    /// @notice Thrown when the payment token is not on the Celo whitelist.
+    /// @dev    Reverts in `createTask` when `allowedTokens[_paymentToken]` is `false`.
     error InvalidToken();
 
     /// @notice Thrown when the reward amount is zero.
