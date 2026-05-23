@@ -42,6 +42,7 @@ const publicClient = createPublicClient({
 // Tasks we don't want to show on the public feed / dashboard. Internal smoke-
 // test tasks, launch demos, and seed data we'd rather not advertise on Celo mainnet. Direct URLs still work
 // (useTaskDetail doesn't filter), so anyone with the link can still see them.
+/** Task IDs excluded from the public Celo feed — smoke-test seeds; direct `/tasks/:id` links still resolve. */
 const HIDDEN_TASK_IDS = new Set<string>(["1", "2"]);
 
 /** @since 1.0.0 Typed TanStack Query key factory — keeps all cache keys in sync across hooks. */
