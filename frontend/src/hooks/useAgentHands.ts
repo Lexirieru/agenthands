@@ -130,13 +130,17 @@ export function useUSDCBalance(address: `0x${string}` | undefined) {
   });
 }
 
+/**
+ * Resolved balance for a single whitelisted Celo stablecoin (USDC, USDT, or USDm).
+ * @since 1.0.0
+ */
 export type StablecoinBalance = {
   symbol: (typeof STABLECOINS)[number]["symbol"];
   address: `0x${string}`;
   decimals: number;
   logo: string | null;
   raw: bigint;
-  /** Floating-point dollars, normalized for the per-token decimals. */
+  /** Floating-point dollar value, normalised by `decimals` (6 for USDC/USDT, 18 for USDm). */
   dollars: number;
 };
 
