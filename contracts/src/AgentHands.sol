@@ -734,6 +734,9 @@ contract AgentHands is
     /// @notice Returns the average rating and total rating count for an agent.
     /// @dev    Average is computed as integer division; fractional parts are truncated.
     ///         Returns (0, 0) if the agent has never been rated.
+    ///         Consumed by `useAgentRating` on the Celo frontend to render the star count
+    ///         inside the `AgentBadge` component — higher averages unlock a gold badge tier.
+    ///         Also feeds into the ERC-8004 Agent Trust Protocol off-chain index.
     /// @param _agent The agent's address.
     /// @return avg   Floor average of all scores (0 if unrated).
     /// @return count Total number of ratings received.
