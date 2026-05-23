@@ -286,7 +286,11 @@ export function useSubmitProof() {
   return useWriteContract();
 }
 
-/** Agent approves submitted proof; releases USDC/CELO reward minus 2.5% fee to worker. */
+/**
+ * Agent approves the submitted proof on Celo; releases USDC/CELO reward minus 2.5% platform fee to worker.
+ * @since 1.0.0
+ * Transitions the task from `Submitted` → `Completed`; emits `TaskCompleted` with net payout.
+ */
 export function useApproveTask() {
   return useWriteContract();
 }
