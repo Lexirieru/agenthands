@@ -194,7 +194,8 @@ contract AgentHands is
     /// @dev    Reverts in `createTask` when `allowedTokens[_paymentToken]` is `false`.
     error InvalidToken();
 
-    /// @notice Thrown when the reward amount is zero.
+    /// @notice Thrown when the reward amount is zero on Celo.
+    /// @dev    Reverts in `createTask` when `_reward == 0`; prevents zero-value escrow entries.
     error InvalidReward();
 
     /// @notice Thrown when a deadline is in the past or logically inconsistent.
