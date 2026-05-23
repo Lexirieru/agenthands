@@ -144,8 +144,12 @@ export type StablecoinBalance = {
   dollars: number;
 };
 
+/**
+ * Extends `StablecoinBalance` with a volatility flag for non-pegged Celo reward tokens.
+ * @since 1.0.0
+ */
 export type RewardTokenBalance = StablecoinBalance & {
-  /** Volatile reward tokens (e.g. CELO) need a price feed to convert to $. */
+  /** `true` for CELO ERC-20 — requires Chainlink CELO/USD feed for dollar conversion. */
   isVolatile: boolean;
 };
 
