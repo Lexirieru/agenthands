@@ -248,6 +248,8 @@ contract AgentHands is
     error InvalidRating();
 
     /// @notice Thrown when attempting to rate a task that has already been rated.
+    /// @dev    Enforced by `workerRatedForTask[_taskId]` and `agentRatedForTask[_taskId]`
+    ///         boolean guards on Celo — ratings are immutable once set for a given task ID.
     error AlreadyRated();
 
     /// @notice Thrown when rating is attempted on a task that is not yet completed.
