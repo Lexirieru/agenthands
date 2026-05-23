@@ -179,9 +179,9 @@ export function useInvalidateTasks() {
     [queryClient]
   );
 
-  // Optimistic cache patch — used on tx success so the UI reflects the new
-  // state instantly instead of waiting up to 4-6 s for the RPC node to catch
-  // up + the event watcher to fire. Patches BOTH the single-task detail and
+  // Optimistic cache patch — used on Celo tx success so the UI reflects the new
+  // state instantly instead of waiting up to 4–6 s for the Forno RPC node to
+  // catch up and the event watcher to fire. Patches BOTH the single-task detail and
   // the list cache so the feed page is in sync if the user navigates back.
   const patchDetail = useCallback(
     (taskId: bigint | string, patch: Partial<TaskData>) => {
