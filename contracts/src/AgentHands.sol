@@ -218,6 +218,8 @@ contract AgentHands is
     error TaskNotSubmitted();
 
     /// @notice Thrown when resolving a dispute on a task that is not in `Disputed` status.
+    /// @dev    Reverts in `resolveDispute` — the contract owner can only arbitrate after the
+    ///         agent has called `disputeTask`, transitioning the Celo task to `Disputed`.
     error TaskNotDisputed();
 
     /// @notice Thrown when the caller is not the agent who posted the task.
