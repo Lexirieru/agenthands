@@ -203,7 +203,8 @@ contract AgentHands is
     ///         `_completionDeadline <= _deadline`. Celo block timestamps advance ~5 s per block.
     error InvalidDeadline();
 
-    /// @notice Thrown when an action requires `TaskStatus.Open` but the task is not open.
+    /// @notice Thrown when an action requires `TaskStatus.Open` but the task is not open on Celo.
+    /// @dev    Reverts in `acceptTask` (worker can't accept a non-Open task) and `cancelTask`.
     error TaskNotOpen();
 
     /// @notice Thrown when an action requires `TaskStatus.Accepted` but the task is not accepted.
