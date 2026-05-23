@@ -295,7 +295,11 @@ export function useApproveTask() {
   return useWriteContract();
 }
 
-/** Agent opens a dispute on a submitted Celo task; pauses payout for arbitration. */
+/**
+ * Agent opens a dispute on a submitted Celo task; pauses payout pending owner arbitration.
+ * @since 1.0.0
+ * Transitions the task from `Submitted` → `Disputed`; resolved by `resolveDispute` on-chain.
+ */
 export function useDisputeTask() {
   return useWriteContract();
 }
