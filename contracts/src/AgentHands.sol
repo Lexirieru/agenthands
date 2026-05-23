@@ -238,6 +238,8 @@ contract AgentHands is
     error DeadlinePassed();
 
     /// @notice Thrown when the completion deadline has already passed.
+    /// @dev    Reverts in `submitProof` when `block.timestamp > task.completionDeadline` on Celo.
+    ///         Worker loses the reward window; agent may call `claimExpired` to recover escrow.
     error CompletionDeadlinePassed();
 
     /// @notice Thrown when a rating score is outside the 1–5 range.
