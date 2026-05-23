@@ -70,8 +70,8 @@ export default function DollarsCard({ address, includeCelo = false }: DollarsCar
           ${isLoading ? '0' : formatDollars(totalDollars)}
         </p>
 
-        {/* Animated breakdown — stacks inside the same dark card so it feels
-            like one panel that "unfolds", just like MiniPay. */}
+        {/* Animated per-token breakdown — CSS grid expand stacks inside the same
+            dark card so it "unfolds" like MiniPay's native balance UI on Celo. */}
         <div
           className={`grid transition-all duration-300 ease-out ${
             open
