@@ -185,7 +185,8 @@ export function useStablecoinBalances(
     },
   });
 
-  // CELO ERC-20 facade balance — only fetched when the caller opts in.
+  // CELO ERC-20 facade balance (`0x471EcE3…`, 18 decimals on Celo mainnet) —
+  // only fetched when `includeCelo` is true (desktop layout only).
   const celoBalance = useReadContract({
     address: CELO_TOKEN_ADDRESS,
     abi: ERC20_ABI,
