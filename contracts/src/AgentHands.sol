@@ -74,7 +74,8 @@ contract AgentHands is
     /// @dev    Pre-incremented in `createTask` so the first task has ID 1 (never 0).
     uint256 public taskCount;
 
-    /// @notice Maps task ID to its Task struct.
+    /// @notice Maps task ID to its on-chain Task struct on Celo mainnet.
+    /// @dev    IDs start at 1; ID 0 is never valid and will return a zero-value struct.
     mapping(uint256 => Task) public tasks;
 
     /// @notice Whitelist of ERC-20 tokens accepted as payment.
