@@ -233,6 +233,8 @@ contract AgentHands is
     error NotWorker();
 
     /// @notice Thrown when the acceptance deadline has already passed.
+    /// @dev    Reverts in `acceptTask` when `block.timestamp > task.deadline` on Celo.
+    ///         The task is not automatically expired — owner must call `claimExpired` separately.
     error DeadlinePassed();
 
     /// @notice Thrown when the completion deadline has already passed.
