@@ -277,7 +277,11 @@ export function useAcceptTask() {
   return useWriteContract();
 }
 
-/** Submit a Pinata IPFS CID as proof of work for an accepted Celo task. */
+/**
+ * Submit a Pinata IPFS CID as proof of work for an accepted Celo task.
+ * @since 1.0.0
+ * Transitions the task from `Accepted` → `Submitted` on-chain; triggers `ProofSubmitted` event.
+ */
 export function useSubmitProof() {
   return useWriteContract();
 }
