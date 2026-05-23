@@ -104,7 +104,7 @@ export default function Header() {
                 {address.slice(0, 4)}...{address.slice(-3)}
               </button>
             ) : isMiniPay ? (
-              // MiniPay auto-connects — showing a Connect button is discouraged.
+              // Celo MiniPay auto-connects via useAutoConnect — showing a manual Connect button is discouraged per MiniPay UX spec.
               <span className="h-8 px-2.5 rounded-full bg-[var(--card)] text-[#8B4513] text-[10px] font-medium inline-flex items-center">
                 Connecting…
               </span>
