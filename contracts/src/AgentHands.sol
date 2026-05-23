@@ -70,7 +70,8 @@ contract AgentHands is
 
     // ─── State ───────────────────────────────────────────────
 
-    /// @notice Total number of tasks ever created. Also used as the next task ID.
+    /// @notice Total number of tasks ever created on Celo mainnet. Also used as the next task ID.
+    /// @dev    Pre-incremented in `createTask` so the first task has ID 1 (never 0).
     uint256 public taskCount;
 
     /// @notice Maps task ID to its Task struct.
