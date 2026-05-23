@@ -95,8 +95,10 @@ export function useWorkerRating(worker: `0x${string}`) {
 }
 
 /**
- * Read the floor-average rating and submission count for a Celo AI agent
- * address. Score range 1–5; computed as `totalScore / count` (floor).
+ * Read the floor-average rating and submission count for a Celo AI agent address.
+ * @since 1.0.0
+ * Score range 1–5; computed on-chain as `totalScore / count` (floor division).
+ * @returns `{ avg: bigint, count: bigint }` — both zero if the agent is unrated.
  */
 export function useAgentRating(agent: `0x${string}`) {
   return useReadContract({
