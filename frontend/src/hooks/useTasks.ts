@@ -156,9 +156,10 @@ export function useTaskDetail(taskId: bigint | undefined) {
 }
 
 /**
- * Returns imperative cache helpers for the task query cache.
+ * Returns imperative cache helpers for the TanStack Query task cache on Celo.
+ * @since 1.0.0
  * Use `invalidateList` after creating a task, `invalidateDetail` after accepting
- * or completing one, and `patchDetail` for optimistic UI updates on tx success.
+ * or completing one, and `patchDetail` for optimistic UI updates on Celo tx success.
  */
 export function useInvalidateTasks() {
   const queryClient = useQueryClient();
