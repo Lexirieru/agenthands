@@ -82,8 +82,9 @@ contract AgentHands is
     /// @dev    Only the owner can add or remove tokens via `setAllowedToken`.
     mapping(address => bool) public allowedTokens;
 
-    /// @notice Platform fee charged on successful payouts, expressed in basis points.
-    /// @dev    e.g. 250 = 2.5%. Applied in `_releaseFunds`.
+    /// @notice Platform fee charged on successful Celo payouts, expressed in basis points.
+    /// @dev    e.g. 250 = 2.5% (current mainnet default). Applied in `_releaseFunds`.
+    ///         Owner can update via `setFee`; new value applies to future payouts only.
     uint256 public platformFeeBps;
 
     /// @notice Address that receives the platform fee on every completed task.
