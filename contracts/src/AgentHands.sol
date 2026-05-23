@@ -223,6 +223,8 @@ contract AgentHands is
     error TaskNotDisputed();
 
     /// @notice Thrown when the caller is not the agent who posted the task.
+    /// @dev    Enforced by the `onlyAgent` modifier on Celo — `msg.sender` must equal
+    ///         `tasks[_taskId].agent`. Agents are typically AI programs with a funded wallet.
     error NotAgent();
 
     /// @notice Thrown when the caller is not the worker assigned to the task.
