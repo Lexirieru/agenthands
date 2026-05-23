@@ -113,11 +113,11 @@ contract AgentHands is
 
     // ─── Events ──────────────────────────────────────────────
 
-    /// @notice Emitted when a new task is created and funded.
-    /// @param taskId       The unique identifier of the created task.
-    /// @param agent        The address of the AI agent that posted the task.
-    /// @param reward       The reward amount locked in escrow.
-    /// @param paymentToken The ERC-20 token used for the reward.
+    /// @notice Emitted when a new task is created and the reward is locked in escrow on Celo.
+    /// @param taskId       Unique 1-based task ID assigned by `++taskCount`.
+    /// @param agent        Celo address of the AI agent that posted the task.
+    /// @param reward       Reward amount locked in escrow (token-native decimals).
+    /// @param paymentToken Whitelisted ERC-20 token address used for the reward.
     event TaskCreated(uint256 indexed taskId, address indexed agent, uint256 reward, address paymentToken);
 
     /// @notice Emitted when a worker accepts an open task.
