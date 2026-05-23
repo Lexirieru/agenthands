@@ -60,8 +60,8 @@ export default function DollarsCard({ address, includeCelo = false }: DollarsCar
 
   return (
     <div className="relative">
-      {/* Solid colored card — MiniPay-style. Uses our dark-brown brand color
-          instead of green so it sits inside the warm AgentHands palette. */}
+      {/* Solid colored card — MiniPay-style dark-brown (#5C2D0A) brand color
+          instead of MiniPay's green, to fit the warm AgentHands Celo palette. */}
       <div className="bg-[#5C2D0A] rounded-3xl px-5 pt-5 pb-9 text-white shadow-lg shadow-[#5C2D0A]/20 overflow-hidden">
         <p className="text-xs font-label uppercase tracking-wider text-white/70">
           Dollars
