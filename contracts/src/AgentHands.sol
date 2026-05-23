@@ -673,7 +673,8 @@ contract AgentHands is
     /// @notice Returns the implementation version string.
     /// @dev    Hardcoded in the implementation bytecode — upgrade to a new implementation
     ///         to bump this value. Useful for clients to detect which feature set is active
-    ///         without inspecting the EIP-1967 implementation slot directly.
+    ///         without inspecting the EIP-1967 implementation slot directly on Celo mainnet.
+    ///         Query via `cast call 0xADA0466303441102cb16F8eC1594C744d603f746 "version()(string)" --rpc-url https://forno.celo.org`.
     /// @return The semver version string of this implementation (e.g. "1.1.0").
     function version() external pure returns (string memory) {
         return "1.1.0";
