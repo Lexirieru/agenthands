@@ -53,7 +53,12 @@ function formatTokenAmount(raw: bigint, decimals: number): string {
   return formatDollars(dollars);
 }
 
+/**
+ * MiniPay-style balance card component for the Celo AgentHands dashboard.
+ * @since 1.0.0
+ */
 export default function DollarsCard({ address, includeCelo = false }: DollarsCardProps) {
+  /** Controls the animated per-token breakdown panel open/closed state. */
   const [open, setOpen] = useState(false);
   const { balances, totalDollars, isLoading, celoUsdPrice, celoPriceIsFresh } =
     useStablecoinBalances(address, { includeCelo });
