@@ -54,9 +54,9 @@ export default function Header() {
 
   useEffect(() => setMounted(true), []);
 
-  // Show the combined $-pegged balance across all whitelisted stablecoins
-  // (USDC + USDT + USDm) without any per-token logo, since the account can
-  // hold any mix and the pill is meant to read as "total dollars".
+  // Show the combined $-pegged stablecoin balance (USDC + USDT + USDm) in the
+  // header pill without per-token logos — the Celo account may hold any mix and
+  // the pill is meant to read as a single "total dollars" figure.
   const dollarsFormatted = !isConnected || balancesLoading
     ? null
     : totalDollars >= 1
