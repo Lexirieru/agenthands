@@ -198,7 +198,9 @@ contract AgentHands is
     /// @dev    Reverts in `createTask` when `_reward == 0`; prevents zero-value escrow entries.
     error InvalidReward();
 
-    /// @notice Thrown when a deadline is in the past or logically inconsistent.
+    /// @notice Thrown when a deadline is in the past or logically inconsistent on Celo.
+    /// @dev    Reverts in `createTask` when `_deadline <= block.timestamp` or
+    ///         `_completionDeadline <= _deadline`. Celo block timestamps advance ~5 s per block.
     error InvalidDeadline();
 
     /// @notice Thrown when an action requires `TaskStatus.Open` but the task is not open.
