@@ -304,7 +304,11 @@ export function useDisputeTask() {
   return useWriteContract();
 }
 
-/** Agent cancels an open (unaccepted) Celo task and recovers the escrowed reward. */
+/**
+ * Agent cancels an open (unaccepted) Celo task and recovers the full escrowed reward.
+ * @since 1.0.0
+ * Only callable while the task is in `Open` status; emits `TaskCancelled` on-chain.
+ */
 export function useCancelTask() {
   return useWriteContract();
 }
