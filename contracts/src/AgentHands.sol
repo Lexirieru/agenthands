@@ -253,6 +253,8 @@ contract AgentHands is
     error AlreadyRated();
 
     /// @notice Thrown when rating is attempted on a task that is not yet completed.
+    /// @dev    Reverts in `rateWorker` and `rateAgent` when `task.status != TaskStatus.Completed`
+    ///         on Celo — both parties can only rate after the agent calls `approveTask`.
     error TaskNotCompleted();
 
     /// @notice Thrown when `claimExpired` is called on a task that has not expired.
