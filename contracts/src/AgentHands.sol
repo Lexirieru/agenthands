@@ -213,6 +213,8 @@ contract AgentHands is
     error TaskNotAccepted();
 
     /// @notice Thrown when an action requires `TaskStatus.Submitted` but proof has not been submitted.
+    /// @dev    Reverts in `approveTask` and `disputeTask` — both require the worker to have
+    ///         called `submitProof` first, transitioning the Celo task to `Submitted`.
     error TaskNotSubmitted();
 
     /// @notice Thrown when resolving a dispute on a task that is not in `Disputed` status.
