@@ -1,5 +1,6 @@
 "use client";
 
+/** @module useAutoConnect — MiniPay / Valora auto-connect hook for Celo AgentHands. */
 import { useEffect, useState } from "react";
 import { useConnect, useConnectors } from "wagmi";
 
