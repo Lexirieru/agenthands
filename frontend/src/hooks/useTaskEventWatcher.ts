@@ -1,5 +1,6 @@
 "use client";
 
+/** @module useTaskEventWatcher — real-time AgentHands contract event subscription on Celo mainnet. */
 import { useEffect } from "react";
 import { createPublicClient, http, fallback, parseAbi } from "viem";
 import { useQueryClient } from "@tanstack/react-query";
