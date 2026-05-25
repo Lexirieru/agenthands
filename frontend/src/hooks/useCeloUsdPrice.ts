@@ -33,6 +33,7 @@ const FEED_ABI = [
 const STALE_AFTER_SECONDS = 60 * 60; // 1 hour
 
 /**
+ * Shape of the value returned by `useCeloUsdPrice` on Celo mainnet.
  * @since 1.0.0
  */
 export interface CeloUsdPriceResult {
@@ -42,6 +43,7 @@ export interface CeloUsdPriceResult {
   updatedAt: number | null;
   /** True only when we have a fresh (age < 1 h), positive answer from the Chainlink CELO/USD feed on Celo. */
   isFresh: boolean;
+  /** True while either the `latestRoundData` or `decimals` Chainlink RPC call is in flight on Celo. */
   isLoading: boolean;
 }
 
