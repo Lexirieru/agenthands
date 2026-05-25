@@ -1,5 +1,6 @@
 "use client";
 
+/** @module useIsMiniPay — Celo MiniPay / Valora wallet detection for AgentHands UI gating. */
 import { useEffect, useState } from "react";
 
 /**
