@@ -17,7 +17,12 @@ const API_BASE =
  * The backend endpoint (`/api/self/verified/:address`) is the authoritative source of truth —
  * the Self Protocol ZK-proof relayer writes to it after on-chain attestation succeeds.
  *
+ * Cache is disabled (`no-store`) so every call reflects the latest relay state — important
+ * because verification can succeed async after the user completes the Self QR scan on Celo.
+ *
+ * @since 1.0.0
  * @param address - Celo wallet address to check; returns false immediately if undefined.
+ * @returns `true` if the address has a valid Self Protocol ZK attestation; `false` otherwise.
  */
 export async function fetchSelfVerified(address: string | undefined): Promise<boolean> {
   if (!address) return false;
