@@ -45,5 +45,11 @@ const fonts = [parasitype, courierNew];
  * Space-separated CSS variable string injected into `<html className>` by
  * RootLayout, making both font variables available to every Tailwind class
  * in the app (e.g. `font-heading` → `var(--font-parasitype)`).
+ *
+ * @since 1.0.0
+ * @see {@link RootLayout} — the consumer that spreads this into `<html className>`
+ * @example
+ * // In layout.tsx:
+ * <html className={`${fontsVariable} antialiased`}>
  */
 export const fontsVariable = fonts.map((f) => f.variable).join(' ');
