@@ -1,4 +1,6 @@
 'use client';
+
+/** @module useTaskFilter — client-side filter and keyword search state for the Celo task feed. */
 import { useState, useMemo } from 'react';
 import type { TaskData } from '@/types/task';
 
