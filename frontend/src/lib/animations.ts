@@ -71,8 +71,10 @@ export function countUp(el: Element, target: number) {
  * Subtle scale-and-fade entrance — used for modal cards and dialogs
  * (e.g. the proof-upload confirmation on Celo task submission).
  *
- * @param el - GSAP tween target.
+ * @param el    - GSAP tween target (element, selector, or NodeList).
  * @param delay - Seconds before the tween starts (default 0).
+ * @returns GSAP Tween instance — call `.kill()` to cancel early.
+ * @since 1.0.0
  */
 export function scaleIn(el: gsap.TweenTarget, delay = 0) {
   return gsap.from(el, {
