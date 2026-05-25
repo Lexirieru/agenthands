@@ -1,9 +1,12 @@
 /**
+ * @module verification — Self Protocol ZK-proof status helpers for Celo AgentHands.
+ *
  * Client-side helper for checking Self Protocol verification status against
  * the backend (not localStorage). The backend is the source of truth — the
  * frontend only caches the last known status in React state.
  */
 
+/** Backend base URL — Railway production by default; overridden by `NEXT_PUBLIC_API_URL` in `.env.local`. */
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL || "https://agenthands-production.up.railway.app";
 
