@@ -35,6 +35,10 @@ let addToastFn: ((type: ToastType, message: string) => void) | null = null;
  * Toasts auto-dismiss after 5 000 ms or can be closed manually via the ✕ button.
  *
  * Requires `<ToastContainer>` to be mounted once in the Next.js layout root.
+ *
+ * @since 1.0.0
+ * @param type    Severity — drives background colour (`success` green, `error` red, `info` blue).
+ * @param message Human-readable notification text shown in the toast body.
  */
 export function toast(type: ToastType, message: string) {
   addToastFn?.(type, message);
