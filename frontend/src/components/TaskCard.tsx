@@ -20,6 +20,7 @@ import {
  * Treats an Open task whose `deadline` is in the past as "Expired" on the
  * client side — no need to wait for the on-chain `claimExpired` transaction — so the
  * card status badge stays accurate even before the transaction lands.
+ * @since 1.0.0
  */
 interface TaskCardProps {
   /** On-chain task ID — 1-indexed `uint256` assigned by `++taskCount` in `createTask` on Celo. */
