@@ -1,6 +1,10 @@
 'use client';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+/**
+ * Props for the `PaginationBar` desktop task-grid component.
+ * @since 1.0.0
+ */
 interface PaginationBarProps {
   /** The currently active page (1-indexed); passed from parent pagination state. */
   currentPage: number;
