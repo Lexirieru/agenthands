@@ -41,6 +41,10 @@ const ERC20_ABI = [
  * Step 2 (create): calls AgentHands.createTask with the form fields; on
  * success invalidates the TanStack Query task list cache and shows a
  * "Task Created!" confirmation card.
+ *
+ * @since 1.0.0
+ * @see useInvalidateTasks — invalidates task list cache after createTask confirms on Celo
+ * @see useCip64 — provides CIP-64 `feeCurrency` overrides for MiniPay / Valora gas abstraction
  */
 export default function NewTaskPage() {
   const router = useRouter();
