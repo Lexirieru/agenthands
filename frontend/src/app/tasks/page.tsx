@@ -29,7 +29,11 @@ function useNowSeconds(intervalMs = 30000) {
   return now;
 }
 
-/** Status filter chips shown above the Celo task grid and mobile filter sheet. */
+/**
+ * Status filter chip definitions shown above the Celo task grid and the mobile filter sheet.
+ * Each entry maps a human-readable label to the on-chain `TaskStatus` enum value,
+ * or `"all"` to clear the filter and show every task regardless of status.
+ */
 const statusFilters: { label: string; value: number | "all" }[] = [
   { label: "All", value: "all" },
   { label: "Open", value: 0 },
