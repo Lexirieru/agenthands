@@ -19,6 +19,10 @@ import NavBar from "./NavBar";
  * Must be a Client Component (`"use client"`) because it reads `useIsMobile`,
  * which depends on `matchMedia` — a browser-only API unavailable during Next.js SSR.
  */
+/**
+ * @param children Page content forwarded to either the `SwipeNav` mobile shell
+ *                 or the desktop `<main>` container on Celo AgentHands.
+ */
 export default function ResponsiveShell({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
 
