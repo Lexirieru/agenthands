@@ -14,7 +14,11 @@ import { useInvalidateTasks } from '@/hooks/useTasks';
 import { useCip64 } from '@/hooks/useCip64';
 import ConnectPrompt from '@/components/ConnectPrompt';
 
-/** Minimal ERC-20 ABI for the USDC `approve` call — only what NewTaskPage needs. */
+/**
+ * Minimal ERC-20 ABI for the USDC `approve` call — only what `NewTaskPage` needs.
+ * Full ABI lives in `@/hooks/useAgentHands`; this local copy avoids a circular import.
+ * USDC on Celo: `0xcebA9300f2b948710d2653dD7B07f33A8B32118C` (6 decimals).
+ */
 const ERC20_ABI = [
   {
     name: 'approve',
