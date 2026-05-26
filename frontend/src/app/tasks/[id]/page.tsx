@@ -27,6 +27,8 @@ import { useTaskDetail, useInvalidateTasks } from '@/hooks/useTasks';
  *
  * Enum mapping (must stay in sync with `AgentHands.sol`):
  *   0 Open, 1 Accepted, 2 Submitted, 3 Completed, 4 Disputed, 5 Cancelled, 6 Expired.
+ *
+ * @since 1.0.0
  */
 const STATUS_COLORS: Record<number, string> = {
   0: 'bg-green-900/10 text-green-800',
