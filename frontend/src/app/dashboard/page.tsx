@@ -15,7 +15,11 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 import { useIsMiniPay } from '@/hooks/useIsMiniPay';
 import { EXPLORER_URL } from '@/config';
 
-/** Tab selector for the worker's task list — Active jobs vs completed ones. */
+/**
+ * Tab selector for the Celo worker's personal task history.
+ * `'active'` shows tasks in Open / Accepted / Submitted / Disputed status;
+ * `'done'` shows Completed, Cancelled, and Expired tasks.
+ */
 type JobTab = 'active' | 'done';
 
 /**
