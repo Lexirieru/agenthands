@@ -15,6 +15,10 @@ const ITEMS_PER_PAGE = 12;
  * Returns the current Unix timestamp in seconds, updating every `intervalMs`.
  * Used client-side to compute whether a Celo task's `deadline` field has
  * passed without relying on server time.
+ *
+ * @since 1.0.0
+ * @param intervalMs Polling interval in ms (default 30 000 — balances accuracy vs re-render cost).
+ * @returns Current Unix timestamp in seconds, refreshed on each interval tick.
  */
 function useNowSeconds(intervalMs = 30000) {
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
