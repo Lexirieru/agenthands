@@ -91,10 +91,10 @@ export const CELO_USD_FEED_ADDRESS =
 export const USDC_FEE_ADAPTER =
   "0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B" as `0x${string}`;
 
-/** Active chain for all wagmi and viem calls — Celo mainnet (chain ID 42220). */
+/** @since 1.0.0 Active chain for all wagmi and viem calls — Celo mainnet (chain ID 42220). */
 export const CHAIN = celo;
 
-/** Celoscan base URL used for "View on Celoscan" external links in the dashboard and header. */
+/** @since 1.0.0 Celoscan base URL for "View on Celoscan" external links — derived from the wagmi `celo` chain config. */
 export const EXPLORER_URL =
   CHAIN.blockExplorers?.default?.url ?? "https://celoscan.io";
 
