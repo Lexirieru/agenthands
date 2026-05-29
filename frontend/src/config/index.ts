@@ -74,8 +74,10 @@ export const STABLECOINS: ReadonlyArray<{
 // so it can't ride x402 — agents have to direct-call createTask. We only
 // surface its balance + USD equivalent on desktop; MiniPay/mobile layouts
 // stay stablecoin-only because that matches MiniPay's product surface.
+/** @since 1.0.0 Native CELO ERC-20 facade on Celo mainnet (18 decimals) — volatile reward token, no EIP-3009. */
 export const CELO_TOKEN_ADDRESS =
   "0x471EcE3750Da237f93B8E339c536989b8978a438" as `0x${string}`;
+/** @since 1.0.0 Decimal precision of the CELO ERC-20 token — 18 decimals, same as ETH wei convention. */
 export const CELO_TOKEN_DECIMALS = 18;
 
 // Chainlink CELO/USD price feed on Celo mainnet — used to convert the
