@@ -141,6 +141,7 @@ export function useAllTasks() {
  * the task detail page up to date as workers interact with the contract.
  * Does NOT filter HIDDEN_TASK_IDS — direct links always resolve.
  *
+ * @since 1.0.0
  * @param taskId - Task ID to load; pass `undefined` to skip fetching.
  * @returns      TanStack Query result with `data: TaskData | null` (null on
  *               revert or missing ID) and standard loading/error state.
