@@ -1,4 +1,6 @@
 /**
+ * @module config — Wagmi/viem config and all Celo mainnet contract addresses for AgentHands.
+ *
  * Wagmi + viem configuration for AgentHands on Celo mainnet (chain ID 42220).
  *
  * Token addresses:
