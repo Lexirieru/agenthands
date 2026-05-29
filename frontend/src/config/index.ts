@@ -58,6 +58,9 @@ export type StablecoinSymbol = "USDC" | "USDT" | "USDm";
  * x402 self-settle path on Celo without a separate `approve` tx.
  * USDm only supports EIP-2612 `permit` — the x402 path is unavailable for it.
  */
+/**
+ * @since 1.0.0
+ */
 export const STABLECOINS: ReadonlyArray<{
   symbol: StablecoinSymbol;
   address: `0x${string}`;
