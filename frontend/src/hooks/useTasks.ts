@@ -122,6 +122,7 @@ async function fetchTask(taskId: bigint): Promise<TaskData | null> {
  * Refetches every 8 s and on window focus; stale time is 4 s so multiple
  * components share the same in-flight request.
  *
+ * @since 1.0.0
  * @returns TanStack Query result with `data: TaskData[]` (empty array while loading),
  *          plus standard `isLoading`, `isError`, and `refetch` fields.
  */
