@@ -83,11 +83,11 @@ export const CELO_TOKEN_DECIMALS = 18;
 // Chainlink CELO/USD price feed on Celo mainnet — used to convert the
 // volatile CELO balance into a $ equivalent for the desktop DollarsCard.
 // 8-decimal answer; reverts treated as "no price available".
+/** @since 1.0.0 Chainlink CELO/USD aggregator on Celo mainnet (8-decimal answer); used by `useCeloUsdPrice`. */
 export const CELO_USD_FEED_ADDRESS =
   "0x0568fD19986748cEfF3301e55c0eb1E729E0Ab7e" as `0x${string}`;
 
-// USDC Fee Adapter for CIP-64 fee abstraction — lets users pay gas in USDC
-// instead of CELO. See https://docs.celo.org/build/fee-abstraction
+/** @since 1.0.0 USDC Fee Adapter for CIP-64 — lets MiniPay/Valora users pay gas in USDC instead of CELO. */
 export const USDC_FEE_ADAPTER =
   "0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B" as `0x${string}`;
 
