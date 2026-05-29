@@ -101,6 +101,11 @@ export const CHAIN = celo;
 export const EXPLORER_URL =
   CHAIN.blockExplorers?.default?.url ?? "https://celoscan.io";
 
+/**
+ * Wagmi config singleton shared across the entire AgentHands frontend.
+ * `ssr: true` + `cookieStorage` preserves wallet state across Next.js SSR / hydration on Celo.
+ * @since 1.0.0
+ */
 export const config = createConfig({
   chains: [celo],
   connectors: [
