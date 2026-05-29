@@ -1,4 +1,6 @@
 /**
+ * @module erc8004 — ERC-8004 Agent Trust Protocol registry addresses for Celo AgentHands.
+ *
  * ERC-8004 Agent Trust Protocol registry addresses on Celo mainnet.
  *
  * ERC-8004 is a soulbound-NFT identity standard used by AgentHands to verify
