@@ -1,5 +1,6 @@
 "use client";
 
+/** @module context — Wagmi + TanStack Query provider with auto-connect and event watcher for Celo AgentHands. */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React, { type ReactNode } from "react";
 import { cookieToInitialState, WagmiProvider } from "wagmi";
