@@ -52,7 +52,11 @@ function IconExplore({ active }: { active: boolean }) {
   );
 }
 
-/** SVG icon for the Dashboard tab — stroked in the active/inactive brand color. */
+/**
+ * SVG icon for the Dashboard tab in the Celo MiniPay bottom navigation bar.
+ * @since 1.0.0
+ * Stroked in the active (`#D4700A`) or inactive (`#8B4513`) brand colour.
+ */
 function IconPortfolio({ active }: { active: boolean }) {
   const c = active ? "#D4700A" : "#8B4513";
   return (
