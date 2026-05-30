@@ -31,6 +31,9 @@ interface TaskGridProps {
  * The empty-state panel surfaces a "No results for [keyword]" message and an optional
  * "Clear filters" button when `onClearFilters` is provided, so users can
  * reset after searching for Celo tasks by location or keyword.
+ *
+ * @since 1.0.0
+ * @see useTaskFilter — provides the filtered `tasks` slice and `clearFilters` handler
  */
 export default function TaskGrid({ tasks, search, onClearFilters }: TaskGridProps) {
   /** Container ref passed to `gsap.context` so GSAP animations are scoped and cleaned up on unmount. */
