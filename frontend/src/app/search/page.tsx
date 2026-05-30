@@ -31,6 +31,9 @@ const statusFilters = [
  *
  * Renders a compact card per task with reward token logo resolved via
  * `tokenInfoForAddress` so USDC and CELO rewards display correctly.
+ *
+ * @since 1.0.0
+ * @see useAllTasks — TanStack Query hook providing the full Celo task list
  */
 export default function SearchPage() {
   const [search, setSearch] = useState("");
