@@ -67,7 +67,9 @@ export default function AgentBadge({ agentAddress }: AgentBadgeProps) {
     query: { enabled: !!agentTokenId },
   });
 
+  /** True when the agent holds at least one ERC-8004 Identity NFT on Celo mainnet. */
   const isVerified = !!balance && Number(balance) > 0;
+  /** Number of client reviews from the Reputation Registry — shown as a star-count chip. */
   const reviewCount = Array.isArray(clients) ? clients.length : 0;
 
   if (!isVerified) {
