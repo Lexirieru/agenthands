@@ -1,5 +1,6 @@
 'use client';
 
+/** @module AgentBadge — ERC-8004 on-chain identity and reputation badge for Celo AI agents. */
 import { useReadContract } from 'wagmi';
 import { HelpCircle, ShieldCheck, Star } from 'lucide-react';
 import { IDENTITY_REGISTRY, REPUTATION_REGISTRY, ERC8004_CHAIN_ID } from '@/config/erc8004';
