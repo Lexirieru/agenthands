@@ -11,7 +11,11 @@ import { MapPin, Clock } from "lucide-react";
 import Link from "next/link";
 import { useAllTasks } from "@/hooks/useTasks";
 
-/** Status filter pills for the Celo task explore/search view. */
+/**
+ * Status filter pill definitions for the Celo AgentHands Explore / search view.
+ * Maps human-readable labels to on-chain `TaskStatus` enum values or `"all"` to show everything.
+ * @since 1.0.0
+ */
 const statusFilters = [
   { label: "All", value: "all" as const },
   { label: "Open", value: 0 },
