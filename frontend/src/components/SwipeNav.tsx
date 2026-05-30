@@ -23,6 +23,10 @@ const tabs = ["/", "/search", "/dashboard"];
  * @since 1.0.0
  * @see ResponsiveShell — mounts SwipeNav only below the 768 px breakpoint
  */
+/**
+ * @param children Page content rendered inside the swipeable container — typically
+ *                 the active route's JSX passed through from `ResponsiveShell` on Celo MiniPay.
+ */
 export default function SwipeNav({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
