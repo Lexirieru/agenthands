@@ -95,6 +95,9 @@ const tabs = [
  * Respects iOS safe-area insets via `pb-[max(…,env(safe-area-inset-bottom))]`
  * so the nav chrome doesn't overlap the home-indicator bar on Celo phone
  * users running the app as a PWA or inside MiniPay's WebView.
+ *
+ * @since 1.0.0
+ * @see SwipeNav — horizontal swipe router that mirrors this tab order
  */
 export default function NavBar() {
   const pathname = usePathname();
