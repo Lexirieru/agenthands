@@ -696,7 +696,8 @@ contract AgentHands is
     ///         Never call this from another on-chain contract — gas cost grows unboundedly
     ///         as more tasks are created and will eventually exceed block gas limits.
     ///         The function allocates the result array in two passes to avoid dynamic resizing.
-    /// @param _status The TaskStatus to filter by.
+    ///         On Celo mainnet use `cast call` with `--rpc-url https://forno.celo.org` for quick queries.
+    /// @param _status The TaskStatus to filter by (0=Open, 1=Accepted … 6=Expired).
     /// @return ids    Array of task IDs whose current status matches `_status`.
     function getTasksByStatus(TaskStatus _status) external view returns (uint256[] memory ids) {
         uint256 total = taskCount;
