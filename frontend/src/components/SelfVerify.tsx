@@ -78,6 +78,7 @@ export default function SelfVerify({ onVerified }: SelfVerifyProps) {
   // We also fire onVerified() exactly once on transition, so the parent gets
   // notified even when the deep-link path is used (no SelfQRcodeWrapper
   // onSuccess callback to rely on in that case).
+  /** Prevents `onVerified` from firing more than once — both the polling path and `SelfQRcodeWrapper.onSuccess` can trigger it on Celo. */
   const notifiedRef = useRef(false);
   useEffect(() => {
     let cancelled = false;
