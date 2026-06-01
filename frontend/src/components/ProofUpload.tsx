@@ -4,7 +4,9 @@
 import { useState, useRef, useEffect, useCallback, useImperativeHandle, type Ref } from 'react';
 import { Upload, CheckCircle, Camera, X, Loader2, FileText, Paperclip } from 'lucide-react';
 
+/** Upload mode selected by the worker — `image` for file/drag-drop, `text` for written or code proofs. */
 type Mode = 'image' | 'text';
+/** Proof content kind stored in the on-chain CID and Pinata manifest — captures what the CID points to on Celo. */
 type Kind = 'image' | 'text' | 'text+image';
 
 /**
