@@ -117,7 +117,10 @@ function saveDraft(taskId: ProofUploadProps['taskId'], payload: DraftPayload) {
   window.localStorage.setItem(key, JSON.stringify(payload));
 }
 
-/** Remove the stored proof draft from localStorage after the on-chain submitProof tx confirms or the user clears the upload. */
+/**
+ * Remove the stored proof draft from localStorage after the on-chain `submitProof` tx confirms or the user clears.
+ * @since 1.0.0
+ */
 function clearDraft(taskId: ProofUploadProps['taskId']) {
   const key = draftKey(taskId);
   if (key) window.localStorage.removeItem(key);
