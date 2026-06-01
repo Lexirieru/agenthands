@@ -66,6 +66,10 @@ export default function SelfVerify({ onVerified }: SelfVerifyProps) {
    * the App Store if the app is not installed. Returns null until `selfApp` is
    * initialised (i.e., until the SelfAppBuilder effect has run on the client and
    * the connected wallet address is available).
+   *
+   * @since 1.0.0
+   * Preferred over QR on Celo MiniPay / mobile — the user is already on the device
+   * where Self is installed, so a deep-link is a one-tap action.
    */
   const universalLink = useMemo(
     () => (selfApp ? getUniversalLink(selfApp) : null),
