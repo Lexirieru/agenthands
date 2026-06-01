@@ -1,3 +1,4 @@
+/** @module format — Display formatting utilities for Celo AgentHands token amounts, addresses, and task status. */
 import {
   STABLECOINS,
   CELO_TOKEN_ADDRESS,
