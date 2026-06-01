@@ -152,6 +152,10 @@ async function pinFile(file: File): Promise<string> {
   return data.cid;
 }
 
+/**
+ * @since 1.0.0
+ * @see ProofUploadHandle — imperative `ensureUploaded()` API called by the parent Submit button on Celo
+ */
 export default function ProofUpload({ ref, onCIDReady, onContentChange, taskId }: ProofUploadProps) {
   const [mode, setMode] = useState<Mode>('image');
   const [uploading, setUploading] = useState(false);
