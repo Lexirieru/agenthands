@@ -84,6 +84,10 @@ function draftKey(taskId: ProofUploadProps['taskId']) {
  * Read and parse a proof draft from localStorage for the given task.
  * Handles the legacy schema where only a raw CID string was stored (treats it as an image draft).
  * Returns null on SSR, missing key, or invalid JSON.
+ *
+ * @since 1.0.0
+ * @param taskId Celo task ID used to namespace the draft key in localStorage.
+ * @returns      Parsed `DraftPayload` or `null` if nothing is stored or the key is absent.
  */
 function loadDraft(taskId: ProofUploadProps['taskId']): DraftPayload | null {
   const key = draftKey(taskId);
