@@ -172,6 +172,10 @@ export function formatDate(dateStr: string | number): string {
  * Used by TaskCard and TaskDetailPage status badges. Unknown values fall
  * back to a generic "Status N" label so the UI degrades gracefully if
  * new enum variants are added to the Celo contract without a frontend update.
+ *
+ * @since 1.0.0
+ * @param status Numeric `TaskStatus` enum value from the AgentHands Celo contract.
+ * @returns      Object with `label` (human-readable string) and `color` (Tailwind text class).
  */
 export function getStatusDisplay(status: number): { label: string; color: string } {
   switch (status) {
