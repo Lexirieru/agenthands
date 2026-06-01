@@ -107,7 +107,10 @@ function loadDraft(taskId: ProofUploadProps['taskId']): DraftPayload | null {
   return null;
 }
 
-/** Persist a proof draft to localStorage so it survives page refresh before the on-chain submitProof tx. */
+/**
+ * Persist a proof draft to localStorage so it survives page refresh before the on-chain `submitProof` tx.
+ * @since 1.0.0
+ */
 function saveDraft(taskId: ProofUploadProps['taskId'], payload: DraftPayload) {
   const key = draftKey(taskId);
   if (!key) return;
