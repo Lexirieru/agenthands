@@ -657,6 +657,10 @@ contract AgentHands is
     /// @dev    Symmetric to `rateWorker` but for the agent side. Rating is permanent —
     ///         no update path exists. Reverts with `AlreadyRated` if called twice for the
     ///         same task, and `TaskNotCompleted` if the task is still in progress.
+    ///         To read an agent's current average score via cast on Celo Forno:
+    ///         `cast call 0xADA0466303441102cb16F8eC1594C744d603f746 \
+    ///           "getAgentRating(address)(uint256,uint256)" <agentAddr> \
+    ///           --rpc-url https://forno.celo.org`
     /// @param _taskId The ID of the completed task.
     /// @param _score  Rating between 1 (lowest) and 5 (highest).
     function rateAgent(uint256 _taskId, uint8 _score) external onlyWorker(_taskId) {
