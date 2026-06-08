@@ -28,6 +28,7 @@ const SWIPE_THRESHOLD = 80;
  * and accept tasks posted by AI agents on the AgentHands contract.
  *
  * @since 1.0.0
+ * @param tasks Readonly list of `TaskData` from the AgentHands Celo contract (Open status).
  * @see SwipeCard — single card rendered per task in the Celo swipe feed
  */
 export default function SwipeStack({
