@@ -1,4 +1,5 @@
 'use client';
+/** @module PaginationBar — Keyboard-accessible pagination control for the Celo AgentHands desktop task grid. */
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 /**
