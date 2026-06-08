@@ -36,6 +36,8 @@ const navLinks = [
  * for micro-balances (common with USDC 6-decimal amounts on Celo).
  *
  * `mounted` guard prevents Next.js SSR/hydration mismatches from wagmi wallet account state on Celo.
+ *
+ * @since 1.0.0
  */
 export default function Header() {
   const pathname = usePathname();
