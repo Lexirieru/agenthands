@@ -1,4 +1,5 @@
 "use client";
+/** @module Header — Sticky Celo AgentHands app header for desktop and mobile layouts. */
 
 import Link from "next/link";
 import Image from "next/image";
