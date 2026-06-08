@@ -46,6 +46,12 @@ export default function SwipeStack({
 
   const safeIndex = tasks.length === 0 ? 0 : Math.min(currentIndex, tasks.length - 1);
 
+  /**
+   * Advance the visible task card by one step in the given direction.
+   * @since 1.0.0
+   * `dir > 0` moves forward (next task); `dir < 0` moves backward (prev task).
+   * Wraps around the task list so the feed loops on Celo MiniPay.
+   */
   const goTo = useCallback(
     (dir: number) => {
       if (!canTransition.current) return;
