@@ -635,6 +635,9 @@ contract AgentHands is
     ///         Scores are accumulated in `workerTotalScore` and the per-task count in
     ///         `workerRatingCount`; the floor average is derived off-chain via `getWorkerRating`.
     ///         Rating is independent of payment — it can be submitted any time after completion.
+    ///         On Celo mainnet, `workerTotalScore` is read by the ERC-8004 AgentRegistry at
+    ///         `0x3Bd0A36889D8D3A6A43bF7BcE2F4e50BE4BEA6FE` to compute the worker's
+    ///         reputation score surfaced in `AgentBadge` on the frontend.
     /// @param _taskId The ID of the completed task.
     /// @param _score  Rating between 1 (lowest) and 5 (highest).
     function rateWorker(uint256 _taskId, uint8 _score) external onlyAgent(_taskId) {
