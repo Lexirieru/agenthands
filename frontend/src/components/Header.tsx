@@ -57,9 +57,9 @@ export default function Header() {
 
   useEffect(() => setMounted(true), []);
 
-  // Show the combined $-pegged stablecoin balance (USDC + USDT + USDm) in the
-  // header pill without per-token logos — the Celo account may hold any mix and
-  // the pill is meant to read as a single "total dollars" figure.
+  // Combined USD balance (USDC + USDT + USDm + optionally CELO via Chainlink
+  // CELO/USD feed `0x0568fD19986748cEfF3301e55c0eb1E729E0Ab7e`) shown as a
+  // single "total dollars" pill — ≥$1 → 2 dp, micro-balances → up to 6 dp.
   const dollarsFormatted = !isConnected || balancesLoading
     ? null
     : totalDollars >= 1
