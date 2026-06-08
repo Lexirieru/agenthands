@@ -35,7 +35,11 @@ interface PaginationBarProps {
 export default function PaginationBar({ currentPage, totalPages, onPrev, onNext, onPageSelect }: PaginationBarProps) {
   if (totalPages <= 1) return null;
 
-  /** Compute the visible page-number window: up to 5 pages centred on `currentPage`. */
+  /**
+   * Compute the visible page-number window: up to 5 pages centred on `currentPage`.
+   * @since 1.0.0
+   * Window is clamped to `[1…totalPages]` so edge pages never show phantom buttons.
+   */
   const pageNumbers = () => {
     const pages = [];
     const start = Math.max(1, currentPage - 2);
