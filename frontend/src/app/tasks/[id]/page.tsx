@@ -62,6 +62,9 @@ function TxOverlay({ message }: { message: string }) {
  * action panel for the connected Celo wallet (accept, submit proof, approve,
  * dispute, cancel, or rate). Optimistically patches the TanStack Query cache
  * on tx success to avoid a stale-RPC flicker while the event watcher catches up.
+ *
+ * @since 1.0.0
+ * @see patchDetail — optimistic TanStack Query cache update for Celo task state transitions
  */
 export default function TaskDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
