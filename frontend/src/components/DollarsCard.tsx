@@ -16,6 +16,9 @@ import { useStablecoinBalances } from '@/hooks/useAgentHands';
  *
  * Clicking the chevron expands an animated per-token breakdown rendered as
  * white sub-cards inside the same dark panel — matching MiniPay's style.
+ *
+ * @since 1.0.0
+ * @see useCeloUsdPrice — Chainlink CELO/USD feed used for CELO → $ conversion on desktop
  */
 /**
  * Props for `DollarsCard`.
