@@ -53,6 +53,9 @@ const statusFilters: { label: string; value: number | "all" }[] = [
  * `createdAt` desc → filtered by status + keyword → sliced to ITEMS_PER_PAGE.
  * Arrow-key pagination is wired via a `keydown` listener so power users can
  * navigate without touching the mouse.
+ *
+ * @since 1.0.0
+ * @see useAllTasks — multicall data source for all Celo AgentHands tasks
  */
 export default function TasksPage() {
   const [filter, setFilter] = useState<number | "all">("all");
