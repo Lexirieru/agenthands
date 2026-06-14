@@ -114,6 +114,11 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
     return true;
   }, [currentChainId, switchChain]);
 
+  /**
+   * Invalidate TanStack Query cache for this specific task and the global list,
+   * forcing a fresh multicall fetch from the Celo RPC after a rating is submitted.
+   * @since 1.0.0
+   */
   const invalidateTask = useCallback(() => {
     invalidateDetail(taskId);
     invalidateList();
