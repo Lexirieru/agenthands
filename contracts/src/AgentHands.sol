@@ -64,8 +64,8 @@ contract AgentHands is
         string description;         // Full instructions for the worker; stored on-chain, not on IPFS
         string location;            // Physical location where the task must be performed
         string proofCID;            // IPFS CID of the worker's completion proof
-        TaskStatus status;
-        uint256 createdAt;          // Block timestamp at task creation
+        TaskStatus status;          // Current lifecycle state — see TaskStatus enum (0=Open … 6=Expired)
+        uint256 createdAt;          // Block timestamp at task creation (Celo ~5 s block time)
     }
 
     // ─── State ───────────────────────────────────────────────
