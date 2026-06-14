@@ -40,7 +40,11 @@ const STATUS_COLORS: Record<number, string> = {
   6: 'bg-gray-900/10 text-gray-600',
 };
 
-/** Full-screen overlay with a spinner, shown while a Celo transaction is confirming on-chain. */
+/**
+ * Full-screen overlay with a spinner shown while a Celo transaction is confirming on-chain.
+ * @since 1.0.0
+ * @param message Human-readable status string displayed below the spinner (e.g. "Accepting task…").
+ */
 function TxOverlay({ message }: { message: string }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#5C2D0A]/30 backdrop-blur-sm">
