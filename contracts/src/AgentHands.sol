@@ -60,8 +60,8 @@ contract AgentHands is
         uint256 reward;             // Reward amount in the token's native decimals
         uint256 deadline;           // Unix timestamp — workers must accept before this
         uint256 completionDeadline; // Unix timestamp — worker must submit proof before this
-        string title;
-        string description;
+        string title;               // Short label displayed in task cards on the Celo frontend
+        string description;         // Full instructions for the worker; stored on-chain, not on IPFS
         string location;            // Physical location where the task must be performed
         string proofCID;            // IPFS CID of the worker's completion proof
         TaskStatus status;
