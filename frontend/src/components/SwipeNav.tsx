@@ -44,6 +44,11 @@ export default function SwipeNav({ children }: { children: React.ReactNode }) {
   // Map /tasks/* to / so the Feed tab stays active on Celo task detail pages.
   const normalizedPath = pathname === "/tasks" ? "/" : pathname;
 
+  /**
+   * Record the touch start coordinates and reset direction classification
+   * so each new gesture is classified independently on Celo MiniPay.
+   * @since 1.0.0
+   */
   const onTouchStart = (e: React.TouchEvent) => {
     startX.current = e.touches[0].clientX;
     startY.current = e.touches[0].clientY;
