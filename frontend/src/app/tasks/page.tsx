@@ -78,8 +78,11 @@ export default function TasksPage() {
     setIsMounted(true);
   }, []);
 
+  /** Set active status filter and reset to page 1 — prevents stale pagination on Celo task grid. @since 1.0.0 */
   const onFilterChange = useCallback((value: number | 'all') => { setFilter(value); setCurrentPage(1); }, []);
+  /** Sync search input and reset to page 1 so results start from the beginning on Celo task grid. @since 1.0.0 */
   const onSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => { setSearch(e.target.value); setCurrentPage(1); }, []);
+  /** Clear keyword search and reset pagination to page 1 on the Celo AgentHands task feed. @since 1.0.0 */
   const onClearSearch = useCallback(() => { setSearch(''); setCurrentPage(1); }, []);
   const onClearFilters = useCallback(() => { setFilter('all'); setSearch(''); setCurrentPage(1); }, []);
 
