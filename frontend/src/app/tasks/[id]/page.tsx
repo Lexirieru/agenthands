@@ -99,6 +99,12 @@ export default function TaskDetailPage({ params }: { params: Promise<{ id: strin
   const { invalidateDetail, invalidateList, patchDetail } = useInvalidateTasks();
   const cip64 = useCip64();
 
+  /**
+   * Guard that ensures the connected wallet is on Celo mainnet (chainId 42220)
+   * before any write tx is sent. Prompts a chain-switch toast if mismatched.
+   * @since 1.0.0
+   * @returns `true` if already on Celo; `false` if a switch was triggered.
+   */
   const ensureChain = useCallback(() => {
     if (currentChainId !== CHAIN.id) {
       switchChain({ chainId: CHAIN.id });
