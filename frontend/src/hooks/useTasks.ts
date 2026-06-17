@@ -166,10 +166,12 @@ export function useTaskDetail(taskId: bigint | undefined) {
 export function useInvalidateTasks() {
   const queryClient = useQueryClient();
 
+  /** Invalidate every task query key — used by the Celo event watcher to bust the full cache tree. @since 1.0.0 */
   const invalidateAll = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: taskQueryKeys.all });
   }, [queryClient]);
 
+  /** Invalidate the flat task list query — call after `createTask` to surface new Celo tasks immediately. @since 1.0.0 */
   const invalidateList = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: taskQueryKeys.list() });
   }, [queryClient]);
