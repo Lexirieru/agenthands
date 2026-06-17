@@ -23,6 +23,11 @@ import NavBar from "./NavBar";
  * @param children Page content forwarded to either the `SwipeNav` mobile shell
  *                 or the desktop `<main>` container on Celo AgentHands.
  */
+/**
+ * Top-level layout switcher between the Celo MiniPay mobile shell and the desktop layout.
+ * @since 1.0.0
+ * @see SwipeNav — horizontal gesture routing for Celo MiniPay mobile tabs
+ */
 export default function ResponsiveShell({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
 
