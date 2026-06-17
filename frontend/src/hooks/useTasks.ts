@@ -178,6 +178,11 @@ export function useInvalidateTasks() {
     queryClient.invalidateQueries({ queryKey: taskQueryKeys.list() });
   }, [queryClient]);
 
+  /**
+   * Invalidate the per-task detail query — call after accepting, submitting, or rating on Celo.
+   * @since 1.0.0
+   * @param taskId 1-based task ID; triggers a fresh `getTask` call against the Celo RPC.
+   */
   const invalidateDetail = useCallback(
     (taskId: bigint | string) => {
       queryClient.invalidateQueries({ queryKey: taskQueryKeys.detail(taskId) });
