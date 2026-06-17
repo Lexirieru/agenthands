@@ -30,6 +30,8 @@ const fallbackRpc = "https://forno.celo.org";
 /**
  * Module-level viem public client for Celo mainnet with automatic fallback to Forno.
  * Shared across all fetch functions so every hook in this module uses the same transport.
+ * @since 1.0.0
+ * Primary transport: `CHAIN.rpcUrls.default.http[0]`; fallback: `https://forno.celo.org`.
  */
 const publicClient = createPublicClient({
   chain: CHAIN,
