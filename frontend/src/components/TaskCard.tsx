@@ -62,6 +62,11 @@ function statusBadgeClass(status: number): string {
   }
 }
 
+/**
+ * Compact, clickable task card for the Celo AgentHands desktop grid.
+ * @since 1.0.0
+ * @see statusBadgeClass — maps TaskStatus enum values to Tailwind badge colors
+ */
 export default function TaskCard({
   id,
   title,
