@@ -332,8 +332,10 @@ contract AgentHands is
 
     /// @notice Adds or removes a token from the payment whitelist.
     /// @dev    Only callable by the owner. Current whitelist on Celo mainnet:
-    ///         - USDC: `0xcebA9300f2b948710d2653dD7B07f33A8B32118C`
-    ///         - CELO ERC-20: `0x471EcE3750Da237f93B8E339c536989b8978a438`
+    ///         - USDC  (6 dec):  `0xcebA9300f2b948710d2653dD7B07f33A8B32118C`
+    ///         - USDT  (6 dec):  `0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e`
+    ///         - USDm  (18 dec): `0x765DE816845861e75A25fCA122bb6898B8B1282a`
+    ///         - CELO ERC-20 (18 dec): `0x471EcE3750Da237f93B8E339c536989b8978a438`
     ///         Removing a token does not affect tasks already funded with it — active
     ///         escrow settles in the original token regardless of whitelist changes.
     /// @param _token   ERC-20 token address to whitelist or remove.
