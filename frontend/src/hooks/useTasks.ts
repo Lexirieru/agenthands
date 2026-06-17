@@ -181,10 +181,13 @@ export function useInvalidateTasks() {
     [queryClient]
   );
 
-  // Optimistic cache patch — used on Celo tx success so the UI reflects the new
-  // state instantly instead of waiting up to 4–6 s for the Forno RPC node to
-  // catch up and the event watcher to fire. Patches BOTH the single-task detail and
-  // the list cache so the feed page is in sync if the user navigates back.
+  /**
+   * Optimistically patch a task in both the detail and list TanStack Query caches.
+   * @since 1.0.0
+   * @param taskId Celo on-chain task ID (bigint or string).
+   * @param patch  Partial `TaskData` fields to merge — typically `{ status }` after a tx confirms.
+   * Avoids a 4–6 s Forno RPC round-trip on Celo by updating the local cache immediately.
+   */
   const patchDetail = useCallback(
     (taskId: bigint | string, patch: Partial<TaskData>) => {
       const idStr = taskId.toString();
