@@ -692,8 +692,9 @@ contract AgentHands is
 
     /// @notice Returns true if `_token` is whitelisted as a payment token.
     /// @dev    Convenience alias for reading `allowedTokens[_token]` directly.
-    ///         Celo mainnet returns `true` for USDC (`0xcebA9300…`) and CELO ERC-20
-    ///         (`0x471EcE3…`). Use before calling `createTask` to avoid `InvalidToken` revert.
+    ///         Celo mainnet returns `true` for: USDC (`0xcebA9300…`), USDT (`0x48065fb…`),
+    ///         USDm (`0x765DE81…`), and CELO ERC-20 (`0x471EcE3…`).
+    ///         Use before calling `createTask` to avoid an `InvalidToken` revert.
     /// @param _token  The ERC-20 token address to check.
     /// @return        True if the token is on the whitelist; false otherwise.
     function isTokenAllowed(address _token) external view returns (bool) {
