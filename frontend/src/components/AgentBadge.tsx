@@ -31,6 +31,11 @@ interface AgentBadgeProps {
   agentAddress: string;
 }
 
+/**
+ * Render an ERC-8004 identity and reputation badge for the given Celo agent address.
+ * @since 1.0.0
+ * @see IDENTITY_REGISTRY — `0x8004A818BFB912233c491871b3d84c89A494BD9e` on Celo mainnet
+ */
 export default function AgentBadge({ agentAddress }: AgentBadgeProps) {
   const { data: balance } = useReadContract({
     address: IDENTITY_REGISTRY,
