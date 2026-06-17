@@ -40,6 +40,11 @@ interface Props {
   total: number;
 }
 
+/**
+ * Full-screen task card rendered by `SwipeStack` for the Celo MiniPay mobile feed.
+ * @since 1.0.0
+ * @see SwipeStack — manages card transitions and gesture routing on Celo MiniPay
+ */
 export default function SwipeCard({ task, index, total }: Props) {
   const status = Number(task.status);
   const statusInfo = getStatusDisplay(status);
