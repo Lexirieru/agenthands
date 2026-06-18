@@ -32,6 +32,9 @@ type JobTab = 'active' | 'done';
  *
  * CELO is intentionally excluded from the Dollars total on MiniPay / mobile
  * because it is volatile and not part of MiniPay's stablecoin-first UX.
+ *
+ * @since 1.0.0
+ * @see DollarsCard — USDC + USDT + USDm + optional CELO balance card for Celo wallet
  */
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
