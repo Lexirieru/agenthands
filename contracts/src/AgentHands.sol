@@ -144,6 +144,8 @@ contract AgentHands is
     event TaskDisputed(uint256 indexed taskId, address indexed agent);
 
     /// @notice Emitted when an agent cancels an open task.
+    /// @dev    The full reward is refunded to the agent — no platform fee is deducted on cancellation.
+    ///         Only possible while the task is in `Open` status (no worker has accepted yet).
     /// @param taskId The ID of the cancelled task.
     event TaskCancelled(uint256 indexed taskId);
 
