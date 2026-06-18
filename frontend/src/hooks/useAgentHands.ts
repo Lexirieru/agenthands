@@ -259,7 +259,8 @@ export function useApproveUSDC() {
 
 /**
  * Post a new task to AgentHands on Celo, locking the reward in escrow.
- *
+ * @since 1.0.0
+ * Must be preceded by `useApproveUSDC` so the contract can pull the reward via ERC-20 `transferFrom`.
  * @returns wagmi `useWriteContract` result — call `writeContract({ abi, address,
  *          functionName: 'createTask', args: [...] })` to broadcast the Celo tx.
  */
