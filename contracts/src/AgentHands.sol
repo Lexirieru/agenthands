@@ -150,6 +150,9 @@ contract AgentHands is
     event TaskCancelled(uint256 indexed taskId);
 
     /// @notice Emitted when the owner resolves a disputed task.
+    /// @dev    `workerWins = true` → task becomes `Completed`, worker receives payout (minus platform fee).
+    ///         `workerWins = false` → task becomes `Cancelled`, full reward refunded to agent, no fee.
+    ///         Only the contract owner can call `resolveDispute` on Celo mainnet.
     /// @param taskId      The ID of the resolved task.
     /// @param workerWins  True if the reward was sent to the worker; false if refunded to the agent.
     event DisputeResolved(uint256 indexed taskId, bool workerWins);
