@@ -12,7 +12,10 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { truncateAddress } from "@/lib/utils/format";
 import { useState, useEffect } from "react";
 
-/** Desktop nav link definitions — rendered as a segmented pill inside the glassmorphism header bar on Celo AgentHands. */
+/**
+ * Desktop nav link definitions — rendered as a segmented pill inside the glassmorphism header bar on Celo AgentHands.
+ * @since 1.0.0
+ */
 const navLinks = [
   { href: "/tasks", label: "TASKS" },
   { href: "/dashboard", label: "DASHBOARD" },
