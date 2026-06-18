@@ -66,7 +66,10 @@ export default function Header() {
       ? totalDollars.toFixed(2)
       : totalDollars.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
 
-  /** Returns `true` when the current Next.js pathname exactly matches the given nav link href on Celo AgentHands. */
+  /**
+   * Returns `true` when the current Next.js pathname exactly matches the given nav link href on Celo AgentHands.
+   * @since 1.0.0
+   */
   const isActive = (href: string) => pathname === href;
 
   /**
