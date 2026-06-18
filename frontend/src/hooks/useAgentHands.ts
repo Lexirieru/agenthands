@@ -270,7 +270,8 @@ export function useCreateTask() {
 
 /**
  * Accept an open Celo task as a worker; pays CIP-64 gas in USDC if in MiniPay.
- *
+ * @since 1.0.0
+ * Requires a valid Self Protocol ZK-identity proof (checked on the backend, not on-chain).
  * @returns wagmi `useWriteContract` result — call `writeContract({ abi, address,
  *          functionName: 'acceptTask', args: [taskId] })` to broadcast on Celo.
  */
