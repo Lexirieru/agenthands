@@ -163,6 +163,10 @@ export type RewardTokenBalance = StablecoinBalance & {
  * stays stablecoin-only by design), CELO balance is also fetched and
  * priced via the Chainlink CELO/USD feed so it can fold into the same
  * "Total dollars" number.
+ *
+ * @since 1.0.0
+ * @param address Connected Celo wallet address, or `undefined` to skip all fetches.
+ * @param options `{ includeCelo }` — set to `true` on desktop to fold CELO into the total.
  */
 export function useStablecoinBalances(
   address: `0x${string}` | undefined,
