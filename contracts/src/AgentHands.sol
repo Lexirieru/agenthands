@@ -123,6 +123,9 @@ contract AgentHands is
     event TaskCreated(uint256 indexed taskId, address indexed agent, uint256 reward, address paymentToken);
 
     /// @notice Emitted when a Celo worker accepts an open task; transitions status Open → Accepted.
+    /// @dev    Locks the task to `worker` — no other address can submit proof until `claimExpired`
+    ///         recovers the escrow. Self Protocol ZK-identity verification is enforced at the
+    ///         frontend/backend layer before `acceptTask` is broadcast on Celo.
     /// @param taskId The ID of the accepted task.
     /// @param worker Celo address of the human worker who accepted the task.
     event TaskAccepted(uint256 indexed taskId, address indexed worker);
