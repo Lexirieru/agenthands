@@ -1,4 +1,5 @@
 "use client";
+/** @module useCeloUsdPrice — Chainlink CELO/USD price feed hook for Celo mainnet balance conversion. */
 
 import { useReadContract } from "wagmi";
 import { CELO_USD_FEED_ADDRESS } from "@/config";
